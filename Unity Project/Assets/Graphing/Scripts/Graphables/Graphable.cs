@@ -112,6 +112,7 @@ namespace Graphing
             set
             {
                 colorScheme = value;
+                _useSingleColor = false;
                 OnDisplayChanged(new ColorChangedEventArgs(ColorScheme, ColorFunc, UseSingleColor, color));
             }
         }
@@ -137,7 +138,9 @@ namespace Graphing
             {
                 bool changed = _color != value;
                 _color = value;
-                if (_useSingleColor && changed)
+                changed |= _useSingleColor == false;
+                _useSingleColor = true;
+                if (changed)
                     OnDisplayChanged(new ColorChangedEventArgs(ColorScheme, ColorFunc, UseSingleColor, color));
             }
         }
