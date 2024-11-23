@@ -97,7 +97,7 @@
     <None Include="Assets\Graphing\Resources\Shaders\OutlineMap.shader" />
     <None Include="Assets\Graphing\Resources\Shaders\ColorMapContours.shader" />
     <None Include="Assets\Graphing\Resources\Shaders\ColorMap.shader" />
-    <None Include="graphingshaders.ksp" />
+    <None Include="AssetBundles\graphingshaders.ksp" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>

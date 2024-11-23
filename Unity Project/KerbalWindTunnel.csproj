@@ -61,7 +61,7 @@
     <Compile Include="Assets\Scripts\ObjectDump.cs" />
     <Compile Include="Assets\Scripts\CanvasLayerSetter.cs" />
     <None Include="Assets\Scripts\KerbalWindTunnel.asmdef" />
-    <None Include="windtunnelassetbundle.ksp" />
+    <None Include="AssetBundles\windtunnelassetbundle.ksp" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
