@@ -182,6 +182,7 @@ namespace KerbalWindTunnel
             UpdateHighlighting(this.highlightMode, this.body, this.altitude, this.speed, this.aoa);
         }*/
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
             WindTunnelSettings.InitializeSettings();
@@ -267,8 +268,7 @@ namespace KerbalWindTunnel
 
         public void OnButtonTrue()
         {
-            if (appButton != null)
-                appButton.SetTexture(icon_on);
+            appButton?.SetTexture(icon_on);
             if (blizzyToolbarButton != null)
                 blizzyToolbarButton.TexturePath = iconPath_blizzy;
 
@@ -282,8 +282,7 @@ namespace KerbalWindTunnel
             highlightMode = HighlightMode.Off;
             //// ClearPartHighlighting();
 
-            if (appButton != null)
-                appButton.SetTexture(icon);
+            appButton?.SetTexture(icon);
             if (blizzyToolbarButton != null)
                 blizzyToolbarButton.TexturePath = iconPath_blizzy_off;
 
@@ -292,6 +291,7 @@ namespace KerbalWindTunnel
             window.gameObject.SetActive(false);
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
         {
             if (window != null)
@@ -311,14 +311,13 @@ namespace KerbalWindTunnel
                 GameEvents.onGUIApplicationLauncherReady?.Remove(OnGuiApplicationLauncherReady);
             if (appButton != null)
                 ApplicationLauncher.Instance?.RemoveModApplication(appButton);
-            if (blizzyToolbarButton != null)
-                blizzyToolbarButton.Destroy();
+            blizzyToolbarButton?.Destroy();
 
             if (window != null)
                 Destroy(window.gameObject);
         }
 
-        public struct PartAeroData
+        public readonly struct PartAeroData
         {
             public readonly float drag;
             public readonly float lift;
