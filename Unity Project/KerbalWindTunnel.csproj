@@ -53,14 +53,14 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="Assets\Scripts\KerbalWindTunnel.cs" />
-    <Compile Include="Assets\Scripts\ToolbarWrapper.cs" />
-    <Compile Include="Assets\Scripts\WindTunnelAssetLoader.cs" />
-    <Compile Include="Assets\Scripts\WindTunnelSettingsDialogue.cs" />
-    <Compile Include="Assets\Scripts\WindTunnelWindow.cs" />
-    <Compile Include="Assets\Scripts\ObjectDump.cs" />
-    <Compile Include="Assets\Scripts\CanvasLayerSetter.cs" />
-    <None Include="Assets\Scripts\KerbalWindTunnel.asmdef" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ToolbarWrapper.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelAssetLoader.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelSettingsDialogue.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelWindow.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ObjectDump.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CanvasLayerSetter.cs" />
+    <None Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.asmdef" />
     <None Include="AssetBundles\windtunnelassetbundle.ksp" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
