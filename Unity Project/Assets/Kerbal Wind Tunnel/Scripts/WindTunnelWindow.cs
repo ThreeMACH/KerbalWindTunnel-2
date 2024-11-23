@@ -72,6 +72,8 @@ namespace KerbalWindTunnel
         private Graphing.GraphableCollection aoaCollection;
         private Graphing.GraphableCollection velocityCollection;
 
+        public static WindTunnelWindow Instance { get; private set; }
+
         public bool Minimized
         {
             get => rollUpToggle != null && rollUpToggle.isOn;
@@ -413,6 +415,54 @@ namespace KerbalWindTunnel
         }
 
         #region Reliant on KSP API
+        public static readonly float gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
+        public const float AoAdelta = 0.1f * Mathf.Deg2Rad;
+        private AeroPredictor vessel = null;
+        private CelestialBody body = Planetarium.fetch.CurrentMainBody;
+        private float _targetAltitude = 17700;
+        private string targetAltitudeStr = "17700";
+        public float TargetAltitude
+        {
+            get { return _targetAltitude; }
+            set
+            {
+                _targetAltitude = value;
+                targetAltitudeStr = value.ToString("F0");
+            }
+        }
+        private float _targetSpeed = 1410;
+        private string targetSpeedStr = "1410";
+        public float TargetSpeed
+        {
+            get { return _targetSpeed; }
+            set
+            {
+                _targetSpeed = value;
+                targetSpeedStr = value.ToString("F1");
+            }
+        }
+
+        public AeroPredictor CommonPredictor { get => this.vessel; }
+        public AeroPredictor GetAeroPredictor()
+        {
+            AeroPredictor vesselCache = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
+            if (WindTunnelSettings.Instance.useCharacterized)
+                vesselCache = new VesselCache.CharacterizedVessel((VesselCache.SimulatedVessel)vesselCache);
+            AeroPredictor.Conditions testConditions = new AeroPredictor.Conditions(this.body, 100, 0);
+            Debug.Log("Normal:");
+            Debug.Log("Lift: " + vesselCache.GetLiftForceMagnitude(testConditions, 1) + "    Drag: " + vesselCache.GetDragForceMagnitude(testConditions, 1));
+            Debug.Log("Characterized");
+            Debug.Log("Lift: " + vesselCache.GetLiftForceMagnitude(testConditions, 1) + "    Drag: " + vesselCache.GetDragForceMagnitude(testConditions, 1));
+            return vesselCache;
+        }
+        public static AeroPredictor GetUnitySafeAeroPredictor(AeroPredictor aeroPredictorToClone)
+        {
+            if (aeroPredictorToClone is VesselCache.CharacterizedVessel characterizedVessel)
+                return characterizedVessel;
+            else
+                return VesselCache.SimulatedVessel.BorrowClone((VesselCache.SimulatedVessel)aeroPredictorToClone);
+        }
+
         public void PlanetSelected(int item)
         {
         }
@@ -508,6 +558,13 @@ namespace KerbalWindTunnel
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
+            if (Instance == null)
+                Instance = this;
+            else
+            {
+                Destroy(gameObject);
+                return;
+            }
             envelopeGrapher.GraphClicked += EnvelopeGrapher_GraphClicked;
             aoaCurveGrapher.GraphClicked += AoaCurveGrapher_GraphClicked;
             velCurveGrapher.GraphClicked += VelCurveGrapher_GraphClicked;

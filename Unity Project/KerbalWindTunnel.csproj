@@ -48,13 +48,44 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Bcl.HashCode, Version=6.0.0.0, Culture=neutral, PublicKeyToken=cc7b13ffcd2ddd51, processorArchitecture=MSIL">
+      <HintPath>packages\Microsoft.Bcl.HashCode.6.0.0\lib\net462\Microsoft.Bcl.HashCode.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2019.4.38f1\Editor\Data\Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Accord.Net Framework\BrentSearch.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Accord.Net Framework\Constants.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Accord.Net Framework\ConvergenceException.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Accord.Net Framework\IOptimizationMethod.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\AeroPredictor.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\AoACurve.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\EnvelopeLine.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\EnvelopePoint.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\EnvelopeSurf.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\GraphGenerator.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\VelCurve.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\DelegateFactory.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\FloatCurve2.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\GUILayoutHelper.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\IListClone.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\KSPClassExtensions.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\Linq2.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\NetObjectDeepCopy.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ToolbarWrapper.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\CharacterizedVessel.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\IReleasable.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\PartCollection.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\RotorPartCollection.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\SimCurves.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\SimulatedControlSurface.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\SimulatedEngine.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\SimulatedLiftingSurface.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\SimulatedPart.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\SimulatedVessel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelAssetLoader.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelSettingsDialog.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelWindow.cs" />
@@ -62,6 +93,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CanvasLayerSetter.cs" />
     <None Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.asmdef" />
     <None Include="AssetBundles\windtunnelassetbundle.ksp" />
+    <None Include="packages.config" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
