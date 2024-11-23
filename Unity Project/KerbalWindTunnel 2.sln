@@ -1,0 +1,32 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "UI_Tools", "UI_Tools.csproj", "{9429CEB7-B1B8-892A-4867-0D82AA0EB801}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Graphing", "Graphing.csproj", "{81D997EA-6791-9CD0-CAE6-EE8DD2C1C9A5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "KerbalWindTunnel", "KerbalWindTunnel.csproj", "{AD0F161A-A1BB-B671-5CDA-8C7F8B850A44}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{9429CEB7-B1B8-892A-4867-0D82AA0EB801}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{9429CEB7-B1B8-892A-4867-0D82AA0EB801}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{9429CEB7-B1B8-892A-4867-0D82AA0EB801}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{9429CEB7-B1B8-892A-4867-0D82AA0EB801}.Release|Any CPU.Build.0 = Release|Any CPU
+		{81D997EA-6791-9CD0-CAE6-EE8DD2C1C9A5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{81D997EA-6791-9CD0-CAE6-EE8DD2C1C9A5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{81D997EA-6791-9CD0-CAE6-EE8DD2C1C9A5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{81D997EA-6791-9CD0-CAE6-EE8DD2C1C9A5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{AD0F161A-A1BB-B671-5CDA-8C7F8B850A44}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{AD0F161A-A1BB-B671-5CDA-8C7F8B850A44}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{AD0F161A-A1BB-B671-5CDA-8C7F8B850A44}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{AD0F161A-A1BB-B671-5CDA-8C7F8B850A44}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+EndGlobal

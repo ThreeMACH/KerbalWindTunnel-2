@@ -1,0 +1,13 @@
+Unity Project/.vs/
+Unity Project/Assets/TextMeshPro*.prefab*
+Unity Project/Assets/KSP Assembly/*.dll
+Unity Project/Assets/PartTools/
+Unity Project/Assets/Plugins/KSPAssets/*.dll
+Unity Project/Assets/SquadCore/
+Unity Project/Assets/TextMesh Pro/
+Unity Project/Assets/XML/squadcore_bundle.xml
+Unity Project/Assets/XML/squadcore_bundle.xml.meta
+Unity Project/Library/
+Unity Project/Logs/Packages-Update.log
+Unity Project/obj/
+Unity Project/Packages/

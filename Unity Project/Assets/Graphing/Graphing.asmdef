@@ -1,0 +1,15 @@
+{
+    "name": "Graphing",
+    "references": [
+        "GUID:fec81c6b11863c94298456f83426d2af"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [],
+    "autoReferenced": false,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

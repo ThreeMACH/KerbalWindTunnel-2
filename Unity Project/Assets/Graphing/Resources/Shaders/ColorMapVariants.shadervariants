@@ -1,0 +1,333 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!200 &20000000
+ShaderVariantCollection:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: ColorMapVariants
+  m_Shaders:
+  - first: {fileID: 4800000, guid: e1aea3725298a48918abd40b37d26169, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _DRAWOUTLINE
+          _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _DRAWOUTLINE
+          _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN _DRAWOUTLINE
+          _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA _DRAWOUTLINE
+          _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+          _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+  - first: {fileID: 4800000, guid: fae095c29815c4432a59cd37dd182691, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _OUTLINE_SOURCE
+        passType: 0
+  - first: {fileID: 4800000, guid: 1ef372a47f51a904da8c0e4f0040d46b, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+  - first: {fileID: 4800000, guid: 36ebb9060585b4d26ab02edce9ae1b50, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+  - first: {fileID: 4800000, guid: 7d541c56368f04f5da5f039ab5bd8fc0, type: 3}
+    second:
+      variants:
+      - keywords: _MODE_JET
+        passType: 0
+      - keywords: _MODE_JET_DARK
+        passType: 0
+      - keywords: _MODE_GRAYSCALE
+        passType: 0
+      - keywords: _MODE_CUSTOM
+        passType: 0
+      - keywords: _MAPSOURCE_EVEN _MODE_CUSTOM
+        passType: 0
+      - keywords: _MAPSOURCE_ALPHA _MODE_CUSTOM
+        passType: 0
+  - first: {fileID: 4800000, guid: 049649feb3d5645b6b439a5d2ac25d59, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWOUTLINE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWOUTLINE _OUTLINE_SOURCE
+        passType: 0
+  - first: {fileID: 4800000, guid: ec11a60f744034a2797b8c32f3719399, type: 3}
+    second:
+      variants:
+      - keywords: 
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM
+        passType: 0
+      - keywords: _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS
+        passType: 0
+      - keywords: _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_EVEN
+        passType: 0
+      - keywords: _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_JET_DARK _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_GRAYSCALE _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_EVEN _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0
+      - keywords: _DRAWGRADIENT _MAPSOURCE_ALPHA _MODE_CUSTOM _DRAWCONTOURS _CONTOURMAPSOURCE_ALPHA
+        passType: 0

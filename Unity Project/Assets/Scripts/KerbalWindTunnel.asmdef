@@ -1,0 +1,19 @@
+{
+    "name": "KerbalWindTunnel",
+    "references": [
+        "GUID:fec81c6b11863c94298456f83426d2af",
+        "GUID:47a42ead4f4ff6247ae057c47448b6be"
+    ],
+    "includePlatforms": [],
+    "excludePlatforms": [],
+    "allowUnsafeCode": false,
+    "overrideReferences": true,
+    "precompiledReferences": [
+        "Assembly-CSharp.dll",
+        "KSPAssets.dll"
+    ],
+    "autoReferenced": true,
+    "defineConstraints": [],
+    "versionDefines": [],
+    "noEngineReferences": false
+}

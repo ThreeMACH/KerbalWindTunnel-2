@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="graphingshaders" Name="graphingshaders" CreatedTime="-8584732845714906059" AutoLoad="true">
+  <Author />
+  <Info />
+  <Assets>
+    <Asset Name="ColorMap/ColorMap" Path="Assets/Graphing/Resources/Shaders/ColorMap.shader" Type="Shader" Url="Graphing/Resources/Shaders/ColorMap" AutoLoad="false" />
+    <Asset Name="ColorMap/ColorMapContours" Path="Assets/Graphing/Resources/Shaders/ColorMapContours.shader" Type="Shader" Url="Graphing/Resources/Shaders/ColorMapContours" AutoLoad="false" />
+    <Asset Name="ColorMap/ColorMapContoursOutline" Path="Assets/Graphing/Resources/Shaders/ColorMapContoursOutline.shader" Type="Shader" Url="Graphing/Resources/Shaders/ColorMapContoursOutline" AutoLoad="false" />
+    <Asset Name="ColorMap/ColorMapOutline" Path="Assets/Graphing/Resources/Shaders/ColorMapOutline.shader" Type="Shader" Url="Graphing/Resources/Shaders/ColorMapOutline" AutoLoad="false" />
+    <Asset Name="ColorMapVariants" Path="Assets/Graphing/Resources/Shaders/ColorMapVariants.shadervariants" Type="ShaderVariantCollection" Url="Graphing/Resources/Shaders/ColorMapVariants" AutoLoad="false" />
+    <Asset Name="ColorMap/ContourMap" Path="Assets/Graphing/Resources/Shaders/ContourMap.shader" Type="Shader" Url="Graphing/Resources/Shaders/ContourMap" AutoLoad="false" />
+    <Asset Name="ColorMap/OutlineMap" Path="Assets/Graphing/Resources/Shaders/OutlineMap.shader" Type="Shader" Url="Graphing/Resources/Shaders/OutlineMap" AutoLoad="false" />
+  </Assets>
+  <Dependencies>
+    <Dependency>windtunnelassetbundle</Dependency>
+  </Dependencies>
+</KSPBundleDefinition>

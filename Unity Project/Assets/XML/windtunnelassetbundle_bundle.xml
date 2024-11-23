@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584692186273983081" AutoLoad="false">
+  <Author />
+  <Info />
+  <Assets>
+    <Asset Name="_LineRendererPrefab" Path="Assets/Graphing/Prefabs/_LineRendererPrefab.prefab" Type="GameObject" Url="Graphing/Prefabs/_LineRendererPrefab" AutoLoad="false" />
+    <Asset Name="Axis" Path="Assets/Graphing/Prefabs/Axis.prefab" Type="GameObject" Url="Graphing/Prefabs/Axis" AutoLoad="false" />
+    <Asset Name="AxisBoundPanel" Path="Assets/Graphing/Prefabs/AxisBoundPanel.prefab" Type="GameObject" Url="Graphing/Prefabs/AxisBoundPanel" AutoLoad="false" />
+    <Asset Name="CrosshairController" Path="Assets/Graphing/Prefabs/CrosshairController.prefab" Type="GameObject" Url="Graphing/Prefabs/CrosshairController" AutoLoad="false" />
+    <Asset Name="GraphDrawer" Path="Assets/Graphing/Prefabs/GraphDrawer.prefab" Type="GameObject" Url="Graphing/Prefabs/GraphDrawer" AutoLoad="false" />
+    <Asset Name="Grapher" Path="Assets/Graphing/Prefabs/Grapher.prefab" Type="GameObject" Url="Graphing/Prefabs/Grapher" AutoLoad="false" />
+    <Asset Name="Tickmark" Path="Assets/Graphing/Prefabs/Tickmark.prefab" Type="GameObject" Url="Graphing/Prefabs/Tickmark" AutoLoad="false" />
+    <Asset Name="ColorMapDefaultMaterial" Path="Assets/Graphing/Resources/Materials/ColorMapDefaultMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/ColorMapDefaultMaterial" AutoLoad="false" />
+    <Asset Name="ColorMapMaterial" Path="Assets/Graphing/Resources/Materials/ColorMapMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/ColorMapMaterial" AutoLoad="false" />
+    <Asset Name="LineMaterial" Path="Assets/Graphing/Resources/Materials/LineMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/LineMaterial" AutoLoad="false" />
+    <Asset Name="OutlineMaterial" Path="Assets/Graphing/Resources/Materials/OutlineMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/OutlineMaterial" AutoLoad="false" />
+    <Asset Name="4Gradient" Path="Assets/Graphing/Resources/Textures/4Gradient.tif" Type="Texture2D" Url="Graphing/Resources/Textures/4Gradient" AutoLoad="false" />
+    <Asset Name="5Gradient" Path="Assets/Graphing/Resources/Textures/5Gradient.tif" Type="Texture2D" Url="Graphing/Resources/Textures/5Gradient" AutoLoad="false" />
+    <Asset Name="Jet" Path="Assets/Graphing/Resources/Textures/Jet.tif" Type="Texture2D" Url="Graphing/Resources/Textures/Jet" AutoLoad="false" />
+    <Asset Name="Jet_Dark" Path="Assets/Graphing/Resources/Textures/Jet_Dark.tif" Type="Texture2D" Url="Graphing/Resources/Textures/Jet_Dark" AutoLoad="false" />
+    <Asset Name="Wind Tunnel Window" Path="Assets/Prefabs/Wind Tunnel Window.prefab" Type="GameObject" Url="Prefabs/Wind Tunnel Window" AutoLoad="false" />
+  </Assets>
+  <Dependencies>
+    <Dependency>graphingshaders</Dependency>
+  </Dependencies>
+</KSPBundleDefinition>
