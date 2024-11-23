@@ -56,7 +56,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ToolbarWrapper.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelAssetLoader.cs" />
-    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelSettingsDialogue.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelSettingsDialog.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelWindow.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ObjectDump.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CanvasLayerSetter.cs" />

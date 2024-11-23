@@ -5,6 +5,18 @@ namespace KerbalWindTunnel
 {
     public class WindTunnelSettings
     {
+        public static bool UseCharacterized
+        {
+            get { return Instance.useCharacterized; }
+            set
+            {
+                Instance.useCharacterized = value;
+                settingsChanged = true;
+            }
+        }
+        [Persistent]
+        public bool useCharacterized = false;
+
         public static bool UseCoefficients
         {
             get { return Instance.useCoefficients; }
