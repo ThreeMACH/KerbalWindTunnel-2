@@ -1,6 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using UnityEngine;
 using KSP.UI.Screens;
 
@@ -51,7 +49,7 @@ namespace KerbalWindTunnel
 
         Gradient dragMap = new Gradient() { colorKeys = new GradientColorKey[] { new GradientColorKey(Color.red, 0), new GradientColorKey(Color.red, 1) }, alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(1, 1) } };
         Gradient liftMap = new Gradient() { colorKeys = new GradientColorKey[] { new GradientColorKey(Color.green, 0), new GradientColorKey(Color.green, 1) }, alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(0, 0), new GradientAlphaKey(1, 1) } };
-        Gradient drag_liftMap = new Gradient() { colorKeys = new GradientColorKey[] { new GradientColorKey(new Color(1, 0, 0), 0), new GradientColorKey(new Color(1, 0, 0), 0.5f), new GradientColorKey(new Color(0, 1, 0), 1) }, alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(0, 0.5f), new GradientAlphaKey(1, 1) } };
+        Gradient drag_liftMap = new Gradient() { colorKeys = new GradientColorKey[] { new GradientColorKey(Color.red, 0), new GradientColorKey(Color.white, 0.5f), new GradientColorKey(Color.green, 1) }, alphaKeys = new GradientAlphaKey[] { new GradientAlphaKey(1, 0), new GradientAlphaKey(0, 0.5f), new GradientAlphaKey(1, 1) } };
 
         /*
         public void UpdateHighlighting(HighlightMode highlightMode, CelestialBody body, float altitude, float speed, float aoa)
