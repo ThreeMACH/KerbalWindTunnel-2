@@ -8,8 +8,6 @@ namespace KerbalWindTunnel.VesselCache
 {
     public class CharacterizedVessel : AeroPredictor, ILiftAoADerivativePredictor
     {
-        public override bool ThreadSafe => true;
-        
         public readonly SimulatedVessel vessel;
 
         public override float Mass => vessel.Mass;
