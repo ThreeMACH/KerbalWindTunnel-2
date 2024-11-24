@@ -76,7 +76,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\NetObjectDeepCopy.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ToolbarWrapper.cs" />
-    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\CharacterizedVessel.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedVessel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\IReleasable.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\PartCollection.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\RotorPartCollection.cs" />
