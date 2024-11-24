@@ -142,7 +142,8 @@ namespace KerbalWindTunnel.DataGenerators
             try
             {
                 Parallel.For(0, preliminaryData.Length, new ParallelOptions() { CancellationToken = new CancellationTokenSource(5000).Token },
-                    () => WindTunnelWindow.GetUnitySafeAeroPredictor(aeroPredictorToClone), (index, state, predictor) =>
+                    aeroPredictorToClone.GetThreadSafeObject,
+                    (index, state, predictor) =>
                          {
                              int x = index % (resolution[0, 0] + 1), y = index / (resolution[0, 0] + 1);
                              EnvelopePoint result = new EnvelopePoint(predictor, newConditions.body, y * firstStepAltitude + newConditions.lowerBoundAltitude, x * firstStepSpeed + newConditions.lowerBoundSpeed);
@@ -264,7 +265,7 @@ namespace KerbalWindTunnel.DataGenerators
                     {
                         //OrderablePartitioner<EnvelopePoint> partitioner = Partitioner.Create(primaryProgress, true);
                         Parallel.For<AeroPredictor>(0, closureProgress.Length, new ParallelOptions() { CancellationToken = closureCancellationToken },
-                            () => WindTunnelWindow.GetUnitySafeAeroPredictor(aeroPredictorToClone),
+                            aeroPredictorToClone.GetThreadSafeObject,
                             (index, state, predictor) =>
                         {
                             int x = index % conditions.XResolution, y = index / conditions.XResolution;

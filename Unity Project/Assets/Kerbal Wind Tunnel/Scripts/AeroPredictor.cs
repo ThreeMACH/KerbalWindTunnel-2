@@ -6,6 +6,7 @@ namespace KerbalWindTunnel
     public abstract class AeroPredictor
     {
         public virtual bool ThreadSafe => false;
+        public virtual AeroPredictor GetThreadSafeObject() => ThreadSafe ? this : throw new NotImplementedException();
 
         public abstract float Mass { get; }
         public abstract bool ThrustIsConstantWithAoA { get; }

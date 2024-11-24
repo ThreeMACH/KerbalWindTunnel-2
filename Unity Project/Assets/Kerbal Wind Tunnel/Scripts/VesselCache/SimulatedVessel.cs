@@ -40,7 +40,7 @@ namespace KerbalWindTunnel.VesselCache
         public FloatCurve maxAoA = null;
         public static List<float> AoAMachs = null;
 
-        public override bool ThreadSafe => true;
+        public override AeroPredictor GetThreadSafeObject() => BorrowClone(this);
 
         public override float Mass { get => totalMass; }
 

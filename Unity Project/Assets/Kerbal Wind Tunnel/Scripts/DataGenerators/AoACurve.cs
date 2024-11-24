@@ -148,7 +148,7 @@ namespace KerbalWindTunnel.DataGenerators
                     {
                         //OrderablePartitioner<EnvelopePoint> partitioner = Partitioner.Create(primaryProgress, true);
                         Parallel.For<AeroPredictor>(0, primaryProgress.Length, new ParallelOptions() { CancellationToken = closureCancellationToken },
-                            () => WindTunnelWindow.GetUnitySafeAeroPredictor(aeroPredictorToClone),
+                            aeroPredictorToClone.GetThreadSafeObject,
                             (index, state, predictor) =>
                         {
                             primaryProgress[index] = new AoAPoint(predictor, conditions.body, conditions.altitude, conditions.speed, conditions.lowerBound + trueStep * index);

@@ -455,13 +455,6 @@ namespace KerbalWindTunnel
             Debug.Log("Lift: " + vesselCache.GetLiftForceMagnitude(testConditions, 1) + "    Drag: " + vesselCache.GetDragForceMagnitude(testConditions, 1));
             return vesselCache;
         }
-        public static AeroPredictor GetUnitySafeAeroPredictor(AeroPredictor aeroPredictorToClone)
-        {
-            if (aeroPredictorToClone is VesselCache.CharacterizedVessel characterizedVessel)
-                return characterizedVessel;
-            else
-                return VesselCache.SimulatedVessel.BorrowClone((VesselCache.SimulatedVessel)aeroPredictorToClone);
-        }
 
         public void PlanetSelected(int item)
         {
