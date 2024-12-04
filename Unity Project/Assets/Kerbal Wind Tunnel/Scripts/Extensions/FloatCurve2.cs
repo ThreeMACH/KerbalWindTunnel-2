@@ -675,10 +675,10 @@ namespace KerbalWindTunnel
 
         public readonly struct DiffSettings
         {
-            public readonly float dx = 1E-6f;
-            public readonly float dy = 1E-6f;
-            public readonly float dx_continuous = 1E-6f;
-            public readonly float dy_continuous = 1E-6f;
+            public readonly float dx;
+            public readonly float dy;
+            public readonly float dx_continuous;
+            public readonly float dy_continuous;
             public DiffSettings(float dx = 1E-6f, float dy = 1E-6f)
             {
                 this.dx = dx;

@@ -10,7 +10,11 @@
     "overrideReferences": true,
     "precompiledReferences": [
         "Assembly-CSharp.dll",
-        "KSPAssets.dll"
+        "KSPAssets.dll",
+        "Microsoft.Bcl.HashCode.dll",
+        "System.Memory.dll",
+        "System.Runtime.CompilerServices.Unsafe.dll",
+        "System.Buffers.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

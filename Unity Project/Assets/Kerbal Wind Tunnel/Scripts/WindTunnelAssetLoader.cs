@@ -35,6 +35,7 @@ namespace KerbalWindTunnel.AssetLoader
             processedPrefabs = true;
         }
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
         {
             string path = KSPUtil.ApplicationRootPath + assetBundlePath;

@@ -272,8 +272,7 @@ namespace KerbalWindTunnel.DataGenerators
                             SurfCoords coords = new SurfCoords(x * conditions.stepSpeed + conditions.lowerBoundSpeed,
                                 y * conditions.stepAltitude + conditions.lowerBoundAltitude);
 
-                            EnvelopePoint result;
-                            if (!cache.TryGetValue(coords, out result))
+                            if (!cache.TryGetValue(coords, out EnvelopePoint result))
                             {
                                 closureCancellationToken.ThrowIfCancellationRequested();
                                 result = new EnvelopePoint(predictor, conditions.body, y * conditions.stepAltitude + conditions.lowerBoundAltitude, x * conditions.stepSpeed + conditions.lowerBoundSpeed);

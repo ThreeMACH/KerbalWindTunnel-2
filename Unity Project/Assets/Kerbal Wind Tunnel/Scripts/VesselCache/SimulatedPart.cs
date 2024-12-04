@@ -151,11 +151,10 @@ namespace KerbalWindTunnel.VesselCache
 
             ModuleWheels.ModuleWheelDeployment wheelDeployment = part.FindModuleImplementing<ModuleWheels.ModuleWheelDeployment>();
             bool forcedRetract = !shieldedFromAirstream && wheelDeployment != null && wheelDeployment.Position > 0;
-            float gearPosition = 0;
 
             if(forcedRetract)
             {
-                gearPosition = wheelDeployment.Position;
+                float gearPosition = wheelDeployment.Position;
                 lock (wheelDeployment)
                 {
                     lock (part.DragCubes)

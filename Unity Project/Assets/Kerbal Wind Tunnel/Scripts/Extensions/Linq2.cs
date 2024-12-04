@@ -195,7 +195,7 @@ namespace KerbalWindTunnel.Extensions
                     float stepX = 1f / lengthX;
                     xI1 = (int)Math.Floor(x / stepX);
                     fX = x / stepX % 1;
-                    xI2 = xI1 + 1;
+                    //xI2 = xI1 + 1;
                     if (fX == 0)
                         xI2 = xI1;
                     else

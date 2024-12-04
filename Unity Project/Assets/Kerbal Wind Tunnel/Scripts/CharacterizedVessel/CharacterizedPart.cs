@@ -114,7 +114,7 @@ namespace KerbalWindTunnel.VesselCache
         }
         private static IEnumerable<(float, bool)> AxesToWorldKeys(Vector3 v)
         {
-            static IEnumerable<float> ZeroOne()
+            IEnumerable<float> ZeroOne()
             {
                 yield return 0;
                 yield return 1;
@@ -138,7 +138,7 @@ namespace KerbalWindTunnel.VesselCache
 
             return machs.GroupBy(KeyframeTime).Select(SelectFunc);
 
-            static (float, bool) SelectFunc(IGrouping<float, Keyframe> group)
+            (float, bool) SelectFunc(IGrouping<float, Keyframe> group)
             {
                 foreach (var k in group)
                 {
@@ -147,7 +147,7 @@ namespace KerbalWindTunnel.VesselCache
                 }
                 return (group.Key, true);
             }
-            static float KeyframeTime(Keyframe keyframe) => keyframe.time;
+            float KeyframeTime(Keyframe keyframe) => keyframe.time;
         }
 
         public void Dispose()
