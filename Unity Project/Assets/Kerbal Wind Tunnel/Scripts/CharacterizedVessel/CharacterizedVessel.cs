@@ -35,13 +35,6 @@ namespace KerbalWindTunnel.VesselCache
             int result = x.Item1.CompareTo(y.Item1);
             return result != 0 ? result : y.Item2.CompareTo(x.Item2);   // Order of x and y reversed here so that a True value comes before a False value
         });
-        /*private static readonly IComparer<(float, bool)> FloatTupleApproxComparer = Comparer<(float, bool)>.Create((x, y) =>
-        {
-            int result = FloatApproxComparer.Compare(x.Item1, y.Item1);
-            return result != 0 ? result : y.Item2.CompareTo(x.Item2);   // Order of x and y reversed here so that a True value comes before a False value
-        });
-        private static readonly IComparer<float> FloatApproxComparer = Comparer<float>.Create((x, y) =>
-            Math.Abs(x - y) < toleranceF ? 0 : x.CompareTo(y));*/
 
         public CharacterizedVessel(SimulatedVessel vessel)
         {
@@ -74,35 +67,36 @@ namespace KerbalWindTunnel.VesselCache
              *  - Make a FloatCurve2 of part drag coefficient for those AoAs and -180:15:180, and Machs.
              *  
              *      D = f(M, AoA) * f(q)
+             */
+
+            /*  Roadmap:
              *  
-             *  Methods Needed:
-             *  - IEqualityComparer<FloatCurve> to use in GroupBy() (or other) to group by LiftMach or DragMach.
-             *      - Extensions.KSPClassExtensions.FloatCurveComparer
-             *  - Take a part and return its primary axes.
-             *      - GetPartAxes(Part) return Vector3[3] of [Forward, Right, Up]
-             *  - Take a normvector and a Lift or Drag curve and return the key vessel AoAs.
-             *      - GetWorldKeys(Vector3, FloatCurve)
-             *  - Make a FloatCurve from a list of keys (and optionally whether the derivative is continuous
-             *    at that key), a function, and a list of objects.
-             *      - MakeFloatCurve((float, bool), Func<float, float>)
-             *  - Make a FloatCurve2 from two lists of keys (and optionally whether the derivative is continuous
-             *    at that key), a function, and a list of objects.
-             *      - MakeFloatCurve2((float, bool), (float, bool), Func<float, float, float>)
-             *  - Collect all the relevant Mach number keys from part and lifting surface drag curves.
-            */
+             *  Control surfaces can incorporate deflection through a FloatCurve2
+             *      L = f(M) * f(AoA, defL) * f(q)
+             *      D = f(M) * f(AoA, defL) * f(q)
+             * 
+             *  Rotor Part Collections cannot be characterized as the velocity and AoA of each part
+             *  is a function of the vessel's velocity and the part's local velocity.
+             *  They will be treated as non-rotating.
+             *
+             */
 
-            /*List<SimulatedLiftingSurface> surfaces = vessel.partCollection.surfaces.Union(vessel.partCollection.ctrls).ToList();
-            ILookup<FloatCurve, SimulatedLiftingSurface> liftingSurfs = surfaces.Where(surf => surf.liftCurve.Curve.keys.Length > 1 || surf.liftCurve.Curve.keys[0].value != 0)
-                .ToLookup(surf => surf.liftMachCurve, FloatCurveComparer.Instance);
-            ILookup<FloatCurve, SimulatedPart> liftingParts = vessel.partCollection.parts.Where(part => !part.NoBodyLift)
-                .ToLookup(part => part.cubes.BodyLiftCurve.liftMachCurve, FloatCurveComparer.Instance);
-            ILookup<FloatCurve, SimulatedLiftingSurface> dragSurfaces = surfaces.Where(surf => surf.dragCurve.Curve.keys.Length > 1 || surf.dragCurve.Curve.keys[0].value != 0)
-                .ToLookup(surf => surf.dragMachCurve, FloatCurveComparer.Instance);
-            List<SimulatedPart> dragParts = vessel.partCollection.parts.Where(p => !(p.noDrag || p.shieldedFromAirstream)).ToList();
-            */
 
-            parts.AddRange(vessel.partCollection.parts.Select(p => new CharacterizedPart(p)));
-            surfaces.AddRange(vessel.partCollection.surfaces.Select(s => new CharacterizedLiftingSurface(s)));
+            AddCharacterizedComponents(vessel.partCollection);
+
+            void AddCharacterizedComponents(PartCollection collection)
+            {
+                parts.AddRange(collection.parts.Select(p => new CharacterizedPart(p)));
+                surfaces.AddRange(collection.surfaces.Select(s => new CharacterizedLiftingSurface(s)));
+                // Todo: Treat controls as their own category.
+                surfaces.AddRange(collection.ctrls.Select(c => new CharacterizedLiftingSurface(c)));
+                foreach (PartCollection child in collection.partCollections)
+                {
+                    if (child is RotorPartCollection rotorCollection && rotorCollection.isRotating)
+                        Debug.LogWarning($"[Kerbal Wind Tunnel] Tried characterizing a rotating part collection ({collection.parts[0].name}). Parts will be treated as non-rotating.");
+                    AddCharacterizedComponents(child);
+                }
+            }
 
             Characterize();
         }

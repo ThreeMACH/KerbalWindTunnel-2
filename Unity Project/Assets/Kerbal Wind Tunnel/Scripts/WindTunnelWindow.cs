@@ -5,8 +5,6 @@ using UnityEngine;
 using UnityEngine.UI;
 using UI_Tools.Universal_Text;
 using Graphing;
-using KerbalWindTunnel.Extensions;
-using KerbalWindTunnel.VesselCache;
 
 namespace KerbalWindTunnel
 {
@@ -453,13 +451,16 @@ namespace KerbalWindTunnel
         public AeroPredictor CreateAeroPredictor()
         {
             AeroPredictor vesselCache = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
-            if (WindTunnelSettings.Instance.useCharacterized)
-                vesselCache = new VesselCache.CharacterizedVessel((VesselCache.SimulatedVessel)vesselCache);
-            AeroPredictor.Conditions testConditions = new AeroPredictor.Conditions(this.body, 100, 0);
-            Debug.Log("Normal:");
-            Debug.Log("Lift: " + vesselCache.GetLiftForceMagnitude(testConditions, 1) + "    Drag: " + vesselCache.GetDragForceMagnitude(testConditions, 1));
-            Debug.Log("Characterized");
-            Debug.Log("Lift: " + vesselCache.GetLiftForceMagnitude(testConditions, 1) + "    Drag: " + vesselCache.GetDragForceMagnitude(testConditions, 1));
+            if (WindTunnelSettings.Instance.useCharacterized && vesselCache is VesselCache.SimulatedVessel simVessel)
+            {
+                if (simVessel.ContainsRotating)
+                {
+                    ScreenMessages.PostScreenMessage("Cannot use characterization methods as the vessel contains rotating parts.", 5, ScreenMessageStyle.UPPER_CENTER);
+                    Debug.Log("[Kerbal Wind Tunnel] Tried to use characterization, but couldn't as the vessel contains rotating parts.");
+                }
+                else
+                    vesselCache = new VesselCache.CharacterizedVessel(simVessel);
+            }
             return vesselCache;
         }
 

@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using KerbalWindTunnel.Extensions;
 using Smooth.Pools;
 using UnityEngine;
@@ -47,6 +48,15 @@ namespace KerbalWindTunnel.VesselCache
         public override bool ThrustIsConstantWithAoA => partCollection.partCollections.Count == 0;
 
         public override float Area => relativeWingArea;
+
+        public bool ContainsRotating => ContainsRotatingRecursive(partCollection);
+
+        private static bool ContainsRotatingRecursive(PartCollection partCollection)
+        {
+            if (partCollection is RotorPartCollection rotorPartCollection && rotorPartCollection.isRotating)
+                return true;
+            return partCollection.partCollections.Any(ContainsRotatingRecursive);
+        }
 
         public Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
