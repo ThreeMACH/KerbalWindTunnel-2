@@ -29,6 +29,7 @@ namespace KerbalWindTunnel.VesselCache
             return aeroForce;
         }
 
+        // Excludes control surfaces that may be deflected.
         public virtual Vector3 GetAeroForceStatic(Vector3 inflow, AeroPredictor.Conditions conditions, out Vector3 torque, Vector3 torquePoint)
         {
             Vector3 aeroForce = Vector3.zero;
@@ -76,6 +77,7 @@ namespace KerbalWindTunnel.VesselCache
             return aeroForce;
         }
 
+        // Includes only control surfaces that may be deflected.
         public virtual Vector3 GetAeroForceDynamic(Vector3 inflow, AeroPredictor.Conditions conditions, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
             Vector3 aeroForce = Vector3.zero;

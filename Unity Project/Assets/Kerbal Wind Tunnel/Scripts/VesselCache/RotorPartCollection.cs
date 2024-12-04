@@ -13,6 +13,10 @@ namespace KerbalWindTunnel.VesselCache
         private bool enginesUseVelCurve;
         private bool enginesUseVelCurveISP;
 
+        // Apparently local Mach means nothing, and everything just uses the vessel frame Mach.
+        // Similarly for local PseudoReDragMult...
+
+        // Excludes control surfaces that may be deflected.
         public override Vector3 GetAeroForceStatic(Vector3 inflow, AeroPredictor.Conditions conditions, out Vector3 torque, Vector3 torquePoint)
         {
             if (!isRotating)
@@ -20,7 +24,7 @@ namespace KerbalWindTunnel.VesselCache
 
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
-            int rotationCount = isRotating ? WindTunnelSettings.Instance.rotationCount : 1;
+            int rotationCount = WindTunnelSettings.Instance.rotationCount;
 
             float Q = 0.0005f * conditions.atmDensity;
 
@@ -28,15 +32,9 @@ namespace KerbalWindTunnel.VesselCache
             // only need to evaluate this part once.
             if (!parts[0].shieldedFromAirstream && inflow.sqrMagnitude > 0)
             {
-                float localMach = inflow.magnitude;
-                float localVelFactor = localMach * localMach;
-                float localPRDM;
+                float localVelFactor = inflow.sqrMagnitude;
 
-                lock (parentVessel.DragCurvePseudoReynolds)
-                    localPRDM = parentVessel.DragCurvePseudoReynolds.Evaluate(conditions.atmDensity * localMach);
-
-                localMach /= conditions.speedOfSound;
-                aeroForce += parts[0].GetAero(inflow.normalized, localMach, localPRDM, out Vector3 pTorque, origin) * localVelFactor * Q;
+                aeroForce += parts[0].GetAero(inflow.normalized, conditions.mach, conditions.pseudoReDragMult, out Vector3 pTorque, origin) * localVelFactor * Q;
                 torque += pTorque * localVelFactor * Q;
             }
 
@@ -57,15 +55,9 @@ namespace KerbalWindTunnel.VesselCache
                         continue;
 
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    float localPRDM;
-                    
-                    lock (parentVessel.DragCurvePseudoReynolds)
-                        localPRDM = parentVessel.DragCurvePseudoReynolds.Evaluate(conditions.atmDensity * localMach);
+                    float localVelFactor = partMotion.sqrMagnitude;
 
-                    localMach /= conditions.speedOfSound;
-                    rAeroForce += parts[i].GetAero(partInflow, localMach, localPRDM, out Vector3 pTorque, origin) * localVelFactor;
+                    rAeroForce += parts[i].GetAero(partInflow, conditions.mach, conditions.pseudoReDragMult, out Vector3 pTorque, origin) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }
                 for (int i = surfaces.Count - 1; i >= 0; i--)
@@ -77,10 +69,8 @@ namespace KerbalWindTunnel.VesselCache
                         continue;
                         
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    localMach /= conditions.speedOfSound;
-                    rAeroForce += surfaces[i].GetDrag(partInflow, localMach, out Vector3 pTorque, origin) * localVelFactor;
+                    float localVelFactor = partMotion.sqrMagnitude;
+                    rAeroForce += surfaces[i].GetDrag(partInflow, conditions.mach, out Vector3 pTorque, origin) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }
                 for (int i = ctrls.Count - 1; i >= 0; i--)
@@ -94,17 +84,14 @@ namespace KerbalWindTunnel.VesselCache
                         continue;
                         
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    float localPRDM;
-                    lock (parentVessel.DragCurvePseudoReynolds)
-                        localPRDM = parentVessel.DragCurvePseudoReynolds.Evaluate(conditions.atmDensity * localMach);
-                    localMach /= conditions.speedOfSound;
+                    float localVelFactor = partMotion.sqrMagnitude;
                     Vector3 pTorque;
-                    if (ctrls[i].ignoresAllControls && ctrls[i].ignorePitch)
-                        rAeroForce += ctrls[i].GetDrag(partInflow, localMach, localPRDM, out pTorque, origin) * localVelFactor;
+                    if (ctrls[i].ignoresAllControls)
+                        rAeroForce += ctrls[i].GetForce(partInflow, conditions.mach, out pTorque, origin) * localVelFactor;
+                        // This call chain gets the total force, but does it through a chain that enforces zero deflection.
+                        // ctrls[i].GetDrag(partInflow, conditions.mach, conditions.pseudoReDragMult, out pTorque, origin) * localVelFactor;
                     else
-                        rAeroForce += ctrls[i].GetForce(partInflow, localMach, localPRDM, out pTorque, origin) * localVelFactor;
+                        rAeroForce += ctrls[i].GetForce(partInflow, conditions.mach, conditions.pseudoReDragMult, out pTorque, origin) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }
 
@@ -138,6 +125,7 @@ namespace KerbalWindTunnel.VesselCache
             return aeroForce;
         }
 
+        // Includes only control surfaces that may be deflected.
         public override Vector3 GetAeroForceDynamic(Vector3 inflow, AeroPredictor.Conditions conditions, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
             if (!isRotating)
@@ -145,7 +133,7 @@ namespace KerbalWindTunnel.VesselCache
 
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
-            int rotationCount = isRotating ? WindTunnelSettings.Instance.rotationCount : 1;
+            int rotationCount = WindTunnelSettings.Instance.rotationCount;
             float Q = 0.0005f * conditions.atmDensity;
 
             for (int r = 0; r < rotationCount; r++)
@@ -166,13 +154,8 @@ namespace KerbalWindTunnel.VesselCache
                     if (partMotion.sqrMagnitude <= 0)
                         continue;
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    float localPRDM;
-                    lock (parentVessel.DragCurvePseudoReynolds)
-                        localPRDM = parentVessel.DragCurvePseudoReynolds.Evaluate(conditions.atmDensity * localMach);
-                    localMach /= conditions.speedOfSound;
-                    rAeroForce += ctrls[i].GetForce(partInflow, localMach, pitchInput, localPRDM, out Vector3 pTorque, origin) * localVelFactor;
+                    float localVelFactor = partMotion.sqrMagnitude;
+                    rAeroForce += ctrls[i].GetForce(partInflow, conditions.mach, pitchInput, conditions.pseudoReDragMult, out Vector3 pTorque, origin) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }
 
@@ -221,13 +204,8 @@ namespace KerbalWindTunnel.VesselCache
             // only need to evaluate this part once.
             if (!parts[0].shieldedFromAirstream && inflow.sqrMagnitude > 0)
             {
-                float localMach = inflow.magnitude;
-                float localVelFactor = localMach * localMach;
-                float localPRDM;
-                lock (parentVessel.DragCurvePseudoReynolds)
-                    localPRDM = parentVessel.DragCurvePseudoReynolds.Evaluate(conditions.atmDensity * localMach);
-                localMach /= conditions.speedOfSound;
-                aeroForce += parts[0].GetAero(inflow.normalized, localMach, localPRDM, out Vector3 pTorque, origin) * localVelFactor * Q;
+                float localVelFactor = inflow.sqrMagnitude;
+                aeroForce += parts[0].GetAero(inflow.normalized, conditions.mach, conditions.pseudoReDragMult, out Vector3 pTorque, origin) * localVelFactor * Q;
                 torque += pTorque * localVelFactor * Q;
             }
 
@@ -247,10 +225,8 @@ namespace KerbalWindTunnel.VesselCache
                     if (partMotion.sqrMagnitude <= 0)
                         continue;
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    localMach /= conditions.speedOfSound;
-                    rAeroForce += parts[i].GetLift(partInflow, localMach, out Vector3 pTorque, torquePoint) * localVelFactor;
+                    float localVelFactor = partMotion.sqrMagnitude;
+                    rAeroForce += parts[i].GetLift(partInflow, conditions.mach, out Vector3 pTorque, torquePoint) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }
                 /*for (int i = surfaces.Count - 1; i >= 0; i--)
@@ -261,10 +237,8 @@ namespace KerbalWindTunnel.VesselCache
                     if (partMotion.sqrMagnitude <= 0)
                         continue;
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    localMach /= conditions.speedOfSound;
-                    rAeroForce += surfaces[i].GetLift(partInflow, localMach, out Vector3 pTorque, torquePoint) * localVelFactor;
+                    float localVelFactor = partMotion.sqrMagnitude;
+                    rAeroForce += surfaces[i].GetLift(partInflow, conditions.mach, out Vector3 pTorque, torquePoint) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }*/
                 
@@ -278,10 +252,8 @@ namespace KerbalWindTunnel.VesselCache
                     if (partMotion.sqrMagnitude <= 0)
                         continue;
                     Vector3 partInflow = partMotion.normalized;
-                    float localMach = partMotion.magnitude;
-                    float localVelFactor = localMach * localMach;
-                    localMach /= conditions.speedOfSound;
-                    rAeroForce += ctrls[i].GetLift(partInflow, localMach, pitchInput, out Vector3 pTorque, torquePoint) * localVelFactor;
+                    float localVelFactor = partMotion.sqrMagnitude;
+                    rAeroForce += ctrls[i].GetLift(partInflow, conditions.mach, pitchInput, out Vector3 pTorque, torquePoint) * localVelFactor;
                     rTorque += pTorque * localVelFactor;
                 }
 
@@ -340,10 +312,7 @@ namespace KerbalWindTunnel.VesselCache
                     // Calculate forces
                     for (int i = engines.Count - 1; i >= 0; i--)
                     {
-                        Vector3 partMotion = Vector3.Cross(axis, (engines[i].thrustPoint - origin)) * angularVelocity + rotatedInflow;
-                        float localMach = partMotion.magnitude / conditions.speedOfSound;
-
-                        Vector3 eThrust = engines[i].GetThrust(localMach, conditions.atmDensity, conditions.atmPressure, conditions.oxygenAvailable);
+                        Vector3 eThrust = engines[i].GetThrust(conditions.mach, conditions.atmDensity, conditions.atmPressure, conditions.oxygenAvailable);
                         rThrust += eThrust;
                         rTorque += Vector3.Cross(eThrust, engines[i].thrustPoint - origin);
                     }
@@ -398,10 +367,8 @@ namespace KerbalWindTunnel.VesselCache
                         if (partMotion.sqrMagnitude <= 0)
                             continue;
                         Vector3 partInflow = partMotion.normalized;
-                        float localMach = partMotion.magnitude;
-                        float localVelFactor = localMach * localMach;
-                        localMach /= conditions.speedOfSound;
-                        rAeroForce += surfaces[i].GetLift(partInflow, localMach, out Vector3 pTorque, origin) * localVelFactor;
+                        float localVelFactor = partMotion.sqrMagnitude;
+                        rAeroForce += surfaces[i].GetLift(partInflow, conditions.mach, out Vector3 pTorque, origin) * localVelFactor;
                         rTorque += pTorque * localVelFactor;
                     }
                     for (int i = ctrls.Count - 1; i >= 0; i--)
@@ -414,10 +381,8 @@ namespace KerbalWindTunnel.VesselCache
                         if (partMotion.sqrMagnitude <= 0)
                             continue;
                         Vector3 partInflow = partMotion.normalized;
-                        float localMach = partMotion.magnitude;
-                        float localVelFactor = localMach * localMach;
-                        localMach /= conditions.speedOfSound;
-                        rAeroForce += ctrls[i].GetLift(partInflow, localMach, out Vector3 pTorque, origin) * localVelFactor;
+                        float localVelFactor = partMotion.sqrMagnitude;
+                        rAeroForce += ctrls[i].GetLift(partInflow, conditions.mach, out Vector3 pTorque, origin) * localVelFactor;
                         rTorque += pTorque * localVelFactor;
                     }
 
@@ -468,10 +433,7 @@ namespace KerbalWindTunnel.VesselCache
                     for (int i = engines.Count - 1; i >= 0; i--)
                     {
                         //Vector3 partMotion = Vector3.Cross(axis, (engines[i].thrustPoint - origin)) * angularVelocity + rotatedInflow;
-                        // Apparently local Mach means nothing, and everything just uses the vessel frame Mach.
-                        float localMach = conditions.mach;  //partMotion.magnitude / conditions.speedOfSound;
-
-                        burnRate += engines[i].GetFuelBurnRate(localMach, conditions.atmDensity);
+                        burnRate += engines[i].GetFuelBurnRate(conditions.mach, conditions.atmDensity);
                     }
 
                     for (int i = partCollections.Count - 1; i >= 0; i--)
