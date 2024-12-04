@@ -450,7 +450,7 @@ namespace KerbalWindTunnel
         }
 
         public AeroPredictor CommonPredictor { get => this.vessel; }
-        public AeroPredictor GetAeroPredictor()
+        public AeroPredictor CreateAeroPredictor()
         {
             AeroPredictor vesselCache = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
             if (WindTunnelSettings.Instance.useCharacterized)

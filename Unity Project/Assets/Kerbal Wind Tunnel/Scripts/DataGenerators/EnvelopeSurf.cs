@@ -133,7 +133,7 @@ namespace KerbalWindTunnel.DataGenerators
             float firstStepSpeed = (newConditions.upperBoundSpeed - newConditions.lowerBoundSpeed) / resolution[0, 0];
             float firstStepAltitude = (newConditions.upperBoundAltitude - newConditions.lowerBoundAltitude) / resolution[0, 1];
             EnvelopePoint[] preliminaryData = new EnvelopePoint[(resolution[0, 0] + 1) * (resolution[0, 1] + 1)];
-            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.GetAeroPredictor();
+            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.CreateAeroPredictor();
             if (aeroPredictorToClone is VesselCache.SimulatedVessel simVessel)
                 simVessel.InitMaxAoA(newConditions.body, (newConditions.upperBoundAltitude - newConditions.lowerBoundAltitude) * 0.25f + newConditions.lowerBoundAltitude);
 
@@ -248,7 +248,7 @@ namespace KerbalWindTunnel.DataGenerators
             stopwatch.Reset();
             stopwatch.Start();
 
-            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.GetAeroPredictor();
+            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.CreateAeroPredictor();
             if (aeroPredictorToClone is VesselCache.SimulatedVessel simVessel)
                 simVessel.InitMaxAoA(conditions.body, (conditions.upperBoundAltitude - conditions.lowerBoundAltitude) * 0.25f + conditions.lowerBoundAltitude);
 

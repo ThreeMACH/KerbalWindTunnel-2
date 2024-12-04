@@ -111,7 +111,7 @@ namespace KerbalWindTunnel.DataGenerators
             float trueStep = (conditions.upperBound - conditions.lowerBound) / numPts;
 
             CancellationToken closureCancellationToken = this.cancellationTokenSource.Token;
-            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.GetAeroPredictor();
+            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.CreateAeroPredictor();
 
             stopwatch.Reset();
             stopwatch.Start();
