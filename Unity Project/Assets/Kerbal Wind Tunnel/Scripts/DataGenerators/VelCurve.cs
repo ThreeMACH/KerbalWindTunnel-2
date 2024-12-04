@@ -13,7 +13,7 @@ namespace KerbalWindTunnel.DataGenerators
     {
         public VelPoint[] VelPoints = new VelPoint[0];
         public Conditions currentConditions = Conditions.Blank;
-        private Dictionary<Conditions, VelPoint[]> cache = new Dictionary<Conditions, VelPoint[]>();
+        private readonly Dictionary<Conditions, VelPoint[]> cache = new Dictionary<Conditions, VelPoint[]>();
         private VelPoint[] primaryProgress = null;
 
         public VelCurve()
@@ -185,7 +185,7 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public struct VelPoint
+        public readonly struct VelPoint
         {
             public readonly float AoA_level;
             public readonly float AoA_max;
@@ -241,7 +241,7 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public struct Conditions : IEquatable<Conditions>
+        public readonly struct Conditions : IEquatable<Conditions>
         {
             public readonly CelestialBody body;
             public readonly float altitude;

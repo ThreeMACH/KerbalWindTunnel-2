@@ -18,7 +18,7 @@ namespace KerbalWindTunnel.DataGenerators
         public EnvelopePoint[,] envelopePoints = new EnvelopePoint[0, 0];
         public Conditions currentConditions = Conditions.Blank;
         //private Dictionary<Conditions, EnvelopePoint[,]> cache = new Dictionary<Conditions, EnvelopePoint[,]>();
-        private ConcurrentDictionary<SurfCoords, EnvelopePoint> cache = new ConcurrentDictionary<SurfCoords, EnvelopePoint>();
+        private readonly ConcurrentDictionary<SurfCoords, EnvelopePoint> cache = new ConcurrentDictionary<SurfCoords, EnvelopePoint>();
         private CancellationTokenSource optimalLineCancellationTokenSource;
         
         public int[,] resolution = { { 10, 10 }, { 40, 120 }, { 80, 180 }, { 160, 360 } };
@@ -384,7 +384,7 @@ namespace KerbalWindTunnel.DataGenerators
 
         #endregion EnvelopeSurf
 
-        private struct SurfCoords : IEquatable<SurfCoords>
+        private readonly struct SurfCoords : IEquatable<SurfCoords>
         {
             public readonly float speed, altitude;
 
@@ -419,7 +419,7 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public struct Conditions : IEquatable<Conditions>
+        public readonly struct Conditions : IEquatable<Conditions>
         {
             public readonly CelestialBody body;
             public readonly float lowerBoundSpeed;

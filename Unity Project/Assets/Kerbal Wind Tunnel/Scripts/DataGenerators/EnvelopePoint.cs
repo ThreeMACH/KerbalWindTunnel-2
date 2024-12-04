@@ -3,7 +3,7 @@ using UnityEngine;
 
 namespace KerbalWindTunnel.DataGenerators
 {
-    public struct EnvelopePoint
+    public readonly struct EnvelopePoint
     {
         public readonly float AoA_level;
         public readonly float Thrust_excess;

@@ -14,7 +14,7 @@ namespace KerbalWindTunnel.DataGenerators
         public AoAPoint[] AoAPoints = new AoAPoint[0];
         public Conditions currentConditions = Conditions.Blank;
         public float AverageLiftSlope { get; private set; } = -1;
-        private Dictionary<Conditions, AoAPoint[]> cache = new Dictionary<Conditions, AoAPoint[]>();
+        private readonly Dictionary<Conditions, AoAPoint[]> cache = new Dictionary<Conditions, AoAPoint[]>();
         private AoAPoint[] primaryProgress = null;
 
         public AoACurve()
@@ -213,7 +213,7 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public struct AoAPoint
+        public readonly struct AoAPoint
         {
             public readonly float Lift;
             public readonly float Drag;
@@ -273,7 +273,7 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public struct Conditions : IEquatable<Conditions>
+        public readonly struct Conditions : IEquatable<Conditions>
         {
             public readonly CelestialBody body;
             public readonly float altitude;

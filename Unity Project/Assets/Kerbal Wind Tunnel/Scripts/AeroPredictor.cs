@@ -214,7 +214,7 @@ namespace KerbalWindTunnel
 
         //public abstract AeroPredictor Clone();
 
-        public struct Conditions
+        public readonly struct Conditions
         {
             public readonly CelestialBody body;
             public readonly float speed;
@@ -235,15 +235,15 @@ namespace KerbalWindTunnel
                 
                 lock (body)
                 {
-                    this.atmPressure = (float)body.GetPressure(altitude);
-                    this.atmDensity = (float)Extensions.KSPClassExtensions.GetDensity(body, altitude);
-                    this.speedOfSound = (float) body.GetSpeedOfSound(atmPressure, atmDensity);
-                    this.oxygenAvailable = body.atmosphereContainsOxygen;
+                    atmPressure = (float)body.GetPressure(altitude);
+                    atmDensity = (float)Extensions.KSPClassExtensions.GetDensity(body, altitude);
+                    speedOfSound = (float) body.GetSpeedOfSound(atmPressure, atmDensity);
+                    oxygenAvailable = body.atmosphereContainsOxygen;
                 }
-                this.mach = speed / speedOfSound;
+                mach = speed / speedOfSound;
                 
                 lock (PhysicsGlobals.DragCurvePseudoReynolds)
-                    this.pseudoReDragMult = PhysicsGlobals.DragCurvePseudoReynolds.Evaluate(atmDensity * speed);
+                    pseudoReDragMult = PhysicsGlobals.DragCurvePseudoReynolds.Evaluate(atmDensity * speed);
                 Q = 0.0005f * atmDensity * this.speed * this.speed;
             }
         }

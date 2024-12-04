@@ -72,7 +72,7 @@ namespace KerbalWindTunnel.DataGenerators
 
         private delegate float CostIncreaseFunction(PathSolverCoords current, PathSolverCoords last);
 
-        public struct AscentPathPoint
+        public readonly struct AscentPathPoint
         {
             public readonly float altitude;
             public readonly float speed;
@@ -92,7 +92,7 @@ namespace KerbalWindTunnel.DataGenerators
                 this.time = time;
             }
         }
-        public struct CoordLocator
+        public readonly struct CoordLocator
         {
             public readonly int x;
             public readonly int y;
@@ -271,7 +271,7 @@ namespace KerbalWindTunnel.DataGenerators
             return result;
         }
 
-        private struct PathSolverCoords : IEquatable<PathSolverCoords>
+        private readonly struct PathSolverCoords : IEquatable<PathSolverCoords>
         {
             public readonly int xi;
             public readonly int yi;
@@ -406,9 +406,9 @@ namespace KerbalWindTunnel.DataGenerators
         }
         public class UniqueQueue<T> : IEnumerable<T>
         {
-            private Queue<T> queue;
-            private HashSet<T> hashSet = new HashSet<T>();
-            private Dictionary<int, int> collisionCount = new Dictionary<int, int>();
+            private readonly Queue<T> queue;
+            private readonly HashSet<T> hashSet = new HashSet<T>();
+            private readonly Dictionary<int, int> collisionCount = new Dictionary<int, int>();
 
             public UniqueQueue() { queue = new Queue<T>(); }
             public UniqueQueue(int capacity) { queue = new Queue<T>(capacity); }
