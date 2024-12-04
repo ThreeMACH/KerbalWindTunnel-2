@@ -50,7 +50,11 @@ namespace UI_Tools
 
         public List<ToggleArrayItem> Items { get => items; }
 
-        public bool GetValueOf(int index) => items[index].Toggle.isOn;
+        public bool this[int index]
+        {
+            get => items[index].Toggle.isOn;
+            set => items[index].Toggle.isOn = value;
+        }
 
         public Toggle Add(string item, UnityEngine.Events.UnityAction<bool> action = null)
         {
