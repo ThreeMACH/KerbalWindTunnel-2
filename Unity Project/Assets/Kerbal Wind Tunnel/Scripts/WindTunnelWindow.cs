@@ -5,7 +5,8 @@ using UnityEngine;
 using UnityEngine.UI;
 using UI_Tools.Universal_Text;
 using Graphing;
-using UI_Tools;
+using KerbalWindTunnel.Extensions;
+using KerbalWindTunnel.VesselCache;
 
 namespace KerbalWindTunnel
 {
@@ -85,7 +86,7 @@ namespace KerbalWindTunnel
             get;
             set;
         }
-
+        
         public int EnvelopeGraphShown
         {
             get => envelopeDropdown.Value;
@@ -288,7 +289,13 @@ namespace KerbalWindTunnel
             //envelopeGrapher.AddGraphToDefaultAxes(new SurfGraph(new float[,] { { 3, 2, 1 }, { 2, 1, 0 }, { 1, 2, 1 }, { 0, 2, 4 } }, 0, 1, 0, 1));
 
             // Things to actually keep.
-            foreach (var resizer in GetComponentsInChildren<RenderTextureResizer>())
+            if (Planetarium.fetch != null)
+            {
+                Instance = this;
+                gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
+                body = Planetarium.fetch.CurrentMainBody;
+            }
+            foreach (var resizer in GetComponentsInChildren<UI_Tools.RenderTextureResizer>())
                 resizer.ForceResize();
         }
 
@@ -415,10 +422,10 @@ namespace KerbalWindTunnel
         }
 
         #region Reliant on KSP API
-        public static readonly float gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
+        public static float gAccel;// = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
         public const float AoAdelta = 0.1f * Mathf.Deg2Rad;
         private AeroPredictor vessel = null;
-        private CelestialBody body = Planetarium.fetch.CurrentMainBody;
+        private CelestialBody body;// = Planetarium.fetch.CurrentMainBody;
         private float _targetAltitude = 17700;
         private string targetAltitudeStr = "17700";
         public float TargetAltitude
@@ -551,13 +558,6 @@ namespace KerbalWindTunnel
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
-            if (Instance == null)
-                Instance = this;
-            else
-            {
-                Destroy(gameObject);
-                return;
-            }
             envelopeGrapher.GraphClicked += EnvelopeGrapher_GraphClicked;
             aoaCurveGrapher.GraphClicked += AoaCurveGrapher_GraphClicked;
             velCurveGrapher.GraphClicked += VelCurveGrapher_GraphClicked;
