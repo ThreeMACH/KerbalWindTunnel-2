@@ -14,24 +14,24 @@ namespace KerbalWindTunnel
         private readonly Dictionary<(int, int), float[]> coeffCache;
         private readonly Dictionary<(int, int), int> coeffCacheHash;
 
-        public int[] Size { get { return new int[] { xKeys.Length, yKeys.Length }; } }
+        public (int, int) Size { get => (xKeys.Length, yKeys.Length); }
         public int Length { get { return values.Length; } }
 
         public int GetUpperBound(int dimension) { return dimension == 0 ? xKeys.Length : yKeys.Length; }
 
-        public FloatCurve2(float[] xKeys, float[] yKeys)
+        public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys)
         {
-            values = new Keyframe2[xKeys.Length, yKeys.Length];
-
             this.xKeys = xKeys.ToArray();
             this.yKeys = yKeys.ToArray();
+
+            values = new Keyframe2[this.xKeys.Length, this.yKeys.Length];
             Array.Sort(this.xKeys);
             Array.Sort(this.yKeys);
             coeffCache = new Dictionary<(int, int), float[]>();
             coeffCacheHash = new Dictionary<(int, int), int>();
         }
 
-        public FloatCurve2(float[] xKeys, float[] yKeys, float[,] values) : this(xKeys, yKeys)
+        public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys, float[,] values) : this(xKeys, yKeys)
         {
             int xLength = this.xKeys.Length;
             int yLength = this.yKeys.Length;
@@ -115,169 +115,299 @@ namespace KerbalWindTunnel
             }
         }
 
-        public FloatCurve2(float[] xKeys, float[] yKeys, float[,] values, float[,] xPartialTangents, float[,] yPartialTangents, float[,] mixedTangents) : this(xKeys, yKeys)
+        public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys, float[,] values, float[,] xPartialTangents, float[,] yPartialTangents, float[,] mixedTangents) : this(xKeys, yKeys)
         {
-            int xLength = xKeys.Length;
-            int yLength = yKeys.Length;
+            int xLength = this.xKeys.Length - 1;
+            int yLength = this.yKeys.Length - 1;
 
-            if ((values.GetUpperBound(0) + 1 != xLength) || (values.GetUpperBound(1) + 1 != yLength))
+            if ((values.GetUpperBound(0) != xLength) || (values.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "values");
-            if ((xPartialTangents.GetUpperBound(0) + 1 != xLength) || (xPartialTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xPartialTangents.GetUpperBound(0) != xLength) || (xPartialTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xPartialTangents");
-            if ((yPartialTangents.GetUpperBound(0) + 1 != xLength) || (yPartialTangents.GetUpperBound(1) + 1 != yLength))
+            if ((yPartialTangents.GetUpperBound(0) != xLength) || (yPartialTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "yPartialTangents");
-            if ((mixedTangents.GetUpperBound(0) + 1 != xLength) || (mixedTangents.GetUpperBound(1) + 1 != yLength))
+            if ((mixedTangents.GetUpperBound(0) != xLength) || (mixedTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "mixedTangents");
 
-            for (int i = xLength - 1; i >= 0; i--)
-                for (int j = yLength - 1; j >= 0; j--)
+            for (int i = xLength; i >= 0; i--)
+                for (int j = yLength; j >= 0; j--)
                     this.values[i, j] = new Keyframe2(this.xKeys[i], this.yKeys[j], values[i, j], xPartialTangents[i, j], yPartialTangents[i, j], mixedTangents[i, j]);
         }
 
-        public FloatCurve2(float[] xKeys, float[] yKeys, float[,] values, float[,] xinTangents, float[,] xoutTangents, float[,] yinTangents, float[,] youtTangents, float[,] xinyinTangents, float[,] xinyoutTangents, float[,] xoutyinTangents, float[,] xoutyoutTangents) : this(xKeys, yKeys)
+        public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys, float[,] values, float[,] xinTangents, float[,] xoutTangents, float[,] yinTangents, float[,] youtTangents, float[,] xinyinTangents, float[,] xinyoutTangents, float[,] xoutyinTangents, float[,] xoutyoutTangents) : this(xKeys, yKeys)
         {
-            int xLength = xKeys.Length;
-            int yLength = yKeys.Length;
+            int xLength = this.xKeys.Length - 1;
+            int yLength = this.yKeys.Length - 1;
 
-            if ((values.GetUpperBound(0) + 1 != xLength) || (values.GetUpperBound(1) + 1 != yLength))
+            if ((values.GetUpperBound(0) != xLength) || (values.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "values");
 
-            if ((xinTangents.GetUpperBound(0) + 1 != xLength) || (xinTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xinTangents.GetUpperBound(0) != xLength) || (xinTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xinTangents");
-            if ((xoutTangents.GetUpperBound(0) + 1 != xLength) || (xoutTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xoutTangents.GetUpperBound(0) != xLength) || (xoutTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xoutTangents");
-            if ((yinTangents.GetUpperBound(0) + 1 != xLength) || (yinTangents.GetUpperBound(1) + 1 != yLength))
+            if ((yinTangents.GetUpperBound(0) != xLength) || (yinTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "yinTangents");
-            if ((youtTangents.GetUpperBound(0) + 1 != xLength) || (youtTangents.GetUpperBound(1) + 1 != yLength))
+            if ((youtTangents.GetUpperBound(0) != xLength) || (youtTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "youtTangents");
 
-            if ((xinyinTangents.GetUpperBound(0) + 1 != xLength) || (xinyinTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xinyinTangents.GetUpperBound(0) != xLength) || (xinyinTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xinyinTangents");
-            if ((xinyoutTangents.GetUpperBound(0) + 1 != xLength) || (xinyoutTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xinyoutTangents.GetUpperBound(0) != xLength) || (xinyoutTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xinyoutTangents");
-            if ((xoutyinTangents.GetUpperBound(0) + 1 != xLength) || (xoutyinTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xoutyinTangents.GetUpperBound(0) != xLength) || (xoutyinTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xoutyinTangents");
-            if ((xoutyoutTangents.GetUpperBound(0) + 1 != xLength) || (xoutyoutTangents.GetUpperBound(1) + 1 != yLength))
+            if ((xoutyoutTangents.GetUpperBound(0) != xLength) || (xoutyoutTangents.GetUpperBound(1) != yLength))
                 throw new ArgumentException("Array dimensions do not match provided keys.", "xoutyoutTangents");
 
 
-            for (int i = xLength - 1; i >= 0; i--)
-                for (int j = yLength - 1; j >= 0; j--)
+            for (int i = xLength; i >= 0; i--)
+                for (int j = yLength; j >= 0; j--)
                     this.values[i, j] = new Keyframe2(this.xKeys[i], this.yKeys[j], values[i, j], xinTangents[i, j], xoutTangents[i, j], yinTangents[i, j], youtTangents[i, j], xinyinTangents[i, j], xinyoutTangents[i, j], xoutyinTangents[i, j], xoutyoutTangents[i, j]);
         }
 
-        public static FloatCurve2 MakeFloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys, Func<float, float, float> func, float deltaX = 0.000001f, float deltaY = 0.000001f)
-            => MakeFloatCurve2(xKeys.Select(k => (k, false)), yKeys.Select(k => (k, false)), func, deltaX, deltaY);
-        public static FloatCurve2 MakeFloatCurve2(IEnumerable<(float value, bool continuousDerivative)> xKeys, IEnumerable<(float value, bool continuousDerivative)> yKeys, Func<float, float, float> func, float deltaX = 0.000001f, float deltaY = 0.000001f)
+        public static FloatCurve2 ComputeCurve(IEnumerable<float> xKeys, IEnumerable<float> yKeys, Func<float, float, float> func, DiffSettings settings = new DiffSettings())
+            => ComputeCurve(xKeys.Select(k => (k, false)), yKeys.Select(k => (k, false)), func, settings);
+        public static FloatCurve2 ComputeCurve(IEnumerable<(float value, bool continuousDerivative)> xKeys, IEnumerable<(float value, bool continuousDerivative)> yKeys, Func<float, float, float> func, DiffSettings settings = new DiffSettings())
         {
-#if DEBUG
-            bool comma = false;
-            Debug.Log("Making FloatCurve2:");
-            string keyStr = "KeysX: ";
-            foreach (var (key, cd) in xKeys)
-            {
-                if (comma)
-                {
-                    keyStr += ", ";
-                }
-                keyStr += key;
-                comma = true;
-            }
-            Debug.Log(keyStr);
-            comma = false;
-            keyStr = "KeysY: ";
-            foreach (var (key, cd) in yKeys)
-            {
-                if (comma)
-                {
-                    keyStr += ", ";
-                }
-                keyStr += key;
-                comma = true;
-            }
-            Debug.Log(keyStr);
-#endif
-            float invDeltaX = 1 / deltaX, invDeltaY = 1 / deltaY;
-            float invDelta2 = invDeltaX * invDeltaY;
+            IList<(float value, bool continuousDerivative)> xKeys_ = xKeys as IList<(float, bool)> ?? xKeys.ToArray();
+            IList<(float value, bool continuousDerivative)> yKeys_ = yKeys as IList<(float, bool)> ?? yKeys.ToArray();
 
-            float[] xKeys_ = xKeys.Select(k => k.value).ToArray();
-            bool[] xCD = xKeys.Select(k => k.continuousDerivative).ToArray();
-            float[] yKeys_ = yKeys.Select(k => k.value).ToArray();
-            bool[] yCD = yKeys.Select(k => k.continuousDerivative).ToArray();
+            FloatCurve2 curve = new FloatCurve2(xKeys_.Select(k => k.value), yKeys_.Select(k => k.value));
+            int lx = xKeys_.Count - 1, ly = yKeys_.Count - 1;
 
-            FloatCurve2 curve = new FloatCurve2(xKeys_, yKeys_);
-            int lx = xKeys_.Length - 1, ly = yKeys_.Length - 1;
 
             for (int i = lx; i >= 0; i--)
             {
+                float deltaX = xKeys_[i].continuousDerivative ? settings.dx_continuous : settings.dx;
+                float invDeltaX = 1 / deltaX;
                 for (int j = ly; j >= 0; j--)
                 {
-                    float value = func(xKeys_[i], yKeys_[j]);
-                    curve.values[i, j].value = value;
+                    float deltaY = yKeys_[j].continuousDerivative ? settings.dy_continuous : settings.dy;
+                    float invDeltaY = 1 / deltaY;
+                    float invDelta2 = invDeltaX * invDeltaY;
+
+                    // Mapping is as follows:
+                    //  6   2   5
+                    //  3   0   1
+                    //  8   4   7
+
+                    Span<float> values = stackalloc float[9];
+
+                    // Calculate base value
+                    values[0] = func(xKeys_[i].value, yKeys_[j].value);
+                    // Calculate X differential values (1 and 3)
                     if (i < lx)
-                        curve.values[i, j].dDx_out = (func(xKeys_[i] + deltaX, yKeys_[j]) - value) * invDeltaX;
-                    if (i > 0)
-                        curve.values[i, j].dDx_in = xCD[i] && i < lx ? curve.values[i, j].dDx_out : -(func(xKeys_[i] - deltaX, yKeys_[j]) - value) * invDeltaX;
-                    if (j < lx)
-                        curve.values[i, j].dDy_out = (func(xKeys_[i], yKeys_[j] + deltaY) - value) * invDeltaY;
-                    if (j > 0)
-                        curve.values[i, j].dDy_in = yCD[j] && j < ly ? curve.values[i, j].dDy_out : -(func(xKeys_[i], yKeys_[j] - deltaY) - value) * invDeltaY;
-                    if (i < lx && j < ly)
-                        curve.values[i, j].ddDx_out_Dy_out = (func(xKeys_[i] + deltaX, yKeys_[j] + deltaY) - value) * invDelta2;
-                    if (i > 0 && j < ly)
-                        curve.values[i, j].ddDx_in_Dy_out = xCD[i] && i < lx ? curve.values[i, j].ddDx_out_Dy_out : -(func(xKeys_[i] - deltaX, yKeys_[j] + deltaY) - value) * invDelta2;
-                    if (i < lx && j > 0)
-                        curve.values[i, j].ddDx_out_Dy_in = yCD[j] && j < ly ? curve.values[i, j].ddDx_out_Dy_out : -(func(xKeys_[i] + deltaX, yKeys_[j] - deltaY) - value) * invDelta2;
-                    if (i > 0 && j > 0)
                     {
-                        if (xCD[i] && yCD[j])
+                        values[1] = func(xKeys_[i].value + deltaX, yKeys_[j].value);
+                        if (i > 0)
                         {
-                            if (i < lx && j < ly)
-                                curve.values[i, j].ddDx_in_Dy_in = curve.values[i, j].ddDx_out_Dy_out;
-                            else if (i < lx)
-                                curve.values[i, j].ddDx_in_Dy_in = curve.values[i, j].ddDx_in_Dy_out;
-                            else if (j < ly)
-                                curve.values[i, j].ddDx_in_Dy_in = curve.values[i, j].ddDx_out_Dy_in;
+                            if (xKeys_[i].continuousDerivative)
+                                values[3] = 2 * values[0] - values[1];
                             else
-                                curve.values[i, j].ddDx_in_Dy_in = (func(xKeys_[i] - deltaX, yKeys_[j] - deltaY) - value) * invDelta2;
+                                values[3] = func(xKeys_[i].value - deltaX, yKeys_[j].value);
                         }
                         else
-                            curve.values[i, j].ddDx_in_Dy_in = (func(xKeys_[i] - deltaX, yKeys_[j] - deltaY) - value) * invDelta2;
+                            values[3] = values[0];
                     }
+                    else if (i > 0)
+                    {
+                        values[3] = func(xKeys_[i].value - deltaX, yKeys_[j].value);
+                        values[1] = values[0];
+                    }
+                    else
+                    {
+                        values[1] = values[0];
+                        values[3] = values[0];
+                    }
+                    // Calculate Y differential values (2 and 4)
+                    if (j < ly)
+                    {
+                        values[2] = func(xKeys_[i].value, yKeys_[j].value + deltaY);
+                        if (j > 0)
+                        {
+                            if (yKeys_[j].continuousDerivative)
+                                values[4] = 2 * values[0] - values[2];
+                            else
+                                values[4] = func(xKeys_[i].value, yKeys_[j].value - deltaY);
+                        }
+                        else
+                            values[4] = values[0];
+                    }
+                    else if (j > 0)
+                    {
+                        values[4] = func(xKeys_[i].value, yKeys_[j].value - deltaY);
+                        values[2] = values[0];
+                    }
+                    else
+                    {
+                        values[2] = values[0];
+                        values[4] = values[0];
+                    }
+                    // Calculate combined differential values (5, 6, 7, and 8)
+                    if (i < lx && j < ly)
+                    {
+                        values[5] = func(xKeys_[i].value + deltaX, yKeys_[j].value + deltaY);
+                        if (i > 0)
+                        {
+                            if (xKeys_[i].continuousDerivative)
+                                values[6] = 2 * values[2] - values[5];
+                            else
+                                values[6] = func(xKeys_[i].value - deltaX, yKeys_[j].value + deltaY);
+                        }
+                        else
+                            values[6] = values[0];
+                        if (j > 0)
+                        {
+                            if (yKeys_[j].continuousDerivative)
+                                values[7] = 2 * values[1] - values[5];
+                            else
+                                values[7] = func(xKeys_[i].value + deltaX, yKeys_[j].value - deltaY);
+                        }
+                        else
+                            values[7] = values[0];
+                        if (i > 0 && j > 0)
+                        {
+                            if (xKeys_[i].continuousDerivative && yKeys_[j].continuousDerivative)
+                                values[8] = 2 * values[0] - values[5];
+                            else if (xKeys_[i].continuousDerivative)
+                                values[8] = 2 * values[4] - values[7];
+                            else if (yKeys_[j].continuousDerivative)
+                                values[8] = 2 * values[2] - values[6];
+                            else
+                                values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                        }
+                        else
+                            values[8] = values[0];
+                    }
+                    else if (i > 0 && j < ly)   // i >= lx  5 and 7 are not used
+                    {
+                        values[5] = values[0];
+                        values[7] = values[0];
+                        values[6] = values[6] = func(xKeys_[i].value - deltaX, yKeys_[j].value + deltaY);
+                        if (j > 0)
+                        {
+                            if (yKeys_[j].continuousDerivative)
+                                values[8] = 2 * values[2] - values[6];
+                            else
+                                values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                        }
+                        else
+                            values[8] = values[0];
+                    }
+                    else if (i < lx && j > 0)   // j >= ly  5 and 6 are not used
+                    {
+                        values[5] = values[0];
+                        values[6] = values[0];
+                        values[7] = func(xKeys_[i].value + deltaX, yKeys_[j].value - deltaY);
+                        if (i > 0)
+                        {
+                            if (xKeys_[i].continuousDerivative)
+                                values[8] = 2 * values[4] - values[7];
+                            else
+                                values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                        }
+                        else
+                            values[8] = values[0];
+                    }
+                    else if (i > 0 && j > 0)    // i >= lx & j >= ly    5, 6, and 7 are not used
+                    {
+                        values[5] = values[0];
+                        values[6] = values[0];
+                        values[7] = values[0];
+                        values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                    }
+                    else
+                    {
+                        values[5] = values[0];
+                        values[6] = values[0];
+                        values[7] = values[0];
+                        values[8] = values[0];
+                    }
+
+                    // Mapping is as follows:
+                    //  6   2   5
+                    //  3   0   1
+                    //  8   4   7
+
+                    // 'Values' becomes differentials here to save allocations
+                    float values2 = values[2];
+                    float values4 = values[4];
+                    values[1] = (values[1] - values[0]) * invDeltaX;
+                    values[3] = (values[0] - values[3]) * invDeltaX;
+                    values[2] = (values[2] - values[0]) * invDeltaY;
+                    values[4] = (values[0] - values[4]) * invDeltaY;
+                    values[5] = ((values[5] - values2) * invDeltaX - values[1]) * invDeltaY;
+                    values[6] = ((values2 - values[6]) * invDeltaX - values[3]) * invDeltaY;
+                    values[7] = (values[1] - (values[7] - values4) * invDeltaX) * invDeltaY;
+                    values[8] = (values[3] - (values4 - values[8]) * invDeltaX) * invDeltaY;
+
+                    curve.values[i, j] = new Keyframe2(
+                        xKeys_[i].value, yKeys_[j].value,
+                        values[0],
+                        values[3], values[1],
+                        values[4], values[2],
+                        values[8], values[6], values[7], values[5]);
                 }
             }
             return curve;
         }
 
-        private float[] GetCoeffs(float timeX, float timeY, out float normalizedX, out float normalizedY)
+        protected static int FindIndex(float[] keys, float value, out bool exact)
+        {
+            int result = Array.BinarySearch(keys, value);
+            if (result >= 0)
+            {
+                exact = true;
+                return result;
+            }
+            exact = false;
+            return (~result) - 1;
+        }
+
+        private float[] GetCoeffs(float timeX, float timeY, out float normalizedX, out float normalizedY, bool prefer1 = false)
         {
             int xSquare;// = Array.FindIndex(xTimes, x => timeX < x) - 1;
             int ySquare;// = Array.FindIndex(yTimes, y => timeY < y) - 1;
-            if (timeX < xKeys[0])
+            bool exactX, exactY;
+            if (timeX <= xKeys[0])
             {
                 xSquare = 0;
                 timeX = xKeys[0];
+                exactX = true;
             }
             else if (timeX > xKeys[xKeys.Length - 1])
             {
                 xSquare = xKeys.Length - 2;
                 timeX = xKeys[xKeys.Length - 1];
+                exactX = true;
             }
             else
-                xSquare = Array.FindIndex(xKeys, x => timeX < x) - 1;
+            {
+                //xSquare = Array.FindIndex(xKeys, x => timeX < x) - 1;
+                xSquare = FindIndex(xKeys, timeX, out exactX);
+                if (prefer1 && exactX)
+                    xSquare -= 1;
+            }
 
-            if (timeY < yKeys[0])
+            if (timeY <= yKeys[0])
             {
                 ySquare = 0;
                 timeY = yKeys[0];
+                exactY = true;
             }
             else if (timeY > yKeys[yKeys.Length - 1])
             {
                 ySquare = yKeys.Length - 2;
                 timeY = yKeys[yKeys.Length - 1];
+                exactY = true;
             }
             else
-                ySquare = Array.FindIndex(yKeys, y => timeY < y) - 1;
+            {
+                ySquare = FindIndex(yKeys, timeY, out exactY);
+                if (prefer1 && exactY)
+                    ySquare -= 1;
+            }
 
             (int, int) squareIndex = (xSquare, ySquare);
 
@@ -286,7 +416,7 @@ namespace KerbalWindTunnel
             normalizedX = Mathf.Clamp01((timeX - xKeys[xSquare]) / dx);
             normalizedY = Mathf.Clamp01((timeY - yKeys[ySquare]) / dy);
 
-            float[] knowns = new float[16] {
+            Span<float> knowns = stackalloc float[16] {
                     values[xSquare,ySquare].value,
                     values[xSquare + 1,ySquare].value,
                     values[xSquare,ySquare + 1].value,
@@ -312,11 +442,7 @@ namespace KerbalWindTunnel
 
             if (!coeffCache.ContainsKey(squareIndex) || coeffCacheHash[squareIndex] != knownsHash)
             {
-                lock (coeffCache)
-                {
-                    coeffCacheHash[squareIndex] = knownsHash;
-
-                    coeffCache[squareIndex] = new float[16] {
+                float[] coeffs = new float[16] {
                         1 * knowns[0],
                         1 * knowns[4],
                         -3 * knowns[0] + 3 * knowns[1] - 2 * knowns[4] - 1 * knowns[5],
@@ -334,9 +460,16 @@ namespace KerbalWindTunnel
                         -6 * knowns[0] + 6 * knowns[1] + 6 * knowns[2] - 6 * knowns[3] - 4 * knowns[4] - 2 * knowns[5] + 4 * knowns[6] + 2 * knowns[7] - 3 * knowns[8] + 3 * knowns[9] - 3 * knowns[10] + 3 * knowns[11] - 2 * knowns[12] - 1 * knowns[13] - 2 * knowns[14] - 1 * knowns[15],
                         4 * knowns[0] - 4 * knowns[1] - 4 * knowns[2] + 4 * knowns[3] + 2 * knowns[4] + 2 * knowns[5] - 2 * knowns[6] - 2 * knowns[7] + 2 * knowns[8] - 2 * knowns[9] + 2 * knowns[10] - 2 * knowns[11] + 1 * knowns[12] + 1 * knowns[13] + 1 * knowns[14] + 1 * knowns[15]
                         };
+
+                lock (coeffCache)
+                {
+                    coeffCacheHash[squareIndex] = knownsHash;
+
+                    coeffCache[squareIndex] = coeffs;
+
+                    return coeffs;
                 }
             }
-
             return coeffCache[squareIndex];
         }
 
@@ -355,9 +488,9 @@ namespace KerbalWindTunnel
                 (coeffs[12] + coeffs[13] * x + coeffs[14] * x2 + coeffs[15] * x3) * y3;
         }
 
-        public float EvaluateDerivative(float timeX, float timeY, (int, int) dimension)
+        public float EvaluateDerivative(float timeX, float timeY, (int, int) dimension, bool prefer1 = false)
         {
-            float[] coeffs = GetCoeffs(timeX, timeY, out float x, out float y);
+            float[] coeffs = GetCoeffs(timeX, timeY, out float x, out float y, prefer1);
 
             float x2 = x * x;
             float x3 = x2 * x;
@@ -396,6 +529,102 @@ namespace KerbalWindTunnel
                 throw new ArgumentOutOfRangeException("dimension");
         }
 
+        public static FloatCurve2 Superposition(IEnumerable<FloatCurve2> curves)
+        {
+            SortedSet<float> xKeys = new SortedSet<float>();
+            SortedSet<float> yKeys = new SortedSet<float>();
+            foreach (FloatCurve2 curve in curves)
+            {
+                if (curve == null) continue;
+                xKeys.UnionWith(curve.xKeys);
+                yKeys.UnionWith(curve.yKeys);
+            }
+            return Superposition(curves, xKeys.ToArray(), yKeys.ToArray());
+        }
+        public static FloatCurve2 Superposition(IEnumerable<FloatCurve2> curves, IEnumerable<float> xKeys, IEnumerable<float> yKeys)
+        {
+            float[] xKeys_ = xKeys.Distinct().ToArray();
+            float[] yKeys_ = yKeys.Distinct().ToArray();
+            Array.Sort(xKeys_);
+            Array.Sort(yKeys_);
+            return Superposition(curves, xKeys_, yKeys_);
+        }
+        public static FloatCurve2 Superposition(IEnumerable<FloatCurve2> curves, IList<float> xKeys, IList<float> yKeys)
+        {
+            int xLength = xKeys.Count;
+            int yLength = yKeys.Count;
+            float[,] values = new float[xLength, yLength];
+            float[,] dDx_in = new float[xLength, yLength];
+            float[,] dDx_out = new float[xLength, yLength];
+            float[,] dDy_in = new float[xLength, yLength];
+            float[,] dDy_out = new float[xLength, yLength];
+            float[,] ddDx_in_Dy_in = new float[xLength, yLength];
+            float[,] ddDx_in_Dy_out = new float[xLength, yLength];
+            float[,] ddDx_out_Dy_in = new float[xLength, yLength];
+            float[,] ddDx_out_Dy_out = new float[xLength, yLength];
+
+            foreach (FloatCurve2 curve in curves)
+            {
+                if (curve == null) continue;
+                for (int i = xLength - 1; i >= 0; i--)
+                {
+                    float xTime = xKeys[i];
+                    for (int j = yLength - 1; j >= 0; j--)
+                    {
+                        float yTime = yKeys[j];
+                        if (curve.xKeys.Contains(xTime) && curve.yKeys.Contains(yTime))
+                        {
+                            Keyframe2 value = curve.values[Array.IndexOf(curve.xKeys, xTime), Array.IndexOf(curve.yKeys, yTime)];
+                            values[i, j] += value.value;
+                            dDx_in[i, j] += value.dDx_in;
+                            dDx_out[i, j] += value.dDx_out;
+                            dDy_in[i, j] += value.dDy_in;
+                            dDy_out[i, j] += value.dDy_out;
+                            ddDx_in_Dy_in[i, j] += value.ddDx_in_Dy_in;
+                            ddDx_in_Dy_out[i, j] += value.ddDx_in_Dy_out;
+                            ddDx_out_Dy_in[i, j] += value.ddDx_out_Dy_in;
+                            ddDx_out_Dy_out[i, j] += value.ddDx_out_Dy_out;
+                            continue;
+                        }
+                        values[i, j] += curve.Evaluate(xTime, yTime);
+                        float ddx = curve.EvaluateDerivative(xTime, yTime, (0, 1));
+                        float ddy = curve.EvaluateDerivative(xTime, yTime, (1, 0));
+                        float dddxdy = curve.EvaluateDerivative(xTime, yTime, (1, 1));
+                        dDx_out[i, j] += ddx;
+                        dDy_out[i, j] += ddy;
+                        if (curve.xKeys.Contains(xTime))
+                        {
+                            dDx_in[i, j] += curve.EvaluateDerivative(xTime, yTime, (0, 1), true);
+                            float cross = curve.EvaluateDerivative(xTime, yTime, (1, 1), true);
+                            ddDx_in_Dy_in[i, j] += cross;
+                            ddDx_in_Dy_out[i, j] += cross;
+                            ddDx_out_Dy_in[i, j] += dddxdy;
+                            ddDx_out_Dy_out[i, j] += dddxdy;
+                        }
+                        else if (curve.yKeys.Contains(yTime))
+                        {
+                            dDy_in[i, j] += curve.EvaluateDerivative(xTime, yTime, (0, 1), true);
+                            float cross = curve.EvaluateDerivative(xTime, yTime, (1, 1), true);
+                            ddDx_in_Dy_in[i, j] += cross;
+                            ddDx_out_Dy_in[i, j] += cross;
+                            ddDx_in_Dy_out[i, j] += dddxdy;
+                            ddDx_out_Dy_out[i, j] += dddxdy;
+                        }
+                        else
+                        {
+                            dDx_in[i, j] += ddx;
+                            dDy_in[i, j] += ddy;
+                            ddDx_in_Dy_in[i, j] += dddxdy;
+                            ddDx_in_Dy_out[i, j] += dddxdy;
+                            ddDx_out_Dy_in[i, j] += dddxdy;
+                            ddDx_out_Dy_out[i, j] += dddxdy;
+                        }
+                    }
+                }
+            }
+            return new FloatCurve2(xKeys, yKeys, values, dDx_in, dDx_out, dDy_in, dDy_out, ddDx_in_Dy_in, ddDx_in_Dy_out, ddDx_out_Dy_in, ddDx_out_Dy_out);
+        }
+
         public struct Keyframe2
         {
             public float timeX;
@@ -409,26 +638,6 @@ namespace KerbalWindTunnel
             public float ddDx_in_Dy_out;
             public float ddDx_out_Dy_in;
             public float ddDx_out_Dy_out;
-
-            /*public Keyframe2(float timex, float timey, float value)
-            {
-                this.timeX = timex;
-                this.timeY = timey;
-                this.value = value;
-                this.dDx = 0.0f;
-                this.dDy = 0.0f;
-                this.ddDxDy = 0.0f;
-            }
-
-            public Keyframe2(float timex, float timey, float value, float ddx, float ddy)
-            {
-                this.timeX = timex;
-                this.timeY = timey;
-                this.value = value;
-                this.dDx = ddx;
-                this.dDy = ddy;
-                this.ddDxDy = 0.0f;
-            }*/
 
             public Keyframe2(float timeX, float timeY, float value, float dDx_in, float dDx_out, float dDy_in, float dDy_out, float ddDx_in_Dy_in, float ddDx_in_Dy_out, float ddDx_out_Dy_in, float ddDx_out_Dy_out)
             {
@@ -461,6 +670,28 @@ namespace KerbalWindTunnel
             public static implicit operator float(Keyframe2 key)
             {
                 return key.value;
+            }
+        }
+
+        public readonly struct DiffSettings
+        {
+            public readonly float dx = 1E-6f;
+            public readonly float dy = 1E-6f;
+            public readonly float dx_continuous = 1E-6f;
+            public readonly float dy_continuous = 1E-6f;
+            public DiffSettings(float dx = 1E-6f, float dy = 1E-6f)
+            {
+                this.dx = dx;
+                this.dx_continuous = dx;
+                this.dy = dy;
+                this.dy_continuous = dy;
+            }
+            public DiffSettings(float dx = 1E-6f, float dy = 1E-6f, float dx_continuous = 1E-6f, float dy_continuous = 1E-6f)
+            {
+                this.dx = dx;
+                this.dx_continuous = dx_continuous;
+                this.dy = dy;
+                this.dy_continuous = dy_continuous;
             }
         }
     }

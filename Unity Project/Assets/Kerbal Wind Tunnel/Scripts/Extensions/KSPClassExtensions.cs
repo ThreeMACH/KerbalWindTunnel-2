@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using UnityEngine;
 
 namespace KerbalWindTunnel.Extensions
 {
@@ -45,13 +46,13 @@ namespace KerbalWindTunnel.Extensions
             return body.GetDensity(pressure, temperature);
         }
 
-        public static FloatCurve MakeFloatCurve(IEnumerable<float> keys, Func<float, float> func, float delta = 0.000001f)
-            => MakeFloatCurve(keys.Select(k => (k, false)), func, delta);
-        public static FloatCurve MakeFloatCurve(IEnumerable<(float value, bool continuousDerivative)> keys, Func<float, float> func, float delta = 0.000001f)
+        public static FloatCurve ComputeFloatCurve(IEnumerable<float> keys, Func<float, float> func, float delta = 0.000001f)
+            => ComputeFloatCurve(keys.Select(k => (k, false)), func, delta);
+        public static FloatCurve ComputeFloatCurve(IEnumerable<(float value, bool continuousDerivative)> keys, Func<float, float> func, float delta = 0.000001f)
         {
 #if DEBUG
             bool comma = false;
-            UnityEngine.Debug.Log("Making FloatCurve:");
+            Debug.Log("Making FloatCurve:");
             string keyStr = "Keys: ";
             string valStr = "Values: ";
             foreach (var (key, cd) in keys)
@@ -65,8 +66,8 @@ namespace KerbalWindTunnel.Extensions
                 valStr += func(key);
                 comma = true;
             }
-            UnityEngine.Debug.Log(keyStr);
-            UnityEngine.Debug.Log(valStr);
+            Debug.Log(keyStr);
+            Debug.Log(valStr);
 #endif
             float invDelta = 1 / delta;
 
@@ -93,10 +94,60 @@ namespace KerbalWindTunnel.Extensions
 
         public static float EvaluateDerivative(this FloatCurve curve, float time)
         {
-            if (time <= curve.minTime || time >= curve.maxTime)
+            if (curve.Curve.keys.Length == 0)
                 return 0;
-            UnityEngine.Keyframe keyframe0 = curve.Curve.keys.Last(k => k.time < time);
-            UnityEngine.Keyframe keyframe1 = curve.Curve.keys[curve.Curve.keys.IndexOf(keyframe0) + 1];
+            if (time < curve.minTime || time > curve.maxTime)
+                return 0;
+            int k0Index;
+            for (k0Index = 0; k0Index < curve.Curve.keys.Length; k0Index++)
+            {
+                if (curve.Curve.keys[k0Index].time <= time)
+                    break;
+            }
+            Keyframe keyframe0 = curve.Curve.keys[k0Index];
+            if (time == curve.maxTime)
+            {
+                float dt1 = keyframe0.time - curve.Curve.keys[k0Index - 1].time;
+                return keyframe0.inTangent * dt1;
+            }
+            Keyframe keyframe1 = curve.Curve.keys[k0Index + 1];
+
+            float dt = keyframe1.time - keyframe0.time;
+
+            if (time == curve.minTime)
+                return keyframe0.outTangent * dt;
+
+            float t = (time - keyframe0.time) / dt;
+
+            if (t == 0)
+            {
+                float dt1 = curve.Curve.keys[k0Index + 2].time - keyframe1.time;
+                return (keyframe1.inTangent * dt + keyframe1.outTangent * dt1) / 2;
+            }
+
+            float m0 = keyframe0.outTangent * dt;
+            float m1 = keyframe1.inTangent * dt;
+
+            float t2 = t * t;
+
+            float a = 6 * t2 - 6 * t;
+            float b = 3 * t2 - 4 * t + 1;
+            float c = 3 * t2 - 2 * t;
+            float d = -6 * t2 + 6 * t;
+
+            return a * keyframe0.value + b * m0 + c * m1 + d * keyframe1.value;
+        }
+        public static float EvaluateThreadSafe(this FloatCurve curve, float time)
+        {
+            lock (curve)
+                return curve.Evaluate(time);
+            if (time <= curve.minTime)
+                return curve.Curve.keys[0].value;
+            if (time >= curve.maxTime)
+                return curve.Curve.keys[curve.Curve.length - 1].value;
+
+            Keyframe keyframe0 = curve.Curve.keys.Last(k => k.time < time);
+            Keyframe keyframe1 = curve.Curve.keys[curve.Curve.keys.IndexOf(keyframe0) + 1];
 
             float dt = keyframe1.time - keyframe0.time;
             float t = (time - keyframe0.time) / dt;
@@ -114,25 +165,87 @@ namespace KerbalWindTunnel.Extensions
 
             return a * keyframe0.value + b * m0 + c * m1 + d * keyframe1.value;
         }
-
-        public static UnityEngine.Vector3 ProjectOnPlaneSafe(UnityEngine.Vector3 vector, UnityEngine.Vector3 planeNormal)
+        public static FloatCurve Superposition(IEnumerable<FloatCurve> curves)
         {
-            return vector - UnityEngine.Vector3.Dot(vector, planeNormal) / planeNormal.sqrMagnitude * planeNormal;
+            SortedSet<float> keys_ = new SortedSet<float>();
+            foreach (FloatCurve curve in curves)
+            {
+                if (curve == null)
+                    continue;
+                keys_.UnionWith(curve.ExtractTimes());
+            }
+            return Superposition(curves, keys_.ToArray());
+        }
+        public static FloatCurve Superposition(IEnumerable<FloatCurve> curves, IEnumerable<float> keys)
+        {
+            float[] keys_ = keys.Distinct().ToArray();
+            Array.Sort(keys_);
+            return Superposition(curves, keys_);
+        }
+
+        public static FloatCurve Superposition(IEnumerable<FloatCurve> curves, IList<float> sortedUniqueKeys)
+        {
+            Dictionary<FloatCurve, SortedSet<float>> keysDict = new Dictionary<FloatCurve, SortedSet<float>>();
+            foreach (FloatCurve curve in curves)
+            {
+                if (curve == null)
+                    continue;
+                keysDict.Add(curve, new SortedSet<float>(curve.ExtractTimes()));
+            }
+
+            FloatCurve result = new FloatCurve();
+            int length = sortedUniqueKeys.Count;
+            Span<float> values = stackalloc float[length];
+            Span<float> inTangents = stackalloc float[length];
+            Span<float> outTangents = stackalloc float[length];
+
+            foreach (FloatCurve curve in curves)
+            {
+                if (curve == null)
+                    continue;
+                for (int i = length - 1; i >= 0; i--)
+                {
+                    float f = sortedUniqueKeys[i];
+                    // This curve has this keyframe
+                    if (keysDict[curve].Contains(f))
+                    {
+                        Keyframe keyframe = curve.Curve.keys.First(k => k.time.Equals(f));
+                        inTangents[i] += keyframe.inTangent;
+                        outTangents[i] += keyframe.outTangent;
+                        values[i] += keyframe.value;
+                    }
+                    else // Evaluate the curve and use it
+                    {
+                        float derivative = curve.EvaluateDerivative(f);
+                        inTangents[i] += derivative;
+                        outTangents[i] += derivative;
+                        values[i] += curve.EvaluateThreadSafe(f);
+                    }
+                }
+            }
+            for (int i = 0; i < length; i++)
+                result.Add(sortedUniqueKeys[i], values[i], inTangents[i], outTangents[i]);
+            return result;
+        }
+
+        public static Vector3 ProjectOnPlaneSafe(Vector3 vector, Vector3 planeNormal)
+        {
+            return vector - Vector3.Dot(vector, planeNormal) / planeNormal.sqrMagnitude * planeNormal;
         }
     }
 
     public class FloatCurveComparer : IEqualityComparer<FloatCurve>
     {
-        public static FloatCurveComparer Instance = new FloatCurveComparer();
+        public static readonly FloatCurveComparer Instance = new FloatCurveComparer();
 
         public int GetHashCode(FloatCurve curve)
         {
             if (curve == null)
                 return HashCode.Combine(curve);
-            UnityEngine.AnimationCurve ac = curve.Curve;
+            AnimationCurve ac = curve.Curve;
             HashCode h = new HashCode();
             h.Add(ac.length);
-            foreach (UnityEngine.Keyframe k in ac.keys)
+            foreach (Keyframe k in ac.keys)
             {
                 h.Add(k.time);
                 h.Add(k.value);
@@ -152,10 +265,10 @@ namespace KerbalWindTunnel.Extensions
                 return true;
             if (curve1.Curve.length != curve2.Curve.length)
                 return false;
-            UnityEngine.AnimationCurve ac1 = curve1.Curve, ac2 = curve2.Curve;
+            AnimationCurve ac1 = curve1.Curve, ac2 = curve2.Curve;
             for (int i = ac1.length - 1; i >= 0; i--)
             {
-                UnityEngine.Keyframe k1 = ac1.keys[i], k2 = ac2.keys[i];
+                Keyframe k1 = ac1.keys[i], k2 = ac2.keys[i];
                 if (k1.time != k2.time ||
                     k1.value != k2.value ||
                     k1.inTangent != k2.inTangent ||

@@ -1,12 +1,13 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
 using UnityEngine;
 using KerbalWindTunnel.Extensions;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class CharacterizedVessel : AeroPredictor, ILiftAoADerivativePredictor
+    public class CharacterizedVessel : AeroPredictor, ILiftAoADerivativePredictor, IDisposable
     {
         public readonly SimulatedVessel vessel;
 
@@ -16,18 +17,31 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float Area => vessel.Area;
 
-        public int tolerance = 8;
+        public const int tolerance = 6;
+        public const float toleranceF = 2E-5f;
 
-        public List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
-        public List<(FloatCurve machCurve, FloatCurve dragCurve)> surfaceDrag = new List<(FloatCurve machCurve, FloatCurve dragCurve)>();
-        public List<(FloatCurve machCurve, FloatCurve liftCurve)> bodyLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
-        public FloatCurve2 bodyDrag;
+        internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
+        internal readonly List<(FloatCurve machCurve, FloatCurve dragCurve)> surfaceDrag = new List<(FloatCurve machCurve, FloatCurve dragCurve)>();
+        internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> bodyLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
+        internal FloatCurve2 bodyDrag;
 
-        private static IComparer<(float, bool)> FloatTupleComparer = Comparer<(float, bool)>.Create((x, y) =>
-            x.Item1 < y.Item1 ? -1 :
-            x.Item1 > y.Item1 ? 1 :
-            x.Item2 == y.Item2 ? 0 :
-            x.Item2 ? 1 : -1);
+        private readonly List<CharacterizedPart> parts = new List<CharacterizedPart>();
+        private readonly List<CharacterizedLiftingSurface> surfaces = new List<CharacterizedLiftingSurface>();
+
+        private Task taskHandle = null;
+
+        public static readonly IComparer<(float, bool)> FloatTupleComparer = Comparer<(float, bool)>.Create((x, y) =>
+        {
+            int result = x.Item1.CompareTo(y.Item1);
+            return result != 0 ? result : y.Item2.CompareTo(x.Item2);   // Order of x and y reversed here so that a True value comes before a False value
+        });
+        /*private static readonly IComparer<(float, bool)> FloatTupleApproxComparer = Comparer<(float, bool)>.Create((x, y) =>
+        {
+            int result = FloatApproxComparer.Compare(x.Item1, y.Item1);
+            return result != 0 ? result : y.Item2.CompareTo(x.Item2);   // Order of x and y reversed here so that a True value comes before a False value
+        });
+        private static readonly IComparer<float> FloatApproxComparer = Comparer<float>.Create((x, y) =>
+            Math.Abs(x - y) < toleranceF ? 0 : x.CompareTo(y));*/
 
         public CharacterizedVessel(SimulatedVessel vessel)
         {
@@ -77,307 +91,92 @@ namespace KerbalWindTunnel.VesselCache
              *  - Collect all the relevant Mach number keys from part and lifting surface drag curves.
             */
 
-            IEnumerable<SimulatedLiftingSurface> surfaces = vessel.partCollection.surfaces.Union(vessel.partCollection.ctrls);
-            ILookup<FloatCurve, SimulatedLiftingSurface> liftingSurfs = surfaces.Where(surf => surf.liftCurve.Curve.keys.Length > 1 || surf.liftCurve.Evaluate(0) != 0)
+            /*List<SimulatedLiftingSurface> surfaces = vessel.partCollection.surfaces.Union(vessel.partCollection.ctrls).ToList();
+            ILookup<FloatCurve, SimulatedLiftingSurface> liftingSurfs = surfaces.Where(surf => surf.liftCurve.Curve.keys.Length > 1 || surf.liftCurve.Curve.keys[0].value != 0)
                 .ToLookup(surf => surf.liftMachCurve, FloatCurveComparer.Instance);
             ILookup<FloatCurve, SimulatedPart> liftingParts = vessel.partCollection.parts.Where(part => !part.NoBodyLift)
                 .ToLookup(part => part.cubes.BodyLiftCurve.liftMachCurve, FloatCurveComparer.Instance);
-            ILookup<FloatCurve, SimulatedLiftingSurface> dragSurfaces = surfaces.Where(surf => surf.dragCurve.Curve.keys.Length > 1 || surf.dragCurve.Evaluate(0) != 0)
+            ILookup<FloatCurve, SimulatedLiftingSurface> dragSurfaces = surfaces.Where(surf => surf.dragCurve.Curve.keys.Length > 1 || surf.dragCurve.Curve.keys[0].value != 0)
                 .ToLookup(surf => surf.dragMachCurve, FloatCurveComparer.Instance);
-            IEnumerable<SimulatedPart> dragParts = vessel.partCollection.parts.Where(p => !(p.noDrag || p.shieldedFromAirstream));
+            List<SimulatedPart> dragParts = vessel.partCollection.parts.Where(p => !(p.noDrag || p.shieldedFromAirstream)).ToList();
+            */
 
-            SortedSet<(float aoa, bool continuousDerivative)> partAoAs = new SortedSet<(float aoa, bool continuousDerivative)>(FloatTupleComparer);
-            SortedSet<(float mach, bool continuousDerivative)> partMachs = new SortedSet<(float mach, bool continuousDerivative)>(FloatTupleComparer);
-            for (int i = -180; i <= 180; i += 15)
-                partAoAs.Add((Mathf.Deg2Rad * i, false));
-            foreach (var part in dragParts)
-            {
-                partAoAs.UnionWith(GetPartAxes(part).SelectMany(v => GetWorldKeys(v, new float[] { 0, 1 })).Select(v => ((float)Math.Round(v, tolerance), false)));
-                partMachs.UnionWith(GetDragMachSet(part.cubes));
-            }
-            foreach (var group in liftingSurfs)
-            {
-                float machMag = group.Key.Evaluate(0), evalPt = 0;
-                if (machMag == 0)
-                {
-                    group.Key.Evaluate(1);
-                    evalPt = 1;
-                }
-                float SurfLiftForce(float aoa)
-                {
-                    Vector3 lift = Vector3.zero;
-                    Vector3 inflow = InflowVect(aoa);
-                    foreach (var surf in group)
-                        lift += surf.GetLift(inflow, evalPt);
-                    return GetLiftForceMagnitude(lift, aoa) / machMag;
-                }
-                SortedSet<(float aoa, bool continuousDerivative)> AoAKeys = new SortedSet<(float aoa, bool continuousDerivative)>(FloatTupleComparer);
-                AoAKeys.UnionWith(group.SelectMany(surf => GetWorldKeys(surf.liftVector, surf.liftCurve)).Select(v => ((float)Math.Round(v.AoA, tolerance), v.continuousDerivative)));
-                
-                FloatCurve liftCurve;
-                liftCurve = KSPClassExtensions.MakeFloatCurve(AoAKeys.GroupBy(t => t.aoa).Select(g => (g.Key, g.All(t => t.continuousDerivative))), SurfLiftForce);
-                surfaceLift.Add((group.Key, liftCurve));
-            }
-            foreach (var group in liftingParts)
-            {
-                float machMag = group.Key.Evaluate(0), evalPt = 0;
-                if (machMag == 0)
-                {
-                    group.Key.Evaluate(1);
-                    evalPt = 1;
-                }
-                float PartLiftForce(float aoa)
-                {
-                    Vector3 lift = Vector3.zero;
-                    Vector3 inflow = InflowVect(aoa);
-                    foreach (var part in group)
-                        lift += part.GetLift(inflow, evalPt);
-                    return GetLiftForceMagnitude(lift, aoa) / machMag;
-                }
-                SortedSet<float> AoAKeys = new SortedSet<float>();
-                AoAKeys.UnionWith(group.SelectMany(part => GetPartAxes(part).SelectMany(v => GetWorldKeys(v, new float[] { 0, 1 }))).Select(v => (float)Math.Round(v, tolerance)));
-                
-                FloatCurve liftCurve;
-                liftCurve = KSPClassExtensions.MakeFloatCurve(AoAKeys, PartLiftForce);
-                bodyLift.Add((group.Key, liftCurve));
-            }
-            foreach (var group in dragSurfaces)
-            {
-                float machMag = group.Key.Evaluate(0), evalPt = 0;
-                if (machMag == 0)
-                {
-                    group.Key.Evaluate(1);
-                    evalPt = 1;
-                }
-                float SurfDragForce(float aoa)
-                {
-                    Vector3 drag = Vector3.zero;
-                    Vector3 inflow = InflowVect(aoa);
-                    foreach (var surf in group)
-                        drag += surf.GetDrag(inflow, evalPt);
-                    return GetDragForceMagnitude(drag, aoa) / machMag;
-                }
-                SortedSet<(float aoa, bool continuousDerivative)> AoAKeys = new SortedSet<(float aoa, bool continuousDerivative)>(FloatTupleComparer);
-                AoAKeys.UnionWith(group.SelectMany(surf => GetWorldKeys(surf.liftVector, surf.dragCurve)).Select(v => ((float)Math.Round(v.AoA, tolerance), v.continuousDerivative)));
-                
-                FloatCurve dragCurve;
-                dragCurve = KSPClassExtensions.MakeFloatCurve(AoAKeys.GroupBy(t => t.aoa).Select(g => (g.Key, g.All(t => t.continuousDerivative))), SurfDragForce);
-                surfaceDrag.Add((group.Key, dragCurve));
-            }
-            float PartDragForce(float mach, float aoa)
-            {
-                Vector3 drag = Vector3.zero;
-                Vector3 inflow = InflowVect(aoa);
-                foreach (var part in dragParts)
-                    drag += part.GetAero(inflow, 0, 1);
-                return GetDragForceMagnitude(drag, aoa);
-            }
+            parts.AddRange(vessel.partCollection.parts.Select(p => new CharacterizedPart(p)));
+            surfaces.AddRange(vessel.partCollection.surfaces.Select(s => new CharacterizedLiftingSurface(s)));
 
-            //partAoAs = (SortedSet<(float, bool)>)partAoAs.GroupBy(t => t.aoa).Select(g => (g.Key, g.All(t => t.continuousDerivative)));
-            //partMachs = (SortedSet<(float, bool)>)partMachs.GroupBy(t => t.mach).Select(g => (g.Key, g.All(t => t.continuousDerivative)));
-            bodyDrag = FloatCurve2.MakeFloatCurve2(
-                partMachs.GroupBy(t => t.mach).Select(g => (g.Key, g.All(t => t.continuousDerivative))),
-                partAoAs.GroupBy(t => t.aoa).Select(g => (g.Key, g.All(t => t.continuousDerivative))),
-                PartDragForce);
+            Characterize();
         }
 
-        public static IEnumerable<(float mach, bool continuousDerivative)> GetDragMachSet(DragCubeList cubes)
+        public void Reset()
         {
-            var surfCurves = cubes.SurfaceCurves;
-            IEnumerable<Keyframe> machs =
-                surfCurves.dragCurveTip.Curve.keys.Concat(
-                surfCurves.dragCurveSurface.Curve.keys).Concat(
-                surfCurves.dragCurveTail.Curve.keys).Concat(
-                cubes.DragCurveMultiplier.Curve.keys).Concat(
-                cubes.DragCurveCdPower.Curve.keys);
-
-            if (!FloatCurveComparer.Instance.Equals(surfCurves.dragCurveMultiplier, cubes.DragCurveMultiplier))
-                machs = machs.Concat(surfCurves.dragCurveMultiplier.Curve.keys);
-
-            return machs.GroupBy(k => k.time).Select(g => (g.Key, g.All(k => k.outTangent == k.inTangent)));
+            lock (this)
+            {
+                taskHandle = null;
+                parts.Clear();
+                surfaces.Clear();
+                surfaceLift.Clear();
+                surfaceDrag.Clear();
+                bodyLift.Clear();
+                bodyDrag = null;
+            }
         }
 
-        public static IEnumerable<(float AoA, bool continuousDerivative)> GetWorldKeys(Vector3 norm, FloatCurve aoaCurve)
+        private void WaitUntilCharacterized()
         {
-            if (norm.x == 0 && norm.z == 0)
-                yield break;
-            
-            if (norm.sqrMagnitude > 1)
-                norm.Normalize();
-
-            float upperLimit = Mathf.Sqrt(norm.x * norm.x + norm.z * norm.z);
-            if (upperLimit < 1E-10f)
-                upperLimit = 0;
-
-            foreach (Keyframe key in aoaCurve.Curve.keys)
-            {
-                bool continuousDerivative;
-                if (key.time == aoaCurve.minTime)
-                    continuousDerivative = key.outTangent == 0;
-                else if (key.time == aoaCurve.maxTime)
-                    continuousDerivative = key.inTangent == 0;
-                else
-                    continuousDerivative = key.outTangent == key.inTangent;
-
-                if (key.time <= upperLimit)
-                {
-                    foreach (float AoA in SinAoAMapping(norm, key.time).Distinct())
-                        yield return (AoA, continuousDerivative);
-                }
-                else
-                {
-                    continuousDerivative = aoaCurve.EvaluateDerivative(upperLimit) == 0;
-                    foreach (float AoA in SinAoAMapping(norm, upperLimit).Distinct())
-                        yield return (AoA, continuousDerivative);
-                    yield break;
-                }
-            }
+            if (taskHandle == null)
+                Characterize();
+            taskHandle.Wait(new TimeSpan(0, 1, 0));
         }
-        public static IEnumerable<float> GetWorldKeys(Vector3 norm, IEnumerable<float> sinAoAs)
+
+        public void Characterize()
         {
-            if (norm.x == 0 && norm.z == 0)
-                yield break;
-
-            if (norm.sqrMagnitude > 1)
-                norm.Normalize();
-            
-            float upperLimit = Mathf.Sqrt(norm.x * norm.x + norm.z * norm.z);
-            if (upperLimit < 1E-10f)
-                upperLimit = 0;
-            
-            foreach (float sinAoA in sinAoAs)
+            lock (this)
             {
-                if (sinAoA <= upperLimit)
-                {
-                    foreach (float AoA in SinAoAMapping(norm, sinAoA).Distinct())
-                        yield return AoA;
-                }
-                else
-                {
-                    foreach (float AoA in SinAoAMapping(norm, upperLimit).Distinct())
-                        yield return AoA;
-                    yield break;
-                }
+                if (taskHandle != null)
+                    return;
+                Debug.Log("Starting Characterization");
+
+                List<Task> tasks = new List<Task>();
+                foreach (CharacterizedPart part in parts)
+                    tasks.Add(Task.Run(part.Characterize));
+                Task partTask = Task.WhenAll(tasks).ContinueWith(CombineParts);
+
+                tasks.Clear();
+                foreach (CharacterizedLiftingSurface surface in surfaces)
+                    tasks.Add(Task.Run(surface.Characterize));
+                Task surfaceTask = Task.WhenAll(tasks).ContinueWith(CombineSurfaces);
+
+                taskHandle = Task.WhenAll(partTask, surfaceTask);
+#if DEBUG
+                taskHandle.ContinueWith(t => Debug.Log("Completed Characterization"));
+#endif
             }
         }
 
-        public static IEnumerable<float> SinAoAMapping(Vector3 norm, float localSinAoA)
+        private void CombineParts(Task _)
         {
-            //return (norm.z * key.time - Math.Sign(norm.x) * Mathf.Sqrt(Math.Max(x2 * (x2 - key.time * key.time + z2), 0))) / (x2 + z2);
-            float x = norm.x, z = norm.z;
-
-            float radical = Math.Max(x * x + z * z - localSinAoA * localSinAoA, 0);
-            if (radical == 0)
-            {
-                yield return Mathf.Atan2(z * localSinAoA, x * localSinAoA);
-                yield return Mathf.Atan2(-z * localSinAoA, -x * localSinAoA);
-                yield break;
-            }
-            radical = Mathf.Sqrt(Math.Max(x * x + z * z - localSinAoA * localSinAoA, 0));
-
-            float xa = x * localSinAoA, za = z * localSinAoA;
-            float xRadical = x * radical, zRadical = z * radical;
-
-            float InnerMap(int AoASign, int quadrantSign)
-                => Mathf.Atan2(
-                    quadrantSign * (za * AoASign - xRadical),
-                    quadrantSign * (xa * AoASign + zRadical));
-            yield return InnerMap(1, 1);
-            yield return InnerMap(-1, 1);
-            yield return InnerMap(1, -1);
-            yield return InnerMap(-1, -1);
+            foreach (var bodyGroup in parts.Where(p => p.LiftMachScalarCurve != null).GroupBy(p => p.LiftMachScalarCurve))
+                bodyLift.Add((bodyGroup.Key, KSPClassExtensions.Superposition(bodyGroup.Select(s => s.LiftCoefficientCurve))));
+            bodyDrag = FloatCurve2.Superposition(parts.Select(p => p.DragCoefficientCurve));
         }
-
-        public static Vector3[] GetPartAxes(SimulatedPart part)
+        private void CombineSurfaces(Task _)
         {
-            Quaternion partToVessel = part.partToVessel;
-            return new Vector3[] { partToVessel * Vector3.forward, partToVessel * Vector3.right, partToVessel * Vector3.up };
+            foreach (var surfGroup in surfaces.Where(s => s.LiftMachScalarCurve != null).GroupBy(s => s.LiftMachScalarCurve))
+                surfaceLift.Add((surfGroup.Key, KSPClassExtensions.Superposition(surfGroup.Select(s => s.LiftCoefficientCurve))));
+            foreach (var surfGroup in surfaces.Where(s => s.DragMachScalarCurve != null).GroupBy(s => s.DragMachScalarCurve))
+                surfaceDrag.Add((surfGroup.Key, KSPClassExtensions.Superposition(surfGroup.Select(s => s.DragCoefficientCurve))));
         }
 
-        /*        private static FloatCurve2 Characterize(Func<float, float, float> func, Dictionary<float, bool> machs, List<float> AoAs)
-                {
-                    List<float> sortedMachs = machs.Keys.ToList();
-                    sortedMachs.Sort();
-
-                    float[,] values = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] machInTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] machOutTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] AoAInTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] AoAOutTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] machIn_AoAInTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] machIn_AoAOutTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] machOut_AoAInTangents = new float[sortedMachs.Count, AoAs.Count];
-                    float[,] machOut_AoAOutTangents = new float[sortedMachs.Count, AoAs.Count];
-
-                    for (int m = 0; m <= sortedMachs.Count - 1; m++)
-                    {
-                        for (int a = 0; a <= AoAs.Count - 1; a++)
-                        {
-                            float value = values[m,a] = func(sortedMachs[m], AoAs[a]);
-
-                            AoAOutTangents[m, a] = (func(sortedMachs[m], AoAs[a] + delta_AoA) - value) / delta_AoA;
-                            AoAInTangents[m, a] = (func(sortedMachs[m], AoAs[a] - delta_AoA) - value) / -delta_AoA;
-
-                            if (m < sortedMachs.Count - 1)
-                            {
-                                machOutTangents[m, a] = (func(sortedMachs[m] + delta_mach, AoAs[a]) - value) / delta_mach;
-                                machOut_AoAInTangents[m, a] = (func(sortedMachs[m] + delta_mach, AoAs[a] - delta_AoA) - value) / (delta_mach * -delta_AoA);
-                                machOut_AoAOutTangents[m, a] = (func(sortedMachs[m] + delta_mach, AoAs[a] + delta_AoA) - value) / (delta_mach * delta_AoA);
-                            }
-                            if (m == sortedMachs.Count - 1 || !(machs[sortedMachs[m]]))
-                            {
-                                machInTangents[m, a] = (func(sortedMachs[m] - delta_mach, AoAs[a]) - value) / -delta_mach;
-                                machIn_AoAInTangents[m, a] = (func(sortedMachs[m] - delta_mach, AoAs[a] - delta_AoA) - value) / (-delta_mach * -delta_AoA);
-                                machIn_AoAOutTangents[m, a] = (func(sortedMachs[m] - delta_mach, AoAs[a] + delta_AoA) - value) / (-delta_mach * delta_AoA);
-                            }
-                            if (machs[sortedMachs[m]])
-                            {
-                                machInTangents[m, a] = machOutTangents[m, a];
-                                machIn_AoAInTangents[m, a] = machOut_AoAInTangents[m, a];
-                                machIn_AoAOutTangents[m, a] = machOut_AoAOutTangents[m, a];
-                            }
-                        }
-                    }
-
-                    return new FloatCurve2(sortedMachs.ToArray(), AoAs.ToArray(), values, machInTangents, machOutTangents, AoAInTangents, AoAOutTangents, machIn_AoAInTangents, machIn_AoAOutTangents, machOut_AoAInTangents, machOut_AoAOutTangents);
-                }*/
-
-        /*private static Dictionary<float, bool> GetLiftMachs(PartCollection collection, Dictionary<float, bool> machs = null)
+        public void Dispose()
         {
-            if (machs == null)
-                machs = new Dictionary<float, bool>();
+            foreach (CharacterizedPart part in parts)
+                part.Dispose();
+            parts.Clear();
 
-            foreach (SimulatedLiftingSurface surf in collection.surfaces)
-            {
-                foreach (var key in surf.liftMachCurve.Curve.keys)
-                    if (!machs.ContainsKey(key.time))
-                        machs.Add(key.time, key.inTangent == key.outTangent);
-                    else
-                        machs[key.time] &= key.inTangent == key.outTangent;
-            }
-            foreach (SimulatedControlSurface ctrl in collection.ctrls)
-            {
-                foreach (var key in ctrl.liftMachCurve.Curve.keys)
-                    if (!machs.ContainsKey(key.time))
-                        machs.Add(key.time, key.inTangent == key.outTangent);
-                    else
-                        machs[key.time] &= key.inTangent == key.outTangent;
-            }
-
-            foreach (SimulatedPart part in collection.parts)
-            {
-                foreach (var key in part.cubes.BodyLiftCurve.liftMachCurve.Curve.keys)
-                    if (!machs.ContainsKey(key.time))
-                        machs.Add(key.time, key.inTangent == key.outTangent);
-                    else
-                        machs[key.time] &= key.inTangent == key.outTangent;
-            }
-            foreach (PartCollection subCollection in collection.partCollections)
-                GetLiftMachs(subCollection, machs);
-            
-            return machs;
+            foreach (CharacterizedLiftingSurface surf in surfaces)
+                surf.Dispose();
+            surfaces.Clear();
         }
-        */
 
         public override float GetPitchInput(Conditions conditions, float AoA, bool dryTorque = false, float guess = float.NaN, float tolerance = 0.0003F)
             => vessel.GetPitchInput(conditions, AoA, dryTorque, guess, tolerance);
@@ -388,15 +187,15 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float GetDragForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
         {
+            WaitUntilCharacterized();
+
             float magnitude = 0;
 
             foreach (var (machCurve, dragCurve) in surfaceDrag)
             {
                 float groupMagnitude;
-                lock (dragCurve)
-                    groupMagnitude = dragCurve.Evaluate(AoA);
-                lock (machCurve)
-                    groupMagnitude *= machCurve.Evaluate(conditions.mach);
+                groupMagnitude = dragCurve.EvaluateThreadSafe(AoA);
+                groupMagnitude *= machCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += groupMagnitude;
             }
 
@@ -408,29 +207,26 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float GetLiftForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
         {
+            WaitUntilCharacterized();
+
             float magnitude = 0;
 
-            foreach (var (machCurve, liftCurve) in surfaceLift)
+            foreach (var (liftMachCurve, liftCurve) in surfaceLift)
             {
                 float groupMagnitude;
-                lock (liftCurve)
-                    groupMagnitude = liftCurve.Evaluate(AoA);
-                lock (machCurve)
-                    groupMagnitude *= machCurve.Evaluate(conditions.mach);
+                groupMagnitude = liftCurve.EvaluateThreadSafe(AoA);
+                groupMagnitude *= liftMachCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += groupMagnitude;
             }
             foreach (var (machCurve, liftCurve) in bodyLift)
             {
                 float groupMagnitude;
-                lock (liftCurve)
-                    groupMagnitude = liftCurve.Evaluate(AoA);
-                lock (machCurve)
-                    groupMagnitude *= machCurve.Evaluate(conditions.mach);
+                groupMagnitude = liftCurve.EvaluateThreadSafe(AoA);
+                groupMagnitude *= machCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += groupMagnitude;
             }
 
-            float Q = 0.0005f * conditions.atmDensity * conditions.speed * conditions.speed;
-            return magnitude * Q;
+            return magnitude * conditions.Q;
         }
 
         public override Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput = 0)
@@ -447,20 +243,20 @@ namespace KerbalWindTunnel.VesselCache
 
         public float GetLiftForceMagnitudeAoADerivative(Conditions conditions, float AoA, float pitchInput = 0)
         {
+            WaitUntilCharacterized();
+
             float magnitude = 0;
 
             foreach (var (machCurve, liftCurve) in surfaceLift)
             {
                 float machValue;
-                lock (machCurve)
-                    machValue = machCurve.Evaluate(conditions.mach);
+                machValue = machCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += liftCurve.EvaluateDerivative(AoA) * machValue;
             }
             foreach (var (machCurve, liftCurve) in bodyLift)
             {
                 float machValue;
-                lock (machCurve)
-                    machValue = machCurve.Evaluate(conditions.mach);
+                machValue = machCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += liftCurve.EvaluateDerivative(AoA) * machValue;
             }
 

@@ -13,6 +13,7 @@ namespace KerbalWindTunnel.VesselCache
 
         public AeroPredictor vessel;
 
+        public Part part;
         public string name = "";
         public float totalMass = 0;
         public float dryMass = 0;
@@ -101,6 +102,7 @@ namespace KerbalWindTunnel.VesselCache
 
         protected void Init(Part part)
         {
+            this.part = part;
             this.name = part.name;
             Rigidbody rigidbody = part.rb;
             this.shipIndex = part.ship.parts.IndexOf(part);
@@ -183,6 +185,7 @@ namespace KerbalWindTunnel.VesselCache
         }
         protected void InitClone(SimulatedPart part)
         {
+            this.part = part.part;
             this.name = part.name;
 
             totalMass = part.totalMass;

@@ -225,6 +225,7 @@ namespace KerbalWindTunnel
             public readonly float pseudoReDragMult;
             public readonly bool oxygenAvailable;
             public readonly float speedOfSound;
+            public readonly float Q;
 
             public Conditions(CelestialBody body, float speed, float altitude)
             {
@@ -243,6 +244,7 @@ namespace KerbalWindTunnel
                 
                 lock (PhysicsGlobals.DragCurvePseudoReynolds)
                     this.pseudoReDragMult = PhysicsGlobals.DragCurvePseudoReynolds.Evaluate(atmDensity * speed);
+                Q = 0.0005f * atmDensity * this.speed * this.speed;
             }
         }
     }
