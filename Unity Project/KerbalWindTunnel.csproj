@@ -84,8 +84,6 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\VelCurve.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\DelegateFactory.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\FloatCurve2.cs" />
-    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\GUILayoutHelper.cs" />
-    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\IListClone.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\KSPClassExtensions.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\Linq2.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\NetObjectDeepCopy.cs" />
