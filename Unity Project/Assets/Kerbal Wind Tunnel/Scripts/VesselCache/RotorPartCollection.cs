@@ -1,7 +1,5 @@
 ﻿using Smooth.Pools;
 using System;
-using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 namespace KerbalWindTunnel.VesselCache
@@ -448,7 +446,7 @@ namespace KerbalWindTunnel.VesselCache
             else
             {
                 torque = Vector3.ProjectOnPlane(engineTorque, axis);
-                engineTorque += Vector3.Cross(engineThrust, origin - torquePoint);
+                torque += Vector3.Cross(engineThrust, origin - torquePoint);
                 return engineThrust;
             }
         }
@@ -463,14 +461,15 @@ namespace KerbalWindTunnel.VesselCache
                 for (int r = 0; r < rotationCount; r++)
                 {
                     Quaternion rotation = Quaternion.AngleAxis(360f / rotationCount * r, axis);
-                    Quaternion inverseRotation = Quaternion.AngleAxis(-360f / rotationCount * r, axis);
+                    //Quaternion inverseRotation = Quaternion.AngleAxis(-360f / rotationCount * r, axis);
                     // Rotate inflow
                     Vector3 rotatedInflow = rotation * inflow;
                     // Calculate burn rate
                     for (int i = engines.Count - 1; i >= 0; i--)
                     {
-                        Vector3 partMotion = Vector3.Cross(axis, (engines[i].thrustPoint - origin)) * angularVelocity + rotatedInflow;
-                        float localMach = partMotion.magnitude / conditions.speedOfSound;
+                        //Vector3 partMotion = Vector3.Cross(axis, (engines[i].thrustPoint - origin)) * angularVelocity + rotatedInflow;
+                        // Apparently local Mach means nothing, and everything just uses the vessel frame Mach.
+                        float localMach = conditions.mach;  //partMotion.magnitude / conditions.speedOfSound;
 
                         burnRate += engines[i].GetFuelBurnRate(localMach, conditions.atmDensity);
                     }
