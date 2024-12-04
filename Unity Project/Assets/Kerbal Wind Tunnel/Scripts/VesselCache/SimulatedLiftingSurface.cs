@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class SimulatedLiftingSurface
+    public class SimulatedLiftingSurface : IReleasable
     {
         private static readonly Pool<SimulatedLiftingSurface> pool = new Pool<SimulatedLiftingSurface>(Create, Reset);
 

@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class SimulatedPart
+    public class SimulatedPart : IReleasable
     {
         protected internal DragCubeList cubes = new DragCubeList();
         private bool ownsCubes = true;

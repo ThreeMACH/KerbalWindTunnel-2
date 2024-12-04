@@ -6,7 +6,7 @@ using UnityEngine;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class PartCollection
+    public class PartCollection : IReleasable
     {
         public SimulatedVessel parentVessel;
 
