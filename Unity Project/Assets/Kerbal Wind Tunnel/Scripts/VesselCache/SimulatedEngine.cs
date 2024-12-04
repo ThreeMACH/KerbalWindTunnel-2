@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using Smooth.Pools;
 using UnityEngine;
@@ -7,7 +6,7 @@ using KerbalWindTunnel.Extensions;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class SimulatedEngine
+    public class SimulatedEngine : IReleasable
     {
         private static readonly Pool<SimulatedEngine> pool = new Pool<SimulatedEngine>(Create, Reset);
 
