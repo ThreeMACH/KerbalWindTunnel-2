@@ -218,7 +218,7 @@ namespace Graphing
                 if (axisMaterial != null)
                 {
                     foreach (GraphDrawer grapher in attachedGraphDrawers.Where(g => g.ShaderMaterial == axisMaterial))
-                        grapher.AssignMaterial(value);
+                        grapher.ShaderMaterial = value;
                     if (materialWasInstantiated)
                         Destroy(axisMaterial);
                 }
@@ -485,17 +485,22 @@ namespace Graphing
                 RecalculateBounds();
             if (attachedGraphDrawers.FirstOrDefault(GraphDrawerIsVisible) == graphDrawer)
             {
-                // TODO: do we want to limit to only IColorGraphs? The function works for any IGraphable...
-                if (_use == AxisDirection.Color && graphDrawer.Graph is IColorGraph graph)
+                // TODO: do we want to limit to only IColorGraphs? The function works for any IGraph...
+                if (_use == AxisDirection.Color)
                 {
-                    AxisMaterial = InstantiateMaterial(graph);
-                    materialWasInstantiated = true;
+                    IColorGraph firstColorGraph = graphDrawer.FirstColorGraphInHierarchy;
+                    if (firstColorGraph != null)
+                    {
+                        // TODO: Make Material handling more elegant.
+                        AxisMaterial = InstantiateMaterial(firstColorGraph);
+                        materialWasInstantiated = true;
+                    }
                 }
                 SetUpAxis(graphDrawer);
             }
             if (_use == AxisDirection.Color)
             {
-                graphDrawer.AssignMaterial(AxisMaterial);
+                graphDrawer.ShaderMaterial = AxisMaterial;
             }
 
             AxisDirection realUse = _use;

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Graphing.UI;
-using Graphing.Extensions;
 
 namespace Graphing
 {
@@ -107,11 +106,11 @@ namespace Graphing
         /// <summary>Adds a graph to this <see cref="Grapher"/>, associating it with the default axes.</summary>
         /// <param name="graph">The graph to be added.</param>
         /// <returns>The <see cref="GraphDrawer"/> object associated with this graph.</returns>
-        public GraphDrawer AddGraphToDefaultAxes(IGraphable graph)
+        public GraphDrawer AddGraphToDefaultAxes(IGraphable graph, bool provideColorAxisForCollection = true)
             => AddGraph(graph,
                 ProvidePrimaryHorizontalAxis(),
                 ProvidePrimaryVerticalAxis(),
-                typeof(IColorGraph).IsAssignableFrom(graph.GetType()) ? ProvideColorAxis() : null
+                graph is IColorGraph || (provideColorAxisForCollection && graph is GraphableCollection) ? ProvideColorAxis() : null
                 );
         public bool RemoveGraph(IGraphable graph)
         {

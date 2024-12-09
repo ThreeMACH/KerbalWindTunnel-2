@@ -14,6 +14,7 @@ namespace Graphing
                 mesh = new Mesh();
             MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
             meshFilter.mesh = mesh;
+            // Todo: This wastefully instantiates something on the first relevant graph since it gets called before the graph is assigned to an axis. I think.
             Material axisMaterial = grapher.GetComponentsInChildren<AxisUI>().FirstOrDefault(a=>a.Use == AxisUI.AxisDirection.Color && a.Contains(this))?.AxisMaterial ?? Instantiate(surfGraphMaterial);
             ShaderMaterial = axisMaterial;
             transform.localEulerAngles = new Vector3(0, 180, 0);

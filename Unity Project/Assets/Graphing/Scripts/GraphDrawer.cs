@@ -31,7 +31,7 @@ namespace Graphing
         public Material ShaderMaterial
         {
             get => _material;
-            protected set
+            set
             {
                 if (_material == value)
                     return;
@@ -41,6 +41,10 @@ namespace Graphing
 
                 if (TryGetComponent(out MeshRenderer meshRenderer))
                     meshRenderer.material = _material;
+
+                foreach (GraphDrawer graphDrawer in GetComponentsInChildren<GraphDrawer>(true))
+                    if (graphDrawer != this)
+                        graphDrawer.ShaderMaterial = value;
             }
         }
         private Material _material = null;
@@ -76,6 +80,34 @@ namespace Graphing
         {
             get => graph;
             set => SetGraph(value);
+        }
+
+        public IColorGraph FirstColorGraphInHierarchy
+        {
+            get=>FirstColorGraph(graph);
+        }
+        private IColorGraph FirstColorGraph(IGraphable graphable)
+        {
+            if (graphable is IColorGraph colorGraph)
+                return colorGraph;
+            if (graphable is GraphableCollection collection)
+            {
+                foreach (IGraphable child in collection)
+                {
+                    if (child is IColorGraph childColorGraph)
+                        return childColorGraph;
+                }
+                foreach (IGraphable child in collection)
+                {
+                    if (child is GraphableCollection childCollection)
+                    {
+                        colorGraph = FirstColorGraph(childCollection);
+                        if (colorGraph != null)
+                            return colorGraph;
+                    }
+                }
+            }
+            return null;
         }
 
         public virtual void SetGraph(IGraphable graph)
@@ -367,24 +399,18 @@ namespace Graphing
 
         protected virtual void OnDestroy()
         {
-            graph.ValuesChanged -= OnValuesChangedHandler;
-            graph.DisplayChanged -= OnDisplayChangedHandler;
-            grapher.UnregisterGraphDrawer(this);
+            if (graph != null)
+            {
+                graph.ValuesChanged -= OnValuesChangedHandler;
+                graph.DisplayChanged -= OnDisplayChangedHandler;
+            }
+            grapher?.UnregisterGraphDrawer(this);
             if (mesh != null)
                 Destroy(mesh);
             if (materialIsUnique)
                 Destroy(_material);
         }
 
-        public void AssignMaterial(Material material)
-        {
-            foreach (GraphDrawer drawer in GetComponentsInChildren<GraphDrawer>())
-                drawer.AssignMaterialInternal(material);
-        }
-        protected void AssignMaterialInternal(Material material)
-        {
-            ShaderMaterial = material ?? throw new ArgumentNullException("material");
-        }
         public void MakeMaterialUnique()
         {
             if (materialIsUnique)
