@@ -336,13 +336,13 @@ namespace Graphing
             {
                 if (!axis.Contains(graph))
                     continue;
-                if (axis.Use == AxisUI.AxisDirection.Horizontal && horizontal == null)
+                if (horizontal == null && axis.Use == AxisUI.AxisDirection.Horizontal)
                 {
                     horizontal = axis;
                     if (vertical != null)
                         break;
                 }
-                if (axis.Use == AxisUI.AxisDirection.Vertical && vertical == null)
+                if (vertical == null && axis.Use == AxisUI.AxisDirection.Vertical)
                 {
                     vertical = axis;
                     if (horizontal != null)
@@ -363,6 +363,10 @@ namespace Graphing
                 yRange = vertical.Max - yMin;
             }
             return new Vector2(xMin + relativePosition.x * xRange, yMin + relativePosition.y * yRange);
+        }
+        public Vector2 GetGraphCoordinate(Vector2 relativePosition)
+        {
+            return new Vector2(PrimaryHorizontalAxis?.GetValue(relativePosition.x) ?? 0, PrimaryVerticalAxis?.GetValue(relativePosition.y) ?? 0);
         }
 
         /// <summary>
@@ -402,7 +406,7 @@ namespace Graphing
         /// </summary>
         /// <param name="sender">The sender graph.</param>
         /// <param name="eventArgs">The <see cref="EventArgs"/> instance containing the event data.</param>
-        public void DisplayNameChangedHandler(IGraphable sender, DisplayNameChangedEventArgs displayNameChangedEventArgs)
+        public virtual void DisplayNameChangedHandler(IGraphable sender, DisplayNameChangedEventArgs displayNameChangedEventArgs)
         {
             // TODO: Set up legend or other things requiring the name of this graph.
         }

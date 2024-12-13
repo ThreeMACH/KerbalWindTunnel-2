@@ -368,6 +368,11 @@ namespace Graphing
         /// </summary>
         public int TickCount { get; private set; }
 
+        public float GetValue(float normalizedValue)
+        {
+            return Mathf.Lerp(Min, Max, normalizedValue);
+        }
+
         protected virtual void BoundsChanged(object sender, Axis.AxisBoundsEventArgs eventArgs)
         {
             if (sender != axis)

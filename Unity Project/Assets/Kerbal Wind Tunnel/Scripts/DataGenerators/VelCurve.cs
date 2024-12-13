@@ -1,24 +1,23 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
+using System.Collections.Concurrent;
 using System.Linq;
+using System.Threading;
+using System.Threading.Tasks;
 using UnityEngine;
 using Graphing;
-using System.Threading.Tasks;
-using System.Threading;
 
 namespace KerbalWindTunnel.DataGenerators
 {
-    public class VelCurve : DataSetGenerator
+    public class VelCurve
     {
-        public VelPoint[] VelPoints = new VelPoint[0];
-        public Conditions currentConditions = Conditions.Blank;
-        private readonly Dictionary<Conditions, VelPoint[]> cache = new Dictionary<Conditions, VelPoint[]>();
-        private VelPoint[] primaryProgress = null;
+        public readonly GraphableCollection graphables = new GraphableCollection();
+        public VelPoint[] VelPoints { get; private set; }
+        private float wingArea;
+        private static readonly ConcurrentDictionary<(int altitude, int velocity), VelPoint> cache = new ConcurrentDictionary<(int, int), VelPoint>();
 
         public VelCurve()
         {
-            graphables.Clear();
             Vector2[] blank = new Vector2[0];
             graphables.Add(new LineGraph(blank) { Name = "Level AoA", YUnit = "°", StringFormat = "F2", color = Color.green });
             graphables.Add(new LineGraph(blank) { Name = "Max Lift AoA", YUnit = "°", StringFormat = "F2", color = Color.green });
@@ -31,159 +30,125 @@ namespace KerbalWindTunnel.DataGenerators
             graphables.Add(new LineGraph(blank) { Name = "Max Lift", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
             graphables.Add(new LineGraph(blank) { Name = "Excess Acceleration", YUnit = "g", StringFormat = "N2", color = Color.green });
 
-            var e = graphables.GetEnumerator();
-            while (e.MoveNext())
+            foreach (var graph in graphables)
             {
-                e.Current.XUnit = "m/s";
-                e.Current.XName = "Airspeed";
-                e.Current.Visible = false;
+                graph.XUnit = "m/s";
+                graph.XName = "Airspeed";
+                graph.Visible = false;
             }
         }
 
-        public override float PercentComplete
+        public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50)
         {
-            get
-            {
-                if (Status == TaskStatus.RanToCompletion)
-                    return 1;
-                if (primaryProgress == null)
-                    return -1;
-                return (float)(primaryProgress.Count((pt) => pt.completed)) / primaryProgress.Count();
-            }
+            TaskProgressTracker tracker = new TaskProgressTracker();
+            Task<ResultsType> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, lowerBound, upperBound, segments, tracker), cancellationToken);
+            tracker.Task = task;
+            task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
+            task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
+            return tracker;
         }
 
-        public override void Clear()
+        private static ResultsType CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
         {
-            base.Clear();
-            currentConditions = Conditions.Blank;
-            cache.Clear();
-            VelPoints = new VelPoint[0];
+            // Apply rounding to facilitate caching.
+            const int altitudeRound = 10;
+            int altitude_ = Mathf.RoundToInt(altitude / altitudeRound) * altitudeRound;
+            lowerBound = Mathf.Round(lowerBound);
+            upperBound = Mathf.Round(upperBound);
+            SortedSet<int> keys = new SortedSet<int>();
+            float delta = (upperBound - lowerBound) / segments;
+            for (int i = 0; i <= segments; i++)
+                keys.Add(Mathf.RoundToInt(lowerBound + delta * i));
+            List<int> keysList = keys.ToList();
+
+            // Amend the tracker count in case rounding eliminated any keys.
+            tracker?.AmendTotal(keysList.Count);
+
+            float wingArea = aeroPredictorToClone.Area;
+
+            // Fill in the data in a parallel loop.
+            VelPoint[] results = new VelPoint[keys.Count];
+            try
+            {
+                Parallel.For<AeroPredictor>(0, keys.Count, new ParallelOptions() { CancellationToken = cancellationToken },
+                    aeroPredictorToClone.GetThreadSafeObject,
+                    (index, state, predictor) =>
+                    {
+                        int velocity = keysList[index];
+                        if (!cache.TryGetValue((altitude_, velocity), out results[index]))
+                        {
+                            VelPoint data = new VelPoint(predictor, body, altitude_, velocity);
+                            results[index] = data;
+                            cache[(altitude_, velocity)] = data;
+                        }
+                        tracker?.Increment();
+                        return predictor;
+                    },
+                    (predictor) => (predictor as VesselCache.IReleasable)?.Release());
+            }
+            catch (AggregateException aggregateException)
+            {
+                foreach (var ex in aggregateException.Flatten().InnerExceptions)
+                {
+                    Debug.LogException(ex);
+                }
+                throw aggregateException;
+            }
+
+            // Last chance to ditch the results before pushing them to the UI
+            cancellationToken.ThrowIfCancellationRequested();
+
+            return (results, wingArea);
         }
-
-        public void Calculate(CelestialBody body, float altitude, float lowerBound = 0, float upperBound = 2000, float step = 50)
+        private void PushResults(Task<ResultsType> data)
         {
-            Conditions newConditions = new Conditions(body, altitude, lowerBound, upperBound, step);
-            if (newConditions.Equals(currentConditions))
+            lock (this)
             {
-                valuesSet = true;
-                return;
-            }
-
-            Cancel();
-
-            if (!cache.TryGetValue(newConditions, out VelPoints))
-            {
-                this.cancellationTokenSource = new CancellationTokenSource();
-                WindTunnel.Instance.StartCoroutine(Processing(newConditions));
-            }
-            else
-            {
-                currentConditions = newConditions;
+                ResultsType results = data.Result;
+                VelPoints = results.data;
+                wingArea = results.wingArea;
                 UpdateGraphs();
-                valuesSet = true;
             }
         }
-
-        public override void UpdateGraphs()
+        private void RethrowErrors(Task<ResultsType> task)
         {
-            float left = currentConditions.lowerBound;
-            float right = currentConditions.upperBound;
-            float invArea = WindTunnelWindow.Instance.CommonPredictor.Area;
+            if (task.Status == TaskStatus.Faulted)
+            {
+                Debug.LogError("Wind tunnel task faulted. (Vel)");
+                Debug.LogException(task.Exception);
+            }
+            else if (task.Status == TaskStatus.Canceled)
+                Debug.Log("Wind tunnel task was canceled. (Vel)");
+        }
+
+        public static void Clear(Task task = null)
+        {
+            if (task == null)
+                cache.Clear();
+            else
+                task.ContinueWith(ClearContinuation);
+        }
+        private static void ClearContinuation(Task _) => cache.Clear();
+
+        public void UpdateGraphs()
+        {
             Func<VelPoint, float> scale = (pt) => 1;
             if (WindTunnelSettings.UseCoefficients)
-                scale = (pt) => 1 / pt.dynamicPressure * invArea;
-            ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => pt.AoA_level * Mathf.Rad2Deg).ToArray(), left, right);
-            ((LineGraph)graphables["Max Lift AoA"]).SetValues(VelPoints.Select(pt => pt.AoA_max * Mathf.Rad2Deg).ToArray(), left, right);
-            ((LineGraph)graphables["Thrust Available"]).SetValues(VelPoints.Select(pt => pt.Thrust_available).ToArray(), left, right);
-            ((LineGraph)graphables["Lift/Drag Ratio"]).SetValues(VelPoints.Select(pt => pt.LDRatio).ToArray(), left, right);
-            ((LineGraph)graphables["Drag"]).SetValues(VelPoints.Select(pt => pt.drag * scale(pt)).ToArray(), left, right);
-            ((LineGraph)graphables["Lift Slope"]).SetValues(VelPoints.Select(pt => pt.dLift / pt.dynamicPressure * invArea).ToArray(), left, right);
-            ((LineGraph)graphables["Excess Thrust"]).SetValues(VelPoints.Select(pt => pt.Thrust_excess).ToArray(), left, right);
-            ((LineGraph)graphables["Pitch Input"]).SetValues(VelPoints.Select(pt => pt.pitchInput).ToArray(), left, right);
-            ((LineGraph)graphables["Max Lift"]).SetValues(VelPoints.Select(pt => pt.Lift_max * scale(pt)).ToArray(), left, right);
-            ((LineGraph)graphables["Excess Acceleration"]).SetValues(VelPoints.Select(pt => pt.Accel_excess).ToArray(), left, right);
+                scale = (pt) => 1 / pt.dynamicPressure * wingArea;
+            ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_level * Mathf.Rad2Deg)).ToArray());
+            ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_level * Mathf.Rad2Deg)).ToArray());
+            ((LineGraph)graphables["Max Lift AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_max * Mathf.Rad2Deg)).ToArray());
+            ((LineGraph)graphables["Thrust Available"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Thrust_available)).ToArray());
+            ((LineGraph)graphables["Lift/Drag Ratio"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.LDRatio)).ToArray());
+            ((LineGraph)graphables["Drag"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.drag * scale(p))).ToArray());
+            ((LineGraph)graphables["Lift Slope"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.dLift / p.dynamicPressure * wingArea)).ToArray());
+            ((LineGraph)graphables["Excess Thrust"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Thrust_excess)).ToArray());
+            ((LineGraph)graphables["Pitch Input"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.pitchInput)).ToArray());
+            ((LineGraph)graphables["Max Lift"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Lift_max * scale(p))).ToArray());
+            ((LineGraph)graphables["Excess Acceleration"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Accel_excess)).ToArray());
         }
-
-        private IEnumerator Processing(Conditions conditions)
-        {
-            int numPts = (int)Math.Ceiling((conditions.upperBound - conditions.lowerBound) / conditions.step);
-            primaryProgress = new VelPoint[numPts + 1];
-            float trueStep = (conditions.upperBound - conditions.lowerBound) / numPts;
-
-            CancellationToken closureCancellationToken = this.cancellationTokenSource.Token;
-            AeroPredictor aeroPredictorToClone = WindTunnelWindow.Instance.CreateAeroPredictor();
-
-            stopwatch.Reset();
-            stopwatch.Start();
-
-            task = Task.Factory.StartNew<VelPoint[]>(
-                () =>
-                {
-                    try
-                    {
-                        //OrderablePartitioner<EnvelopePoint> partitioner = Partitioner.Create(primaryProgress, true);
-                        Parallel.For<AeroPredictor>(0, primaryProgress.Length, new ParallelOptions() { CancellationToken = closureCancellationToken },
-                            aeroPredictorToClone.GetThreadSafeObject,
-                            (index, state, predictor) =>
-                        {
-                            primaryProgress[index] = new VelPoint(predictor, conditions.body, conditions.altitude, conditions.lowerBound + trueStep * index);
-                            return predictor;
-                        }, (predictor) => (predictor as VesselCache.IReleasable)?.Release());
-
-                        closureCancellationToken.ThrowIfCancellationRequested();
-                        return cache[conditions] = primaryProgress;
-                    }
-                    catch (AggregateException aggregateException)
-                    {
-                        foreach (var ex in aggregateException.Flatten().InnerExceptions)
-                        {
-                            Debug.LogException(ex);
-                        }
-                        throw aggregateException;
-                    }
-                },
-            closureCancellationToken);
-
-            while (task.Status < TaskStatus.RanToCompletion)
-            {
-                //Debug.Log(manager.PercentComplete + "% done calculating...");
-                yield return 0;
-            }
-
-            if (aeroPredictorToClone is VesselCache.IReleasable releaseable)
-                releaseable.Release();
-
-            if (task.Status > TaskStatus.RanToCompletion)
-            {
-                if (task.Status == TaskStatus.Faulted)
-                {
-                    Debug.LogError("Wind tunnel task faulted (Vel)");
-                    Debug.LogException(task.Exception);
-                }
-                else if (task.Status == TaskStatus.Canceled)
-                    Debug.Log("Wind tunnel task was canceled. (Vel)");
-                yield break;
-            }
-
-            if (!closureCancellationToken.IsCancellationRequested)
-            {
-                VelPoints = primaryProgress;
-                currentConditions = conditions;
-                UpdateGraphs();
-                valuesSet = true;
-            }
-        }
-
-        public override void OnAxesChanged(float xMin, float xMax, float yMin, float yMax, float zMin, float zMax)
-        {
-            const float variance = 0.75f;
-            const int numPts = 125;
-            if (!currentConditions.Contains(currentConditions.Modify(lowerBound: xMin, upperBound: xMax)) ||
-                currentConditions.step * variance > (xMax - xMin / numPts))
-            {
-                Calculate(currentConditions.body, currentConditions.altitude, xMin, xMax, (xMax - xMin) / numPts);
-            }
-        }
+        private static Vector2 ValuesFunc(VelPoint point, Func<VelPoint, float> func)
+            => new Vector2(point.speed, func(point));
 
         public readonly struct VelPoint
         {
@@ -201,7 +166,6 @@ namespace KerbalWindTunnel.DataGenerators
             public readonly float dLift;
             public readonly float pitchInput;
             public readonly float Lift_max;
-            public readonly bool completed;
 
             public VelPoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed)
             {
@@ -224,9 +188,11 @@ namespace KerbalWindTunnel.DataGenerators
                 Thrust_excess = -drag - AeroPredictor.GetDragForceMagnitude(thrustForce, AoA_level);
                 Accel_excess = Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel;
                 LDRatio = Math.Abs(AeroPredictor.GetLiftForceMagnitude(force, AoA_level) / drag);
-                dLift = (vessel.GetLiftForceMagnitude(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput) -
-                    vessel.GetLiftForceMagnitude(conditions, AoA_level, pitchInput)) / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
-                completed = true;
+                if (vessel is ILiftAoADerivativePredictor derivativePredictor)
+                    dLift = derivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA_level, pitchInput) * Mathf.Deg2Rad; // Deg2Rad = 1/Rad2Deg
+                else
+                    dLift = (vessel.GetLiftForceMagnitude(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput) -
+                        vessel.GetLiftForceMagnitude(conditions, AoA_level, pitchInput)) / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
             }
 
             public override string ToString()
@@ -241,73 +207,17 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public readonly struct Conditions : IEquatable<Conditions>
+        public readonly struct ResultsType
         {
-            public readonly CelestialBody body;
-            public readonly float altitude;
-            public readonly float lowerBound;
-            public readonly float upperBound;
-            public readonly float step;
-
-            public static readonly Conditions Blank = new Conditions(null, 0, 0, 0, 0);
-
-            public Conditions(CelestialBody body, float altitude, float lowerBound, float upperBound, float step)
+            public readonly VelPoint[] data;
+            public readonly float wingArea;
+            public ResultsType(VelPoint[] data, float wingArea)
             {
-                this.body = body;
-                if (body != null && altitude > body.atmosphereDepth)
-                    altitude = (float)body.atmosphereDepth;
-                this.altitude = altitude;
-                this.lowerBound = lowerBound;
-                this.upperBound = upperBound;
-                this.step = step;
+                this.data = data;
+                this.wingArea = wingArea;
             }
-
-            public Conditions Modify(CelestialBody body = null, float altitude = float.NaN, float lowerBound = float.NaN, float upperBound = float.NaN, float step = float.NaN)
-             => Conditions.Modify(this, body, altitude, lowerBound, upperBound, step);
-            public static Conditions Modify(Conditions conditions, CelestialBody body = null, float altitude = float.NaN, float lowerBound = float.NaN, float upperBound = float.NaN, float step = float.NaN)
-            {
-                if (body == null) body = conditions.body;
-                if (float.IsNaN(altitude)) altitude = conditions.altitude;
-                if (float.IsNaN(lowerBound)) lowerBound = conditions.lowerBound;
-                if (float.IsNaN(upperBound)) upperBound = conditions.upperBound;
-                if (float.IsNaN(step)) step = conditions.step;
-                return new Conditions(body, altitude, lowerBound, upperBound, step);
-            }
-
-            public bool Contains(Conditions conditions)
-            {
-                return this.lowerBound <= conditions.lowerBound &&
-                    this.upperBound >= conditions.upperBound;
-            }
-
-            public override bool Equals(object obj)
-            {
-                if (obj == null)
-                    return false;
-                if (obj is Conditions conditions)
-                    return Equals(conditions);
-                return false;
-            }
-
-            public bool Equals(Conditions conditions)
-            {
-                return this.body == conditions.body &&
-                    this.altitude == conditions.altitude &&
-                    this.lowerBound == conditions.lowerBound &&
-                    this.upperBound == conditions.upperBound &&
-                    this.step == conditions.step;
-            }
-
-            public static bool operator ==(Conditions left, Conditions right)
-            {
-                return left.Equals(right);
-            }
-            public static bool operator !=(Conditions left, Conditions right) => !(left.Equals(right));
-
-            public override int GetHashCode()
-            {
-                return HashCode.Combine(this.body, this.altitude, this.lowerBound, this.upperBound, this.step);
-            }
+            public static implicit operator (VelPoint[], float)(ResultsType obj) => (obj.data, obj.wingArea);
+            public static implicit operator ResultsType((VelPoint[] data, float wingArea) obj) => new ResultsType(obj.data, obj.wingArea);
         }
     }
 }

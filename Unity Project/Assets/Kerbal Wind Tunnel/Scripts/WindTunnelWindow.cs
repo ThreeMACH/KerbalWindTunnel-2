@@ -5,6 +5,7 @@ using UnityEngine;
 using UnityEngine.UI;
 using UI_Tools.Universal_Text;
 using Graphing;
+using KerbalWindTunnel.DataGenerators;
 
 namespace KerbalWindTunnel
 {
@@ -77,6 +78,13 @@ namespace KerbalWindTunnel
         private GraphableCollection aoaCollection;
         private GraphableCollection velocityCollection;
 
+        private readonly VelCurve velData = new VelCurve();
+        private readonly AoACurve aoaData = new AoACurve();
+        private readonly EnvelopeSurf envelopeData = new EnvelopeSurf();
+
+        private TaskProgressTracker taskTracker_vel;
+        private TaskProgressTracker taskTracker_aoa;
+        private TaskProgressTracker taskTracker_surf;
         private System.Threading.CancellationTokenSource cancellationTokenSource = new System.Threading.CancellationTokenSource();
 
         private static readonly string[] envelopeItems = new string[] { "Excess Thrust", "Level Flight AoA", "Lift/Drag Ratio", "Thrust Available", "Max Lift AoA", "Max Lift Force", "Fuel Economy", "Fuel Burn Rate", "Drag Force", "Lift Slope", "Pitch Input", "Excess Acceleration" };
@@ -265,10 +273,13 @@ namespace KerbalWindTunnel
             get => _highlightSpeed;
             set
             {
+                value = Mathf.Round(value);
                 if (_highlightSpeed == value)
                     return;
                 _highlightSpeed = value;
                 highlightSpeedInput.Text = value.ToString();
+                if (GraphMode == 1)
+                    RefreshData();
                 UpdateHighlightingMethod();
             }
         }
@@ -279,10 +290,14 @@ namespace KerbalWindTunnel
             get => _highlightAltitude;
             set
             {
+                const int altitudeRound = 10;
+                value = Mathf.Round(value / altitudeRound) * altitudeRound;
                 if (_highlightAltitude == value)
                     return;
                 _highlightAltitude = value;
                 highlightAltitudeInput.Text = value.ToString();
+                if (GraphMode > 0)
+                    RefreshData();
                 UpdateHighlightingMethod();
             }
         }
@@ -351,6 +366,16 @@ namespace KerbalWindTunnel
             planetDropdown.Value = homeIndex;
 
             SetEnvelopeOptions(envelopeItems);
+
+            velocityCollection = velData.graphables;
+            aoaCollection = aoaData.graphables;
+            envelopeCollection = envelopeData.graphables;
+
+            velCurveGrapher.AddGraph(velocityCollection);
+            aoaCurveGrapher.AddGraph(aoaCollection);
+            envelopeGrapher.AddGraph(envelopeCollection);
+
+
             foreach (var resizer in GetComponentsInChildren<UI_Tools.RenderTextureResizer>())
                 resizer.ForceResize();
         }
@@ -380,6 +405,8 @@ namespace KerbalWindTunnel
             if (float.TryParse(speed, out float result) && result != _highlightSpeed)
             {
                 _highlightSpeed = result;
+                if (GraphMode == 1)
+                    RefreshData();
                 UpdateHighlightingMethod();
             }
         }
@@ -390,6 +417,8 @@ namespace KerbalWindTunnel
             if (float.TryParse(altitude, out float result) && result != _highlightAltitude)
             {
                 _highlightAltitude = result;
+                if (GraphMode > 0)
+                    RefreshData();
                 UpdateHighlightingMethod();
             }
         }
@@ -460,16 +489,23 @@ namespace KerbalWindTunnel
         private void EnvelopeGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
             envelopeInfo.Text = envelopeGrapher.GetDisplayValue(clickedPosition);
+            clickedPosition = envelopeGrapher.GetGraphCoordinate(clickedPosition);
+            HighlightSpeed = clickedPosition.x;
+            HighlightAltitude = clickedPosition.y;
+            // Todo: Incorporate AoA
         }
 
         private void AoaCurveGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
             aoaCurveInfo.Text = aoaCurveGrapher.GetDisplayValue(clickedPosition);
+            HighlightAoA = aoaCurveGrapher.GetGraphCoordinate(clickedPosition).x;
         }
 
         private void VelCurveGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
             velCurveInfo.Text = velCurveGrapher.GetDisplayValue(clickedPosition);
+            HighlightSpeed = velCurveGrapher.GetGraphCoordinate(clickedPosition).x;
+            // Todo: Incorporate AoA
         }
 
         private Vector2 crosshairsPosition;
@@ -531,20 +567,13 @@ namespace KerbalWindTunnel
             }
         }
 
-        public AeroPredictor CreateAeroPredictor()
+        private void RefreshData()
         {
-            AeroPredictor vesselCache = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
-            if (WindTunnelSettings.Instance.useCharacterized && vesselCache is VesselCache.SimulatedVessel simVessel)
+            if (vessel == null)
+                return;
+            Cancel();
             {
-                if (simVessel.ContainsRotating)
-                {
-                    ScreenMessages.PostScreenMessage("Cannot use characterization methods as the vessel contains rotating parts.", 5, ScreenMessageStyle.UPPER_CENTER);
-                    Debug.Log("[Kerbal Wind Tunnel] Tried to use characterization, but couldn't as the vessel contains rotating parts.");
-                }
-                else
-                    vesselCache = new VesselCache.CharacterizedVessel(simVessel);
             }
-            return vesselCache;
         }
 
         // Called by the Planet selection dropdown
@@ -562,22 +591,35 @@ namespace KerbalWindTunnel
             highlightManager?.UpdateHighlighting((HighlightManager.HighlightMode)HighlightMode, body.celestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
         }
 
-        private void GraphModeChanged()
-        {
-        }
+        // Called when the Graph Mode is changed by a toggle or externally.
+        private void GraphModeChanged() => RefreshData();
 
         // Called whenever the target ascent altitude or velocity is changed.
         private void UpdateAscentTarget()
         {
+            envelopeData.CalculateOptimalLines(cancellationTokenSource.Token);
         }
 
         // Called whenever one of the AoA graph selection toggles *changes*.
         public void AoAGraphToggleEvent(int index)
         {
+            bool value = aoaToggleArray[index];
+            aoaCollection[index].Visible = value;
         }
 
         // Called whenever one of the Velocity graph selection toggles *changes*.
         public void VelGraphToggleEvent(int index)
+        {
+            bool value = velToggleArray[index];
+            velocityCollection[index].Visible = value;
+        }
+
+        // TODO: Should be used to disable any auto-updates.
+        // The window is only set to not enabled when the 'X' is clicked.
+        public void OnDisable()
+        {
+        }
+        public void OnEnable()
         {
         }
 
@@ -585,6 +627,14 @@ namespace KerbalWindTunnel
         public void UpdateVessel()
         {
 
+            if (vessel != null)
+            {
+                if (vessel is VesselCache.IReleasable releasable)
+                    releasable.Release();
+                if (vessel is IDisposable disposable)
+                    disposable.Dispose();
+                vessel = null;
+            }
 
             updateVesselButton.interactable = false;
         }
@@ -638,6 +688,9 @@ namespace KerbalWindTunnel
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
         {
+            cancellationTokenSource?.Cancel();
+            cancellationTokenSource?.Dispose();
+            cancellationTokenSource = null;
             envelopeGrapher.GraphClicked -= EnvelopeGrapher_GraphClicked;
             aoaCurveGrapher.GraphClicked -= AoaCurveGrapher_GraphClicked;
             velCurveGrapher.GraphClicked -= VelCurveGrapher_GraphClicked;
