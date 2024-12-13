@@ -200,8 +200,11 @@ namespace Graphing
         /// <param name="values"></param>
         public void SetValues(float[] values, float xLeft, float xRight)
         {
-            SetValuesInternal(values, xLeft, xRight);
-            OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+            lock (this)
+            {
+                SetValuesInternal(values, xLeft, xRight);
+                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+            }
         }
         private void SetValuesInternal(float[] values, float xLeft, float xRight)
         {
@@ -236,8 +239,11 @@ namespace Graphing
         /// <param name="values"></param>
         public void SetValues(Vector2[] values)
         {
-            SetValuesInternal(values);
-            OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+            lock (this)
+            {
+                SetValuesInternal(values);
+                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+            }
         }
         private void SetValuesInternal(Vector2[] values)
         {

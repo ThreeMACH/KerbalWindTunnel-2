@@ -34,10 +34,13 @@ namespace Graphing
             get { return _values; }
             set
             {
-                _values = value;
-                zMin = _values.Min(true);
-                zMax = _values.Max(true);
-                OnValuesChanged(new ValuesChangedEventArgs(Values, false, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                lock (this)
+                {
+                    _values = value;
+                    zMin = _values.Min(true);
+                    zMax = _values.Max(true);
+                    OnValuesChanged(new ValuesChangedEventArgs(Values, false, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                }
             }
         }
 
@@ -269,20 +272,23 @@ namespace Graphing
 
         public void SetValues(float[,] values, float xLeft, float xRight, float yBottom, float yTop)
         {
-            this._values = values;
-            this.xMin = xLeft;
-            this.xMax = xRight;
-            this.yMin = yBottom;
-            this.yMax = yTop;
-            if (_values.GetUpperBound(0) < 0 || _values.GetUpperBound(1) < 0)
+            lock (this)
             {
-                zMin = zMax = 0;
-                return;
-            }
-            this.zMin = values.Min(true);
-            this.zMax = values.Max(true);
+                this._values = values;
+                this.xMin = xLeft;
+                this.xMax = xRight;
+                this.yMin = yBottom;
+                this.yMax = yTop;
+                if (_values.GetUpperBound(0) < 0 || _values.GetUpperBound(1) < 0)
+                {
+                    zMin = zMax = 0;
+                    return;
+                }
+                this.zMin = values.Min(true);
+                this.zMax = values.Max(true);
 
-            OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+            }
         }
 
         /// <summary>

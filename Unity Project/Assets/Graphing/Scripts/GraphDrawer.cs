@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
@@ -268,55 +267,60 @@ namespace Graphing
 
         protected void MarkForRedraw(EventArgs reason)
         {
-            redrawReasons.Add(reason);
-            if (markedForRedraw)
-                return;
+            lock (redrawReasons)
+                redrawReasons.Add(reason);
             markedForRedraw = true;
-            StartCoroutine(DrawAtEndOfFrame());
         }
 
-        private IEnumerator DrawAtEndOfFrame()
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
+        private void LateUpdate()
         {
-            yield return null;
-            markedForRedraw = false;
-            LateRedraw();
+            if (markedForRedraw)
+            {
+                LateRedraw();
+                markedForRedraw = false;
+            }
         }
         protected virtual void LateRedraw() => Draw();
+
         protected virtual void GenerateOtherGraph(IGraphable graphable, IGrouping<Type, EventArgs> redrawReasons, bool forceRegenerate = false)
             => Debug.LogError("GraphDrawer is not equipped to draw that type of graph.");
 
         protected virtual void Draw(bool forceRegenerate = false)
         {
-            int localFlag = 0;
-            if (redrawReasons.Count == 0)
-                redrawReasons.Add(new EventArgs());
-            foreach (IGrouping<Type, EventArgs> reasonGroup in redrawReasons.Reverse<EventArgs>().GroupBy(reason => reason.GetType()).OrderBy(group => EventArgsSort(group.Key)))
+            lock (graph)
             {
-                if (graph is ILineGraph lineGraphable)
+                int localFlag = 0;
+                if (redrawReasons.Count == 0)
+                    redrawReasons.Add(new EventArgs());
+                foreach (IGrouping<Type, EventArgs> reasonGroup in redrawReasons.Reverse<EventArgs>().GroupBy(reason => reason.GetType()).OrderBy(group => EventArgsSort(group.Key)))
                 {
-                    localFlag = DrawLineGraph(lineGraphable, reasonGroup, localFlag, forceRegenerate);
-                    continue;
-                }
-                if (graph is SurfGraph surfGraph)
-                {
-                    localFlag = DrawSurfGraph(surfGraph, reasonGroup, localFlag, forceRegenerate);
-                    continue;
-                }
-                if (graph is OutlineMask outlineMask)
-                {
-                    localFlag = DrawOutlineGraph(outlineMask, reasonGroup, localFlag, forceRegenerate);
-                    continue;
-                }
-                if (graph is GraphableCollection collection)
-                {
-                    localFlag = DrawCollection(collection, reasonGroup, localFlag, forceRegenerate);
-                    continue;
+                    if (graph is ILineGraph lineGraphable)
+                    {
+                        localFlag = DrawLineGraph(lineGraphable, reasonGroup, localFlag, forceRegenerate);
+                        continue;
+                    }
+                    if (graph is SurfGraph surfGraph)
+                    {
+                        localFlag = DrawSurfGraph(surfGraph, reasonGroup, localFlag, forceRegenerate);
+                        continue;
+                    }
+                    if (graph is OutlineMask outlineMask)
+                    {
+                        localFlag = DrawOutlineGraph(outlineMask, reasonGroup, localFlag, forceRegenerate);
+                        continue;
+                    }
+                    if (graph is GraphableCollection collection)
+                    {
+                        localFlag = DrawCollection(collection, reasonGroup, localFlag, forceRegenerate);
+                        continue;
+                    }
+
+                    GenerateOtherGraph(graph, reasonGroup, forceRegenerate);
                 }
 
-                GenerateOtherGraph(graph, reasonGroup, forceRegenerate);
+                redrawReasons.Clear();
             }
-
-            redrawReasons.Clear();
         }
 
         /// <summary>

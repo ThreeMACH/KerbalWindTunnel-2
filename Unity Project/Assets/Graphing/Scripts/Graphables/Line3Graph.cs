@@ -142,8 +142,11 @@ namespace Graphing
         /// <param name="values"></param>
         public void SetValues(Vector3[] values)
         {
-            SetValuesInternal(values);
-            OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+            lock (this)
+            {
+                SetValuesInternal(values);
+                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+            }
         }
 
         private void SetValuesInternal(Vector3[] values)

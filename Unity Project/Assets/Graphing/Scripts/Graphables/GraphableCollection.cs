@@ -217,8 +217,11 @@ namespace Graphing
             get => graphs.ToList();
             set
             {
-                this.Clear();
-                AddRange(value);
+                lock (this)
+                {
+                    this.Clear();
+                    AddRange(value);
+                }
             }
         }
 
@@ -271,7 +274,7 @@ namespace Graphing
             if (graph == this)
                 return true;
             if (graph is GraphableCollection collection)
-                return collection.Any(g => IsCircularReference(graph));
+                return collection.Any(g => (g as GraphableCollection)?.IsCircularReference(graph) ?? false);
             return false;
         }
 
@@ -707,22 +710,25 @@ namespace Graphing
         /// <param name="newGraph"></param>
         public virtual void Add(IGraphable newGraph)
         {
-            if (newGraph == null)
-                return;
-            if (IsCircularReference(newGraph))
+            lock (this)
             {
-                UnityEngine.Debug.LogError("Cannot create a circular GraphableCollection.");
-                return;
+                if (newGraph == null)
+                    return;
+                if (IsCircularReference(newGraph))
+                {
+                    UnityEngine.Debug.LogError("Cannot create a circular GraphableCollection.");
+                    return;
+                }
+                if (graphs.Contains(newGraph))
+                {
+                    UnityEngine.Debug.LogError("Cannot add two of the same graph instance to a collection.");
+                    return;
+                }
+                graphs.Add(newGraph);
+                newGraph.ValuesChanged += ValuesChangedSubscriber;
+                newGraph.DisplayChanged += DisplayChangedSubscriber;
+                OnValuesChanged(new GraphElementAddedEventArgs(newGraph));
             }
-            if (graphs.Contains(newGraph))
-            {
-                UnityEngine.Debug.LogError("Cannot add two of the same graph instance to a collection.");
-                return;
-            }
-            graphs.Add(newGraph);
-            newGraph.ValuesChanged += ValuesChangedSubscriber;
-            newGraph.DisplayChanged += DisplayChangedSubscriber;
-            OnValuesChanged(new GraphElementAddedEventArgs(newGraph));
         }
         /// <summary>
         /// Adds the elements in the specified collection to the end of the <see cref="GraphableCollection"/>.
@@ -730,21 +736,24 @@ namespace Graphing
         /// <param name="newGraphs"></param>
         public virtual void AddRange(IEnumerable<IGraphable> newGraphs)
         {
-            IEnumerator<IGraphable> enumerator = newGraphs.GetEnumerator();
-            while (enumerator.MoveNext())
+            lock (this)
             {
-                if (enumerator.Current == null)
-                    continue;
-                if (IsCircularReference(enumerator.Current))
+                IEnumerator<IGraphable> enumerator = newGraphs.GetEnumerator();
+                while (enumerator.MoveNext())
                 {
-                    UnityEngine.Debug.LogError("Cannot create a circular GraphableCollection.");
-                    continue;
+                    if (enumerator.Current == null)
+                        continue;
+                    if (IsCircularReference(enumerator.Current))
+                    {
+                        UnityEngine.Debug.LogError("Cannot create a circular GraphableCollection.");
+                        continue;
+                    }
+                    graphs.Add(enumerator.Current);
+                    enumerator.Current.ValuesChanged += ValuesChangedSubscriber;
+                    enumerator.Current.DisplayChanged += DisplayChangedSubscriber;
                 }
-                graphs.Add(enumerator.Current);
-                enumerator.Current.ValuesChanged += ValuesChangedSubscriber;
-                enumerator.Current.DisplayChanged += DisplayChangedSubscriber;
+                OnValuesChanged(new GraphElementsAddedEventArgs(newGraphs));
             }
-            OnValuesChanged(new GraphElementsAddedEventArgs(newGraphs));
         }
         /// <summary>
         /// Inserts an element into the <see cref="GraphableCollection"/> the specified index.
@@ -754,17 +763,20 @@ namespace Graphing
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public virtual void Insert(int index, IGraphable newGraph)
         {
-            if (newGraph == null)
-                return;
-            if (graphs.Contains(newGraph))
+            lock (this)
             {
-                UnityEngine.Debug.LogError("Cannot add two of the same graph instance to a collection.");
-                return;
+                if (newGraph == null)
+                    return;
+                if (graphs.Contains(newGraph))
+                {
+                    UnityEngine.Debug.LogError("Cannot add two of the same graph instance to a collection.");
+                    return;
+                }
+                graphs.Insert(index, newGraph);
+                newGraph.ValuesChanged += ValuesChangedSubscriber;
+                newGraph.DisplayChanged += DisplayChangedSubscriber;
+                OnValuesChanged(new GraphElementAddedEventArgs(newGraph));
             }
-            graphs.Insert(index, newGraph);
-            newGraph.ValuesChanged += ValuesChangedSubscriber;
-            newGraph.DisplayChanged += DisplayChangedSubscriber;
-            OnValuesChanged(new GraphElementAddedEventArgs(newGraph));
         }
         /// <summary>
         /// Removes the first occurrence of the specified object.
@@ -773,14 +785,17 @@ namespace Graphing
         /// <returns></returns>
         public virtual bool Remove(IGraphable graph)
         {
-            bool removed = graphs.Remove(graph);
-            if (removed)
+            lock (this)
             {
-                graph.ValuesChanged -= ValuesChangedSubscriber;
-                graph.DisplayChanged -= DisplayChangedSubscriber;
-                OnValuesChanged(new GraphElementRemovedEventArgs(graph));
+                bool removed = graphs.Remove(graph);
+                if (removed)
+                {
+                    graph.ValuesChanged -= ValuesChangedSubscriber;
+                    graph.DisplayChanged -= DisplayChangedSubscriber;
+                    OnValuesChanged(new GraphElementRemovedEventArgs(graph));
+                }
+                return removed;
             }
-            return removed;
         }
         /// <summary>
         /// Removes the element at the specified index.
@@ -789,11 +804,14 @@ namespace Graphing
         /// <exception cref="ArgumentOutOfRangeException"></exception>
         public virtual void RemoveAt(int index)
         {
-            IGraphable graphable = graphs[index];
-            graphs.RemoveAt(index);
-            graphable.ValuesChanged -= ValuesChangedSubscriber;
-            graphable.DisplayChanged -= DisplayChangedSubscriber;
-            OnValuesChanged(new GraphElementRemovedEventArgs(graphable));
+            lock (this)
+            {
+                IGraphable graphable = graphs[index];
+                graphs.RemoveAt(index);
+                graphable.ValuesChanged -= ValuesChangedSubscriber;
+                graphable.DisplayChanged -= DisplayChangedSubscriber;
+                OnValuesChanged(new GraphElementRemovedEventArgs(graphable));
+            }
         }
         /// <summary>
         /// Subscribes to the contained objects' <see cref="IGraphable.ValuesChanged"/> events.
@@ -802,7 +820,6 @@ namespace Graphing
         /// <param name="eventArgs"></param>
         protected virtual void ValuesChangedSubscriber(object sender, EventArgs eventArgs)
         {
-
             if (ignoreChildEvents)
                 return;
             EventArgs realEventArgs = eventArgs;
