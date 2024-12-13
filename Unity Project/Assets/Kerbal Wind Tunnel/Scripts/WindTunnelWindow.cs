@@ -18,9 +18,15 @@ namespace KerbalWindTunnel
         [SerializeField]
         private UT_InputField highlightSpeedInput;
         [SerializeField]
+        private GameObject highlightSpeedGroup;
+        [SerializeField]
         private UT_InputField highlightAltitudeInput;
         [SerializeField]
+        private GameObject highlightAltitudeGroup;
+        [SerializeField]
         private UT_InputField highlightAoAInput;
+        [SerializeField]
+        private GameObject highlightAoAGroup;
         [SerializeField]
         private Toggle envelopeToggle;
         [SerializeField]
@@ -67,26 +73,30 @@ namespace KerbalWindTunnel
         private Toggle rollUpToggle;
 #pragma warning restore IDE0044 // Add readonly modifier
 
-        private Graphing.GraphableCollection envelopeCollection;
-        private Graphing.GraphableCollection aoaCollection;
-        private Graphing.GraphableCollection velocityCollection;
+        private GraphableCollection envelopeCollection;
+        private GraphableCollection aoaCollection;
+        private GraphableCollection velocityCollection;
+
+        private System.Threading.CancellationTokenSource cancellationTokenSource = new System.Threading.CancellationTokenSource();
+
+        private static readonly string[] envelopeItems = new string[] { "Excess Thrust", "Level Flight AoA", "Lift/Drag Ratio", "Thrust Available", "Max Lift AoA", "Max Lift Force", "Fuel Economy", "Fuel Burn Rate", "Drag Force", "Lift Slope", "Pitch Input", "Excess Acceleration" };
+        private static readonly string[] aoaItems = new string[] { "Lift Force", "Drag Force", "Lift/Drag Ratio", "Lift Slope", "Pitch Input", "Pitching Torque" };
+        private static readonly string[] velItems = new string[] { "Level Flight AoA", "Max Lift AoA", "Lift/Drag Ratio", "Lift Slope", "Thrust Available", "Drag Force", "Excess Thrust", "Max Lift", "Excess Accleration", "Pitch Input" };
 
         private HighlightManager highlightManager;
 
         public static WindTunnelWindow Instance { get; private set; }
 
+        private AeroPredictor vessel = null;
+
+        // Only used externally. Rolling up is implemented by the prefab.
         public bool Minimized
         {
-            get => rollUpToggle != null && rollUpToggle.isOn;
+            get => rollUpToggle?.isOn ?? false;
             set { if (rollUpToggle != null) rollUpToggle.isOn = value; }
         }
-
-        public bool UseMach
-        {
-            get;
-            set;
-        }
         
+        // Set from the On Value Changed of the envelope mode dropdown.
         public int EnvelopeGraphShown
         {
             get => envelopeDropdown.Value;
@@ -112,6 +122,7 @@ namespace KerbalWindTunnel
             }
         }
 
+        // Set by the 'Wet' AoA Graphs Toggle
         public bool ShowAoAGraphsWet
         {
             get => _showAoAGraphsWet;
@@ -121,10 +132,12 @@ namespace KerbalWindTunnel
                     return;
                 _showAoAGraphsWet = value;
                 aoaWetToggle.isOn = value;
-                UpdateAoAGraphs();
+                UpdateAoAWetDry();
             }
         }
         private bool _showAoAGraphsWet = true;
+
+        // Set by the 'Dry' AoA Graphs Toggle
         public bool ShowAoAGraphsDry
         {
             get => _showAoAGraphsDry;
@@ -134,11 +147,12 @@ namespace KerbalWindTunnel
                     return;
                 _showAoAGraphsDry = value;
                 aoaDryToggle.isOn = value;
-                UpdateAoAGraphs();
+                UpdateAoAWetDry();
             }
         }
         private bool _showAoAGraphsDry = true;
 
+        // Set by the 'Fuel-optimal path' toggle
         public bool ShowFuelOptimalPath
         {
             get => _showFuelOptimalPath;
@@ -153,6 +167,8 @@ namespace KerbalWindTunnel
             }
         }
         private bool _showFuelOptimalPath = true;
+
+        // Set by the 'Time-optimal path' toggle
         public bool ShowTimeOptimalPath
         {
             get => _showTimeOptimalPath;
@@ -171,6 +187,7 @@ namespace KerbalWindTunnel
         public float AscentTargetAltitude
         {
             get => _ascentTargetAlt;
+            // Setter only used externally.
             set
             {
                 if (_ascentTargetAlt == value)
@@ -181,9 +198,11 @@ namespace KerbalWindTunnel
             }
         }
         private float _ascentTargetAlt;
+
         public float AscentTargetSpeed
         {
             get => _ascentTargetSpeed;
+            // Setter only used externally.
             set
             {
                 if (_ascentTargetSpeed == value)
@@ -195,6 +214,7 @@ namespace KerbalWindTunnel
         }
         private float _ascentTargetSpeed;
 
+        // Set by each of the Graph Mode toggles
         public int GraphMode
         {
             get => _graphMode;
@@ -218,10 +238,13 @@ namespace KerbalWindTunnel
                         velCurveToggle.isOn = true;
                         break;
                 }
+                UpdateInputVisibility();
                 GraphModeChanged();
             }
         }
         private int _graphMode;
+
+        // Set by the highlight mode dropdown
         public int HighlightMode
         {
             get => _highlightMode;
@@ -249,7 +272,8 @@ namespace KerbalWindTunnel
                 UpdateHighlightingMethod();
             }
         }
-        private float _highlightSpeed;
+        private float _highlightSpeed = 30;
+
         public float HighlightAltitude
         {
             get => _highlightAltitude;
@@ -267,6 +291,7 @@ namespace KerbalWindTunnel
         public float HighlightAoA
         {
             get => _highlightAoA;
+            // Setter only used externally.
             set
             {
                 if (_highlightAoA == value)
@@ -277,6 +302,17 @@ namespace KerbalWindTunnel
             }
         }
         private float _highlightAoA;
+
+        private void UpdateInputVisibility()
+        {
+            bool altitude, speed, aoa;
+            altitude = speed = aoa = HighlightMode > 0;
+            altitude |= GraphMode >= 1;
+            speed |= GraphMode == 1;
+            highlightAoAGroup.SetActive(aoa);
+            highlightAltitudeGroup.SetActive(altitude);
+            highlightSpeedGroup.SetActive(speed);
+        }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
@@ -292,18 +328,35 @@ namespace KerbalWindTunnel
             //envelopeGrapher.AddGraphToDefaultAxes(new SurfGraph(new float[,] { { 3, 2, 1 }, { 2, 1, 0 }, { 1, 2, 1 }, { 0, 2, 4 } }, 0, 1, 0, 1));
 
             // Things to actually keep.
+            highlightAltitudeInput.Text = HighlightAltitude.ToString();
+            highlightSpeedInput.Text = HighlightSpeed.ToString();
+            highlightAoAInput.Text = HighlightAoA.ToString();
+
             if (!HighLogic.LoadedSceneIsEditor)
                 return;
+            if (Instance != null)
             {
-                Instance = this;
-                gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
-                body = Planetarium.fetch.CurrentMainBody;
+                DestroyImmediate(this);
+                return;
             }
+            Instance = this;
             highlightManager = gameObject.AddComponent<HighlightManager>();
+
+            InitializePlanetList();
+            gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
+            int homeIndex = planets.FindIndex(x => x.celestialBody == Planetarium.fetch.CurrentMainBody);
+            if (homeIndex < 0)
+                homeIndex = 0;
+            body = planets[homeIndex];
+            planetDropdown.Value = homeIndex;
+
+            SetEnvelopeOptions(envelopeItems);
             foreach (var resizer in GetComponentsInChildren<UI_Tools.RenderTextureResizer>())
                 resizer.ForceResize();
         }
 
+        // Called when the Export button is clicked
+        // TODO: Set directory
         public void ExportGraphData()
         {
             switch (GraphMode)
@@ -321,6 +374,7 @@ namespace KerbalWindTunnel
             }
         }
 
+        // Called by On End Edit of the highlight speed entry field
         public void SetHighlightSpeed(string speed)
         {
             if (float.TryParse(speed, out float result) && result != _highlightSpeed)
@@ -330,6 +384,7 @@ namespace KerbalWindTunnel
             }
         }
 
+        // Called by On End Edit of the highlight altitude entry field
         public void SetHighlightAltitude(string altitude)
         {
             if (float.TryParse(altitude, out float result) && result != _highlightAltitude)
@@ -339,6 +394,7 @@ namespace KerbalWindTunnel
             }
         }
 
+        // Called by On End Edit of the highlight AoA entry field
         public void SetHighlightAoA(string AoA)
         {
             if (float.TryParse(AoA, out float result) && result != _highlightAoA)
@@ -348,7 +404,28 @@ namespace KerbalWindTunnel
             }
         }
 
-        public void SetPlanetOptions(IEnumerable<(string name, float upperAlt, float upperSpeed)> options)
+        public readonly List<CBItem> planets = new List<CBItem>();
+
+        private void InitializePlanetList()
+        {
+            planets.Clear();
+            CelestialBody starCB = FlightGlobals.Bodies.FirstOrDefault(x => x.referenceBody == x);
+            if (starCB == null)
+                return;
+            ParseCelestialBodies(starCB);
+            SetPlanetOptions(planets);
+        }
+        private void ParseCelestialBodies(CelestialBody parent, int depth = 0)
+        {
+            foreach (CBItem body in FlightGlobals.Bodies.Where(x => x.referenceBody == parent).Select(x => new CBItem(x, depth)).OrderBy(x => x.semiMajorRadius))
+            {
+                if (body.parent == null)
+                    continue;
+                planets.Add(body);
+                ParseCelestialBodies(body.celestialBody, depth + 1);
+            }
+        }
+        public void SetPlanetOptions(IEnumerable<CBItem> options)
         {
             planetDropdown.ClearOptions();
             planetDropdown.AddOptions(options.Select(o => o.name).ToList());
@@ -360,6 +437,7 @@ namespace KerbalWindTunnel
             envelopeDropdown.AddOptions(optionNames.ToList());
         }
 
+        // Called in On End Edit of the ascent target entry box
         public void SetAscentTargetAltitude(string altitude)
         {
             if (float.TryParse(altitude, out float result) && result != _ascentTargetAlt)
@@ -369,6 +447,7 @@ namespace KerbalWindTunnel
             }
         }
 
+        // Called in On End Edit of the ascent target entry box
         public void SetAscentTargetSpeed(string speed)
         {
             if (float.TryParse(speed, out float result) && result != _ascentTargetSpeed)
@@ -393,23 +472,24 @@ namespace KerbalWindTunnel
             velCurveInfo.Text = velCurveGrapher.GetDisplayValue(clickedPosition);
         }
 
-        private Vector2 oldPosition;
+        private Vector2 crosshairsPosition;
         private bool selectingAscentTarget = false;
         private void EnvelopeGrapher_AscentClicked(object _, Vector2 clickedPosition)
         {
-            AxisUI axis;
+            Graphing.AxisUI axis;
             axis = envelopeGrapher.PrimaryHorizontalAxis;
             if (axis != null)
                 _ascentTargetSpeed = axis.Min + (axis.Max - axis.Min) * clickedPosition.x;
             axis = envelopeGrapher.PrimaryVerticalAxis;
             if (axis != null)
                 _ascentTargetAlt = axis.Min + (axis.Max - axis.Min) * clickedPosition.y;
-            envelopeGrapher.GetComponentInChildren<Graphing.UI.CrosshairController>().SetCrosshairPosition(oldPosition);
-            EnvelopeGrapher_GraphClicked(this, oldPosition);
+            envelopeGrapher.GetComponentInChildren<Graphing.UI.CrosshairController>().SetCrosshairPosition(crosshairsPosition);
+            EnvelopeGrapher_GraphClicked(this, crosshairsPosition);
             selectOnGraphToggle.isOn = false;
             UpdateAscentTarget();
         }
 
+        // Called when the 'Select on Graph' button is clicked
         public void SelectAscentOnGraph(bool value)
         {
             if (value && selectingAscentTarget)
@@ -421,7 +501,7 @@ namespace KerbalWindTunnel
                 selectingAscentTarget = false;
                 return;
             }
-            oldPosition = envelopeGrapher.GetComponentInChildren<Graphing.UI.CrosshairController>().NormalizedPosition;
+            crosshairsPosition = envelopeGrapher.GetComponentInChildren<Graphing.UI.CrosshairController>().NormalizedPosition;
             envelopeGrapher.GraphClicked += EnvelopeGrapher_AscentClicked;
             selectingAscentTarget = true;
         }
@@ -429,32 +509,28 @@ namespace KerbalWindTunnel
         #region Reliant on KSP API
         public static float gAccel;// = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
         public const float AoAdelta = 0.1f * Mathf.Deg2Rad;
-        private AeroPredictor vessel = null;
-        private CelestialBody body;// = Planetarium.fetch.CurrentMainBody;
+        private CBItem body;// = Planetarium.fetch.CurrentMainBody;
         private float _targetAltitude = 17700;
-        private string targetAltitudeStr = "17700";
         public float TargetAltitude
         {
             get { return _targetAltitude; }
             set
             {
                 _targetAltitude = value;
-                targetAltitudeStr = value.ToString("F0");
+                ascentAltitudeInput.Text = value.ToString("F0");
             }
         }
         private float _targetSpeed = 1410;
-        private string targetSpeedStr = "1410";
         public float TargetSpeed
         {
             get { return _targetSpeed; }
             set
             {
                 _targetSpeed = value;
-                targetSpeedStr = value.ToString("F1");
+                ascentSpeedInput.Text = value.ToString("F1");
             }
         }
 
-        public AeroPredictor CommonPredictor { get => this.vessel; }
         public AeroPredictor CreateAeroPredictor()
         {
             AeroPredictor vesselCache = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
@@ -471,10 +547,16 @@ namespace KerbalWindTunnel
             return vesselCache;
         }
 
+        // Called by the Planet selection dropdown
         public void PlanetSelected(int item)
         {
+            body = planets[item];
+            RefreshData();
+            if (HighlightMode > 0)
+                UpdateHighlightingMethod();
         }
 
+        // Called when the highlighting mode or conditions are changed
         private void UpdateHighlightingMethod()
         {
             highlightManager?.UpdateHighlighting((HighlightManager.HighlightMode)HighlightMode, body.celestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
@@ -484,79 +566,58 @@ namespace KerbalWindTunnel
         {
         }
 
+        // Called whenever the target ascent altitude or velocity is changed.
         private void UpdateAscentTarget()
         {
         }
 
+        // Called whenever one of the AoA graph selection toggles *changes*.
         public void AoAGraphToggleEvent(int index)
         {
         }
 
+        // Called whenever one of the Velocity graph selection toggles *changes*.
         public void VelGraphToggleEvent(int index)
         {
         }
 
+        // Called by the Update Vessel button
         public void UpdateVessel()
         {
 
 
             updateVesselButton.interactable = false;
         }
-        public void UpdateAoAGraphs()
-        {/*
-            UISkinDef skin = UISkinManager.defaultSkin;
-            void SaveSprite(Sprite sprite, string name)
+
+        private void Cancel()
+        {
+            if (cancellationTokenSource != null)
             {
-                if (sprite == null)
-                    return;
-                Texture2D tex = sprite.texture;
-                byte[] texBytes = tex.EncodeToPNG();
-                System.IO.File.WriteAllBytes("GameData/WindTunnel/PluginData/" + name, texBytes);
+                cancellationTokenSource.Cancel();
+                cancellationTokenSource.Dispose();
+                cancellationTokenSource = null;
+                cancellationTokenSource = new System.Threading.CancellationTokenSource();
             }
-            void SaveStyle(UIStyle style, string name)
-            {
-                if (style.active != null)
-                {
-                    SaveSprite(style.active.background, name + "_active");
-                    Debug.Log(name + "_active " + style.active.textColor);
-                }
-                if (style.disabled != null)
-                {
-                    SaveSprite(style.disabled.background, name + "_disabled");
-                    Debug.Log(name + "_disabled " + style.active.textColor);
-                }
-                if (style.highlight != null)
-                {
-                    SaveSprite(style.highlight.background, name + "_highlight");
-                    Debug.Log(name + "_highlight " + style.active.textColor);
-                }
-                if (style.normal != null)
-                {
-                    SaveSprite(style.normal.background, name + "_normal");
-                    Debug.Log(name + "_normal " + style.active.textColor);
-                }
-            }
-            SaveStyle(skin.box, "box");
-            SaveStyle(skin.button, "button");
-            SaveStyle(skin.horizontalScrollbar, "horizontalScrollbar");
-            SaveStyle(skin.horizontalScrollbarLeftButton, "horizontalScrollbarLeftButton");
-            SaveStyle(skin.horizontalScrollbarRightButton, "horizontalScrollbarRightButton");
-            SaveStyle(skin.horizontalScrollbarThumb, "horizontalScrollbarThumb");
-            SaveStyle(skin.horizontalSlider, "horizontalSlider");
-            SaveStyle(skin.horizontalSliderThumb, "horizontalSliderThumb");
-            SaveStyle(skin.label, "label");
-            SaveStyle(skin.scrollView, "scrollView");
-            SaveStyle(skin.textArea, "textArea");
-            SaveStyle(skin.textField, "textField");
-            SaveStyle(skin.toggle, "toggle");
-            SaveStyle(skin.verticalScrollbar, "verticalScrollbar");
-            SaveStyle(skin.verticalScrollbarUpButton, "verticalScrollbarUpButton");
-            SaveStyle(skin.verticalScrollbarDownButton, "verticalScrollbarDownButton");
-            SaveStyle(skin.verticalScrollbarThumb, "verticalScrollbarThumb");
-            SaveStyle(skin.verticalSlider, "verticalSlider");
-            SaveStyle(skin.verticalSliderThumb, "verticalSliderThumb");
-            SaveStyle(skin.window, "window");*/
         }
+
+        // Called when the value of 'Wet' or 'Dry' toggle changes.
+        public void UpdateAoAWetDry()
+        {
+            bool wet = ShowAoAGraphsWet;
+            bool dry = ShowAoAGraphsDry;
+            foreach (var graph in aoaCollection)
+            {
+                if (graph is GraphableCollection collection)
+                {
+                    if (collection.Count < 2)
+                        continue;
+                    collection[0].Visible = wet;
+                    collection[1].Visible = dry;
+                }
+            }
+        }
+
+        // Called by the 'Settings' button being clicked.
         public void ToggleSettingsWindow()
         {
         }
@@ -584,6 +645,61 @@ namespace KerbalWindTunnel
             GameEvents.onPartActionUIDismiss.Remove(OnPartActionUIDismiss);
             if (selectingAscentTarget)
                 envelopeGrapher.GraphClicked -= EnvelopeGrapher_AscentClicked;
+        }
+
+        public struct CBItem
+        {
+            public CBItem(CelestialBody celestialBody, int depth = 0)
+            {
+                this.celestialBody = celestialBody;
+                if (celestialBody.referenceBody != celestialBody)
+                    semiMajorRadius = (float)celestialBody.orbit.semiMajorAxis;
+                else
+                    semiMajorRadius = (float)celestialBody.Radius;
+                this.depth = depth;
+                name = this.celestialBody.bodyName;
+                if (celestialBody.referenceBody == celestialBody)
+                    parent = null;
+                else
+                    parent = celestialBody.referenceBody;
+
+                switch (name.ToLower())
+                {
+                    case "laythe":
+                    default:
+                    case "kerbin":
+                        upperAlt = 25000;
+                        upperSpeed = 2500;
+                        break;
+                    case "eve":
+                        upperAlt = 35000;
+                        upperSpeed = 3500;
+                        break;
+                    case "duna":
+                        upperAlt = 10000;
+                        upperSpeed = 1000;
+                        break;
+                    /*case "laythe":
+                        upperAlt = 20000;
+                        maxSpeed = 2000;
+                        break;*/
+                    case "jool":
+                        upperAlt = 200000;
+                        upperSpeed = 7000;
+                        break;
+                }
+            }
+
+            public readonly CelestialBody celestialBody;
+            public int depth;
+            public readonly string name;
+            public string NameFormatted { get => new string(' ', depth * 4) + name; }
+            public readonly float semiMajorRadius;
+            public readonly CelestialBody parent;
+            public float upperAlt;
+            public float upperSpeed;
+
+            public static explicit operator CelestialBody(CBItem body) => body.celestialBody;
         }
         #endregion
     }

@@ -18,15 +18,6 @@ namespace KerbalWindTunnel
             DragOverLift = 4
         }
 
-        public HighlightMode highlightMode = HighlightMode.Off;
-
-        private PartAeroData[] highlightingData;
-        private List<Part> highlightedParts = new List<Part>(100);
-        CelestialBody body = null;
-        float altitude = 0;
-        float speed = 0;
-        float aoa = 0;
-
         WindTunnelWindow window;
 
         private static ApplicationLauncherButton appButton = null;
@@ -277,9 +268,6 @@ namespace KerbalWindTunnel
         }
         public void OnButtonFalse()
         {
-            highlightMode = HighlightMode.Off;
-            //// ClearPartHighlighting();
-
             appButton?.SetTexture(icon);
             if (blizzyToolbarButton != null)
                 blizzyToolbarButton.TexturePath = iconPath_blizzy_off;
@@ -313,20 +301,6 @@ namespace KerbalWindTunnel
 
             if (window != null)
                 Destroy(window.gameObject);
-        }
-
-        public readonly struct PartAeroData
-        {
-            public readonly float drag;
-            public readonly float lift;
-            public readonly float mass;
-
-            public PartAeroData(float drag, float lift, float mass)
-            {
-                this.drag = drag;
-                this.lift = lift;
-                this.mass = mass;
-            }
         }
     }
 }

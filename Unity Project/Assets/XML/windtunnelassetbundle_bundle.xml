@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584692186273983081" AutoLoad="false">
+<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584675573603326055" AutoLoad="false">
   <Author />
   <Info />
   <Assets>
@@ -18,7 +18,7 @@
     <Asset Name="5Gradient" Path="Assets/Graphing/Resources/Textures/5Gradient.tif" Type="Texture2D" Url="Graphing/Resources/Textures/5Gradient" AutoLoad="false" />
     <Asset Name="Jet" Path="Assets/Graphing/Resources/Textures/Jet.tif" Type="Texture2D" Url="Graphing/Resources/Textures/Jet" AutoLoad="false" />
     <Asset Name="Jet_Dark" Path="Assets/Graphing/Resources/Textures/Jet_Dark.tif" Type="Texture2D" Url="Graphing/Resources/Textures/Jet_Dark" AutoLoad="false" />
-    <Asset Name="Wind Tunnel Window" Path="Assets/Prefabs/Wind Tunnel Window.prefab" Type="GameObject" Url="Prefabs/Wind Tunnel Window" AutoLoad="false" />
+    <Asset Name="Wind Tunnel Window" Path="Assets/Kerbal Wind Tunnel/Prefabs/Wind Tunnel Window.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/Prefabs/Wind Tunnel Window" AutoLoad="false" />
   </Assets>
   <Dependencies>
     <Dependency>graphingshaders</Dependency>
