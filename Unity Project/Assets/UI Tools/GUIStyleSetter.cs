@@ -108,7 +108,6 @@ namespace UI_Tools
         {
             if (selectable == null)
                 return;
-            // TODO: set On vs Regular
             if (on)
             {
                 SpriteState spriteState = selectable.spriteState;

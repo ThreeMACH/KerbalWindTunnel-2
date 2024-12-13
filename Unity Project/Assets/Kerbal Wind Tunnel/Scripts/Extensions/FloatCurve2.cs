@@ -667,10 +667,6 @@ namespace KerbalWindTunnel
                     throw new ArgumentException("The given keys did not match coordinates.");
                 return new Keyframe2(key1.timeX, key2.timeX, key1.value + key2.value, key1.dDx + key2.dDx, key1.dDy + key2.dDy, key1.ddDxDy + key2.ddDxDy);
             }*/
-            public static implicit operator float(Keyframe2 key)
-            {
-                return key.value;
-            }
         }
 
         public readonly struct DiffSettings

@@ -47,7 +47,7 @@ namespace Graphing
         /// <summary>
         /// Constructs a blank <see cref="SurfGraph"/>.
         /// </summary>
-        public SurfGraph() { colorScheme = GradientExtensions.Jet; }    // TODO: Jet_Dark
+        public SurfGraph() { colorScheme = GradientExtensions.Jet_Dark; }
         /// <summary>
         /// Constructs a <see cref="SurfGraph"/> with the specified values spaced evenly on a grid.
         /// </summary>

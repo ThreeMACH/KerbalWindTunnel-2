@@ -91,8 +91,6 @@ namespace Graphing
         }
         public void ValueChanged(string newValue)
         {
-            // TODO: Highlight text red when invalid and return to normal when valid.
-            //Debug.Log("ValueChanged: " + newValue);
             if (validEntryPredicate == null)
                 return;
             inputField.TextComponent.color =

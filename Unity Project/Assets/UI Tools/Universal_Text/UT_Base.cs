@@ -68,7 +68,7 @@ namespace UI_Tools.Universal_Text
         {
             if (mode == UT_Mode.TMPro && TMPro.TMP_Settings.instance == null)
                 throw new System.NullReferenceException("TMP_Settings is not loaded.");
-            foreach (UT_Base component in gameObject.GetComponentsInChildren<UT_Base>(true))    // TODO: UT_Base
+            foreach (UT_Base component in gameObject.GetComponentsInChildren<UT_Base>(true))
             {
                 component.SetMode(mode, forceNow);
             }
