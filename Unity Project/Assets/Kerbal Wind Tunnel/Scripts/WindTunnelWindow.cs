@@ -71,6 +71,8 @@ namespace KerbalWindTunnel
         private Graphing.GraphableCollection aoaCollection;
         private Graphing.GraphableCollection velocityCollection;
 
+        private HighlightManager highlightManager;
+
         public static WindTunnelWindow Instance { get; private set; }
 
         public bool Minimized
@@ -229,10 +231,12 @@ namespace KerbalWindTunnel
                     return;
                 _highlightMode = value;
                 highlightDropdown.Value = value;
+                UpdateInputVisibility();
                 UpdateHighlightingMethod();
             }
         }
         private int _highlightMode;
+
         public float HighlightSpeed
         {
             get => _highlightSpeed;
@@ -259,6 +263,7 @@ namespace KerbalWindTunnel
             }
         }
         private float _highlightAltitude;
+
         public float HighlightAoA
         {
             get => _highlightAoA;
@@ -287,12 +292,14 @@ namespace KerbalWindTunnel
             //envelopeGrapher.AddGraphToDefaultAxes(new SurfGraph(new float[,] { { 3, 2, 1 }, { 2, 1, 0 }, { 1, 2, 1 }, { 0, 2, 4 } }, 0, 1, 0, 1));
 
             // Things to actually keep.
-            if (Planetarium.fetch != null)
+            if (!HighLogic.LoadedSceneIsEditor)
+                return;
             {
                 Instance = this;
                 gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
                 body = Planetarium.fetch.CurrentMainBody;
             }
+            highlightManager = gameObject.AddComponent<HighlightManager>();
             foreach (var resizer in GetComponentsInChildren<UI_Tools.RenderTextureResizer>())
                 resizer.ForceResize();
         }
@@ -470,6 +477,7 @@ namespace KerbalWindTunnel
 
         private void UpdateHighlightingMethod()
         {
+            highlightManager?.UpdateHighlighting((HighlightManager.HighlightMode)HighlightMode, body.celestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
         }
 
         private void GraphModeChanged()
