@@ -31,10 +31,10 @@ namespace Graphing
         
         protected readonly List<IGraphable> graphs = new List<IGraphable>();
 
-        public AxisUI PrimaryVerticalAxis { get => leftAxisGroup.GetComponentsInChildren<AxisUI>().Last(); }
+        public AxisUI PrimaryVerticalAxis { get => leftAxisGroup.GetComponentsInChildren<AxisUI>().LastOrDefault(); }
         public AxisUI PrimaryHorizontalAxis { get => bottomAxisGroup.GetComponentInChildren<AxisUI>(); }
         public AxisUI SecondaryVerticalAxis { get => rightAxisGroup.GetComponentInChildren<AxisUI>(); }
-        public AxisUI SecondaryHorizontalAxis { get => topAxisGroup.GetComponentsInChildren<AxisUI>().Last(); }
+        public AxisUI SecondaryHorizontalAxis { get => topAxisGroup.GetComponentsInChildren<AxisUI>().LastOrDefault(); }
 
         /// <summary>Provides the primary vertical axis, creating one if one does not exist.</summary>
         /// <returns>The vertical axis designated as primary.</returns>
