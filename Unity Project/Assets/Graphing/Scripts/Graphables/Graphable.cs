@@ -48,22 +48,22 @@ namespace Graphing
         /// <summary>
         /// The lower X bound of the object.
         /// </summary>
-        public virtual float XMin { get => xMin; set { xMin = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax)); } }
+        public virtual float XMin { get => xMin; set { xMin = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax)); } }
         protected float xMin;
         /// <summary>
         /// The upper X bound of the object.
         /// </summary>
-        public virtual float XMax { get => xMax; set { xMax = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax)); } }
+        public virtual float XMax { get => xMax; set { xMax = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax)); } }
         protected float xMax;
         /// <summary>
         /// The lower Y bound of the object.
         /// </summary>
-        public virtual float YMin { get => yMin; set { yMin = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax)); } }
+        public virtual float YMin { get => yMin; set { yMin = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax)); } }
         protected float yMin;
         /// <summary>
         /// The upper Y bound of the object.
         /// </summary>
-        public virtual float YMax { get => yMax; set { yMax = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax)); } }
+        public virtual float YMax { get => yMax; set { yMax = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax)); } }
         protected float yMax;
         /// <summary>
         /// A flag indicating if this object should be transposed before drawing.
@@ -200,11 +200,11 @@ namespace Graphing
         /// <summary>
         /// An event to be triggered when an object's values change.
         /// </summary>
-        public event EventHandler ValuesChanged;
+        public event EventHandler<IValueEventArgs> ValuesChanged;
         /// <summary>
         /// An event to be triggered when an object's display formatting changes.
         /// </summary>
-        public event EventHandler DisplayChanged;
+        public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
         /// <summary>
         /// Outputs the object's values to file.
@@ -218,7 +218,7 @@ namespace Graphing
         /// Invokes the <see cref="ValuesChanged"/> event for this object.
         /// </summary>
         /// <param name="eventArgs">Any relevant <see cref="EventArgs"/>.</param>
-        public virtual void OnValuesChanged(EventArgs eventArgs)
+        public virtual void OnValuesChanged(IValueEventArgs eventArgs)
         {
             ValuesChanged?.Invoke(this, eventArgs);
         }
@@ -226,7 +226,7 @@ namespace Graphing
         /// Invokes the <see cref="DisplayChanged"/> event for this object.
         /// </summary>
         /// <param name="eventArgs">Any relevant <see cref="EventArgs"/>.</param>
-        public virtual void OnDisplayChanged(EventArgs eventArgs)
+        public virtual void OnDisplayChanged(IDisplayEventArgs eventArgs)
         {
             DisplayChanged?.Invoke(this, eventArgs);
         }
@@ -252,12 +252,12 @@ namespace Graphing
         /// <summary>
         /// The lower Z bound of the object.
         /// </summary>
-        public virtual float ZMin { get => zMin; set { zMin = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax)); } }
+        public virtual float ZMin { get => zMin; set { zMin = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax)); } }
         protected float zMin;
         /// <summary>
         /// The upper Z bound of the object.
         /// </summary>
-        public virtual float ZMax { get => zMax; set { zMax = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax)); } }
+        public virtual float ZMax { get => zMax; set { zMax = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax)); } }
         protected float zMax;
         /// <summary>
         /// The unit for the Z axis.

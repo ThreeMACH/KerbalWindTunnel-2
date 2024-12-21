@@ -83,7 +83,7 @@ namespace Graphing
             }
             graphs.Add(graph);
             GraphDrawer drawer = Instantiate(_graphDrawerPrefab, graphingSystem).GetComponent<GraphDrawer>();
-            drawer.SetGraph(graph);
+            drawer.SetGraph(graph, this);
             if (graph is IGraphable3 graphable3 && !GetComponentsInChildren<AxisUI>().Any(a => a.Use == AxisUI.AxisDirection.Depth || a.Use == AxisUI.AxisDirection.Color))
             {
                 drawer.SetOriginAndScale(AxisUI.AxisDirection.Depth, 0, 1 / (graphable3.ZMax - graphable3.ZMin));

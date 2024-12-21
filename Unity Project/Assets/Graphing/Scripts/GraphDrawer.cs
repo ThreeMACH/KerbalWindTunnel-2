@@ -78,39 +78,16 @@ namespace Graphing
         public IGraphable Graph
         {
             get => graph;
-            set => SetGraph(value);
+            set => SetGraph(value, grapher);
         }
 
-        public IColorGraph FirstColorGraphInHierarchy
-        {
-            get=>FirstColorGraph(graph);
-        }
-        private IColorGraph FirstColorGraph(IGraphable graphable)
-        {
-            if (graphable is IColorGraph colorGraph)
-                return colorGraph;
-            if (graphable is GraphableCollection collection)
-            {
-                foreach (IGraphable child in collection)
-                {
-                    if (child is IColorGraph childColorGraph)
-                        return childColorGraph;
-                }
-                foreach (IGraphable child in collection)
-                {
-                    if (child is GraphableCollection childCollection)
-                    {
-                        colorGraph = FirstColorGraph(childCollection);
-                        if (colorGraph != null)
-                            return colorGraph;
-                    }
-                }
-            }
-            return null;
-        }
+        public IGraphable FirstVisibleInHierarchy => GraphableCollection.FirstVisibleGraph(graph);
+        public IColorGraph FirstColorGraphInHierarchy => GraphableCollection.FirstColorGraph(graph);
 
-        public virtual void SetGraph(IGraphable graph)
+        public virtual void SetGraph(IGraphable graph, Grapher grapher)
         {
+            this.grapher = grapher;
+
             if (this.graph == graph)
                 return;
 
@@ -200,7 +177,7 @@ namespace Graphing
             Debug.LogError("GraphDrawer is not equipped to handle that type of graph.");
         }
 
-        protected virtual void OnDisplayChangedHandler(object sender, EventArgs args)
+        protected virtual void OnDisplayChangedHandler(object sender, IDisplayEventArgs args)
         {
             if (sender != graph)
                 return;
@@ -210,20 +187,20 @@ namespace Graphing
             else if (args is TransposeChangedEventArgs transposeArgs)
                 Transpose = transposeArgs.Transpose;
             else if (args is ColorChangedEventArgs)
-                MarkForRedraw(args);
+                MarkForRedraw((EventArgs)args);
             else if (args is LineWidthChangedEventArgs)
-                MarkForRedraw(args);
+                MarkForRedraw((EventArgs)args);
             else if (args is MaskLineOnlyChangedEventArgs)
-                MarkForRedraw(args);
+                MarkForRedraw((EventArgs)args);
             else if (args is DisplayNameChangedEventArgs displayNameChangedEventArgs)
                 grapher.DisplayNameChangedHandler((IGraphable)sender, displayNameChangedEventArgs);
         }
 
-        protected virtual void OnValuesChangedHandler(object sender, EventArgs args)
+        protected virtual void OnValuesChangedHandler(object sender, IValueEventArgs args)
         {
             if (sender != graph)
                 return;
-            MarkForRedraw(args);
+            MarkForRedraw((EventArgs)args);
         }
 
         private bool _transpose = false;
@@ -429,7 +406,9 @@ namespace Graphing
         {
             if (!typeof(EventArgs).IsAssignableFrom(eventType))
                 return -1;
-            if (eventType == typeof(ChildChangedEventArgs))
+            if (eventType == typeof(ChildDisplayChangedEventArgs))
+                return -1;
+            if (eventType == typeof(ChildValueChangedEventArgs))
                 return -1;
             if (eventType == typeof(ValuesChangedEventArgs))
                 return 0;

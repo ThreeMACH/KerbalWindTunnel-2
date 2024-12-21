@@ -82,11 +82,11 @@ namespace Graphing
         /// <summary>
         /// An event to be triggered when an object's values change.
         /// </summary>
-        event EventHandler ValuesChanged;
+        event EventHandler<IValueEventArgs> ValuesChanged;
         /// <summary>
         /// An event to be triggered when an object's display formatting changes.
         /// </summary>
-        event EventHandler DisplayChanged;
+        event EventHandler<IDisplayEventArgs> DisplayChanged;
         /// <summary>
         /// Outputs the object's values to file.
         /// </summary>

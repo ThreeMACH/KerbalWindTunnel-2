@@ -16,8 +16,8 @@ namespace Graphing
                 {
                     GraphDrawer childDrawer = Instantiate(_ownPrefab, transform).GetComponent<GraphDrawer>();
                     if (childDrawer.grapher == null)
-                        childDrawer.grapher = this.grapher;
-                    childDrawer.SetGraph(graphable);
+                        childDrawer.grapher = grapher;
+                    childDrawer.SetGraph(graphable, grapher);
                     if (graphable is IGraphable3 graphable3 && !(graphable is GraphableCollection))
                         ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D);
                 }
@@ -35,7 +35,7 @@ namespace Graphing
                         GraphDrawer childDrawer = Instantiate(_ownPrefab, transform).GetComponent<GraphDrawer>();
                         if (childDrawer.grapher == null)
                             childDrawer.grapher = this.grapher;
-                        childDrawer.SetGraph(addedEvent.Graph);
+                        childDrawer.SetGraph(addedEvent.Graph, grapher);
                     }
                     else if (reason is GraphElementRemovedEventArgs removedEvent)
                     {
@@ -49,7 +49,7 @@ namespace Graphing
                             GraphDrawer childDrawer = Instantiate(_ownPrefab, transform).GetComponent<GraphDrawer>();
                             if (childDrawer.grapher == null)
                                 childDrawer.grapher = this.grapher;
-                            childDrawer.SetGraph(newGraph);
+                            childDrawer.SetGraph(newGraph, grapher);
                         }
                     }
                     else if (reason is GraphElementsRemovedEventArgs multiRemoveEvent)

@@ -469,7 +469,7 @@ namespace Graphing
                 attachedGraphDrawers.Remove(graphDrawer);
             }
             attachedGraphDrawers.Insert(0, graphDrawer);
-            SetUpAxis(graphDrawer);
+            SetUpAxis(graphDrawer.FirstVisibleInHierarchy);
         }
 
         public bool Contains(GraphDrawer graphDrawer) => attachedGraphDrawers.Contains(graphDrawer);
@@ -488,7 +488,7 @@ namespace Graphing
             attachedGraphDrawers.Add(graphDrawer);
             if (autoSetMin ||  autoSetMax)
                 RecalculateBounds();
-            if (attachedGraphDrawers.FirstOrDefault(GraphDrawerIsVisible) == graphDrawer)
+            if (FirstVisibleGraph() == graphDrawer.FirstVisibleInHierarchy)
             {
                 // TODO: do we want to limit to only IColorGraphs? The function works for any IGraph...
                 if (_use == AxisDirection.Color)
@@ -501,7 +501,7 @@ namespace Graphing
                         materialWasInstantiated = true;
                     }
                 }
-                SetUpAxis(graphDrawer);
+                SetUpAxis(graphDrawer.FirstVisibleInHierarchy);
             }
             if (_use == AxisDirection.Color)
             {
@@ -547,82 +547,59 @@ namespace Graphing
         /// </summary>
         /// <param name="sender">The sender graph.</param>
         /// <param name="eventArgs">The <see cref="EventArgs"/> instance containing the event data.</param>
-        public void GraphBoundsChangeHandler(object sender, EventArgs eventArgs)
+        private void GraphBoundsChangeHandler(object sender, IValueEventArgs eventArgs)
         {
-            if (!Contains((IGraphable)sender))
-                return;
-
-            if (eventArgs is VisibilityChangedEventArgs visibilityChangedEventArgs)
+            while (eventArgs is ChildValueChangedEventArgs childArgs)
             {
-                List<GraphDrawer> graphList = attachedGraphDrawers;
-                int indexOfDrawer = -1;
-                int indexOfFirstVisible = -1;
-                for (int i = 0; i < graphList.Count; i++)
-                {
-                    if (indexOfDrawer < 0 && graphList[i].Graph == sender)
-                    {
-                        indexOfDrawer = i;
-                        if (visibilityChangedEventArgs.Visible)
-                            break;
-                    }
-                    if (indexOfFirstVisible < 0 && graphList[i].Graph.Visible)
-                    {
-                        indexOfFirstVisible = i;
-                        break;
-                    }
-                }
-                // If the loop broke before finding the drawer, the drawer was not before and was not the first visible graph.
-                // In that case, no response is necessary.
-                if (indexOfDrawer == -1)
-                    return;
-                // If the loop broke before finding the first visible, either none are visible or the drawer is the first visible graph.
-                if (indexOfFirstVisible == -1)
-                {
-                    // If the drawer is not visible, then none are. Reset the axis entirely.
-                    if (!visibilityChangedEventArgs.Visible)
-                    {
-                        SetUpAxis(null);
-                        return;
-                    }
-                    // The drawer itself is now visible and was before any other visible graphs in priority.
-                    SetUpAxis(graphList[indexOfDrawer]);
-                    return;
-                }
-                // Otherwise, the drawer was the first visible graph and is no longer.
-                SetUpAxis(graphList[indexOfFirstVisible]);
-                return;
+                eventArgs = childArgs.EventArgs;
+                sender = childArgs.OriginalSender;
             }
+
             if (eventArgs is ValuesChangedEventArgs valuesChangedEventArgs && valuesChangedEventArgs.BoundsChanged)
             {
                 if (!(Use >= AxisDirection.Depth && (sender is IGraphable3)) && !(Use >= AxisDirection.Color && (sender is IColorGraph)))
                     return;
                 // Set axis bounds for all axes driven by this drawer.
-                if (!AutoSetMin || !AutoSetMax)
-                    RecalculateBounds();
-                return;
-            }
-            if (eventArgs is BoundsChangedEventArgs boundsChangedEventArgs)
-            {
-                if (boundsChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && boundsChangedEventArgs.Axis == AxisDirection.Depth))
-                    return;
-                // Set axis bounds for all axes driven by this drawer.
-                if (!AutoSetMin || !AutoSetMax)
+                if (AutoSetMin || AutoSetMax)
                     RecalculateBounds();
                 return;
             }
         }
 
-        private void GraphDisplayChangeHandler(object sender, EventArgs eventArgs)
+        private void GraphDisplayChangeHandler(object sender, IDisplayEventArgs eventArgs)
         {
+            while (eventArgs is ChildDisplayChangedEventArgs childArgs)
+            {
+                eventArgs = childArgs.EventArgs;
+                sender = childArgs.OriginalSender;
+            }
+
             if (eventArgs is TransposeChangedEventArgs)
             {
                 if (Use == AxisDirection.Horizontal || Use == AxisDirection.Vertical)
                 {
                     RecalculateBounds();
                 }
+                return;
             }
 
-            if (attachedGraphDrawers.FirstOrDefault(GraphDrawerIsVisible)?.Graph != sender)
+            if (eventArgs is VisibilityChangedEventArgs)
+            {
+                SetUpAxis(FirstVisibleGraph());
+                return;
+            }
+
+            if (eventArgs is BoundsChangedEventArgs boundsChangedEventArgs)
+            {
+                if (boundsChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && boundsChangedEventArgs.Axis == AxisDirection.Depth))
+                    return;
+                // Set axis bounds for all axes driven by this drawer.
+                if (AutoSetMin || AutoSetMax)
+                    RecalculateBounds();
+                return;
+            }
+
+            if (FirstVisibleGraph() != sender)
                 return;
 
             if (eventArgs is AxisNameChangedEventArgs axisNameChangedEventArgs)
@@ -639,14 +616,27 @@ namespace Graphing
             }
         }
 
+        private IGraphable FirstVisibleGraph()
+        {
+            foreach (IGraphable graph in attachedGraphDrawers.Select(d => d.FirstVisibleInHierarchy))
+            {
+                if (graph != null)
+                    return graph;
+            }
+            return null;
+        }
+
         /// <summary>
         /// Sets up an axis object based on a given graph drawer.
         /// </summary>
         /// <param name="axis">The axis to set up.</param>
         /// <param name="drawer">The graph drawer to drive its settings.</param>
-        public void SetUpAxis(GraphDrawer drawer)
+        public void SetUpAxis(IGraphable graph)
         {
-            if (drawer == null)
+            if (axisText == null)
+                axisText = axisLabel.GetComponent<UI_Tools.Universal_Text.UT_Text>();
+
+            if (graph == null)
             {
                 Label = "";
                 Unit = "-";
@@ -657,17 +647,17 @@ namespace Graphing
             switch (Use)
             {
                 case AxisDirection.Horizontal:
-                    Label = drawer.Graph.XName;
-                    Unit = drawer.Graph.XUnit;
+                    Label = graph.XName;
+                    Unit = graph.XUnit;
                     RecalculateBounds();
                     return;
                 case AxisDirection.Vertical:
-                    Label = drawer.Graph.YName;
-                    Unit = drawer.Graph.YUnit;
+                    Label = graph.YName;
+                    Unit = graph.YUnit;
                     RecalculateBounds();
                     return;
                 case AxisDirection.Depth:
-                    if (drawer.Graph is IGraphable3 graphable3)
+                    if (graph is IGraphable3 graphable3)
                     {
                         Label = graphable3.ZName;
                         Unit = graphable3.ZUnit;
@@ -675,12 +665,12 @@ namespace Graphing
                     }
                     return;
                 case AxisDirection.Color:
-                    if (drawer.Graph is IColorGraph colorGraph)
+                    if (graph is IColorGraph colorGraph)
                     {
                         Label = colorGraph.CName;
                         Unit = colorGraph.CUnit;
                     }
-                    else if (drawer.Graph is IGraphable3 _graphable3)
+                    else if (graph is IGraphable3 _graphable3)
                     {
                         Label = _graphable3.ZName;
                         Unit = _graphable3.ZUnit;

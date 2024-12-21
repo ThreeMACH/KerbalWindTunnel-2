@@ -35,7 +35,7 @@ namespace Graphing
                 bool changed = _visible != value;
                 _visible = value;
                 if (changed)
-                    OnDisplayChanged(new VisibilityChangedEventArgs(Visible));
+                    OnDisplayChanged(new VisibilityChangedEventArgs(value));
             }
         }
         private bool _visible = true;
@@ -46,22 +46,22 @@ namespace Graphing
         /// <summary>
         /// The lower X bound of the object.
         /// </summary>
-        public virtual float XMin { get => xMin; set { xMin = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false); } }
+        public virtual float XMin { get => xMin; set { xMin = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false); } }
         protected float xMin;
         /// <summary>
         /// The upper X bound of the object.
         /// </summary>
-        public virtual float XMax { get => xMax; set { xMax = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false); } }
+        public virtual float XMax { get => xMax; set { xMax = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false); } }
         protected float xMax;
         /// <summary>
         /// The lower Y bound of the object.
         /// </summary>
-        public virtual float YMin { get => yMin; set { yMin = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false); } }
+        public virtual float YMin { get => yMin; set { yMin = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false); } }
         protected float yMin;
         /// <summary>
         /// The upper Y bound of the object.
         /// </summary>
-        public virtual float YMax { get => yMax; set { yMax = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false); } }
+        public virtual float YMax { get => yMax; set { yMax = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false); } }
         protected float yMax;
 
         protected readonly List<IGraphable> graphs = new List<IGraphable>();
@@ -69,11 +69,11 @@ namespace Graphing
         /// <summary>
         /// An event to be triggered when an object's values change.
         /// </summary>
-        public event EventHandler ValuesChanged;
+        public event EventHandler<IValueEventArgs> ValuesChanged;
         /// <summary>
         /// An event to be triggered when an object's display formatting changes.
         /// </summary>
-        public event EventHandler DisplayChanged;
+        public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
         // TODO: Confirm that this is described correctly.
         protected bool autoFitAxes = true;
@@ -87,14 +87,17 @@ namespace Graphing
             {
                 bool changed = autoFitAxes != value;
                 autoFitAxes = value;
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        if (graphs[i] is GraphableCollection collection)
-                            collection.AutoFitAxes = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            if (graphs[i] is GraphableCollection collection)
+                                collection.AutoFitAxes = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 if (changed)
                     RecalculateLimits();
             }
@@ -109,18 +112,20 @@ namespace Graphing
         {
             get
             {
-                int index = graphs.FindIndex(g => g.Visible);
-                return index >= 0 ? graphs[index].XUnit : "";
+                return FirstVisibleGraph(this)?.XUnit ?? "";
             }
             set
             {
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        graphs[i].XUnit = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            graphs[i].XUnit = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 OnDisplayChanged(new AxisUnitChangedEventArgs(AxisUI.AxisDirection.Horizontal, value));
             }
         }
@@ -132,18 +137,20 @@ namespace Graphing
 
             get
             {
-                int index = graphs.FindIndex(g => g.Visible);
-                return index >= 0 ? graphs[index].YUnit : "";
+                return FirstVisibleGraph(this)?.YUnit ?? "";
             }
             set
             {
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        graphs[i].YUnit = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            graphs[i].YUnit = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 OnDisplayChanged(new AxisUnitChangedEventArgs(AxisUI.AxisDirection.Vertical, value));
             }
         }
@@ -154,18 +161,20 @@ namespace Graphing
         {
             get
             {
-                int index = graphs.FindIndex(g => g.Visible);
-                return index >= 0 ? graphs[index].XName : "";
+                return FirstVisibleGraph(this)?.XName ?? "";
             }
             set
             {
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        graphs[i].XName = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            graphs[i].XName = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 OnDisplayChanged(new AxisNameChangedEventArgs(AxisUI.AxisDirection.Horizontal, value));
             }
         }
@@ -188,13 +197,16 @@ namespace Graphing
             }
             set
             {
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        graphs[i].YName = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            graphs[i].YName = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 OnDisplayChanged(new AxisNameChangedEventArgs(AxisUI.AxisDirection.Vertical, value));
             }
         }
@@ -261,11 +273,11 @@ namespace Graphing
                 IGraphable oldGraph = graphs[index];
 
                 graphs[index] = value;
-                OnValuesChanged(new GraphElementRemovedEventArgs(oldGraph), false);
+                OnDisplayChanged(new GraphElementRemovedEventArgs(oldGraph), false);
 
                 graphs[index].ValuesChanged += ValuesChangedSubscriber;
                 graphs[index].DisplayChanged += DisplayChangedSubscriber;
-                OnValuesChanged(new GraphElementAddedEventArgs(graphs[index]));
+                OnDisplayChanged(new GraphElementAddedEventArgs(graphs[index]));
             }
         }
 
@@ -309,6 +321,51 @@ namespace Graphing
                 enumerator.Current.ValuesChanged += ValuesChangedSubscriber;
                 enumerator.Current.DisplayChanged += DisplayChangedSubscriber;
             }
+        }
+
+        public static IGraphable FirstVisibleGraph(IGraphable graph)
+        {
+            if (!graph.Visible)
+                return null;
+            if (graph is GraphableCollection collection)
+            {
+                foreach (IGraphable child in collection)
+                {
+                    if (!child.Visible)
+                        continue;
+                    IGraphable result = child;
+                    if (child is GraphableCollection childCollection)
+                        result = FirstVisibleGraph(childCollection);
+                    if (result != null)
+                        return result;
+                }
+                return null;
+            }
+            return graph;
+        }
+
+        public static IColorGraph FirstColorGraph(IGraphable graphable)
+        {
+            if (graphable is IColorGraph colorGraph)
+                return colorGraph;
+            if (graphable is GraphableCollection collection)
+            {
+                foreach (IGraphable child in collection)
+                {
+                    if (child is IColorGraph childColorGraph)
+                        return childColorGraph;
+                }
+                foreach (IGraphable child in collection)
+                {
+                    if (child is GraphableCollection childCollection)
+                    {
+                        colorGraph = FirstColorGraph(childCollection);
+                        if (colorGraph != null)
+                            return colorGraph;
+                    }
+                }
+            }
+            return null;
         }
 
         /// <summary>
@@ -394,12 +451,12 @@ namespace Graphing
             bool boundsChanged = false;
             if (!(oldLimits[0] == XMin && oldLimits[1] == XMax))
             {
-                OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false);
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false);
                 boundsChanged = true;
             }
             if (!(oldLimits[2] == YMin && oldLimits[3] == YMax))
             {
-                OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false);
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false);
                 boundsChanged = true;
             }
             return boundsChanged;
@@ -616,18 +673,18 @@ namespace Graphing
         /// Invokes the <see cref="ValuesChanged"/> event for this object.
         /// </summary>
         /// <param name="eventArgs">Any relevant <see cref="EventArgs"/>.</param>
-        protected virtual void OnValuesChanged(EventArgs eventArgs, bool recalculateLimits = true)
+        protected virtual void OnValuesChanged(IValueEventArgs eventArgs)
         {
-            if (recalculateLimits)
-                RecalculateLimits();
             ValuesChanged?.Invoke(this, eventArgs);
         }
         /// <summary>
         /// Invokes the <see cref="DisplayChanged"/> event for this object.
         /// </summary>
         /// <param name="eventArgs">Any relevant <see cref="EventArgs"/>.</param>
-        public virtual void OnDisplayChanged(EventArgs eventArgs)
+        public virtual void OnDisplayChanged(IDisplayEventArgs eventArgs, bool recalculateLimits = true)
         {
+            if (recalculateLimits)
+                RecalculateLimits();
             DisplayChanged?.Invoke(this, eventArgs);
         }
         /// <summary>
@@ -636,13 +693,16 @@ namespace Graphing
         /// <param name="visible"></param>
         public void SetVisibility(bool visible)
         {
-            ignoreChildEvents = true;
-            try
+            lock (this)
             {
-                for (int i = graphs.Count - 1; i >= 0; i--)
-                    graphs[i].Visible = visible;
+                ignoreChildEvents = true;
+                try
+                {
+                    for (int i = graphs.Count - 1; i >= 0; i--)
+                        graphs[i].Visible = visible;
+                }
+                finally { ignoreChildEvents = false; }
             }
-            finally { ignoreChildEvents = false; }
         }
         /// <summary>
         /// Sets the visibility of all elements, except for the element specified by name.
@@ -651,13 +711,16 @@ namespace Graphing
         /// <param name="exception"></param>
         public void SetVisibilityExcept(bool visible, string exception)
         {
-            ignoreChildEvents = true;
-            try
+            lock (this)
             {
-                this.SetVisibility(visible);
-                this[exception].Visible = !visible;
+                ignoreChildEvents = true;
+                try
+                {
+                    this.SetVisibility(visible);
+                    this[exception].Visible = !visible;
+                }
+                finally { ignoreChildEvents = false; }
             }
-            finally { ignoreChildEvents = false; }
         }
         /// <summary>
         /// Searches for an element that matches the conditions defined by the specified predicate,
@@ -692,7 +755,7 @@ namespace Graphing
             }
             List<IGraphable> oldGraphs = graphs.ToList();
             graphs.Clear();
-            OnValuesChanged(new GraphElementsRemovedEventArgs(oldGraphs));
+            OnDisplayChanged(new GraphElementsRemovedEventArgs(oldGraphs));
         }
         /// <summary>
         /// Searches for the specified object and returns the zero-based index
@@ -727,7 +790,7 @@ namespace Graphing
                 graphs.Add(newGraph);
                 newGraph.ValuesChanged += ValuesChangedSubscriber;
                 newGraph.DisplayChanged += DisplayChangedSubscriber;
-                OnValuesChanged(new GraphElementAddedEventArgs(newGraph));
+                OnDisplayChanged(new GraphElementAddedEventArgs(newGraph));
             }
         }
         /// <summary>
@@ -752,7 +815,7 @@ namespace Graphing
                     enumerator.Current.ValuesChanged += ValuesChangedSubscriber;
                     enumerator.Current.DisplayChanged += DisplayChangedSubscriber;
                 }
-                OnValuesChanged(new GraphElementsAddedEventArgs(newGraphs));
+                OnDisplayChanged(new GraphElementsAddedEventArgs(newGraphs));
             }
         }
         /// <summary>
@@ -775,7 +838,7 @@ namespace Graphing
                 graphs.Insert(index, newGraph);
                 newGraph.ValuesChanged += ValuesChangedSubscriber;
                 newGraph.DisplayChanged += DisplayChangedSubscriber;
-                OnValuesChanged(new GraphElementAddedEventArgs(newGraph));
+                OnDisplayChanged(new GraphElementAddedEventArgs(newGraph));
             }
         }
         /// <summary>
@@ -792,7 +855,7 @@ namespace Graphing
                 {
                     graph.ValuesChanged -= ValuesChangedSubscriber;
                     graph.DisplayChanged -= DisplayChangedSubscriber;
-                    OnValuesChanged(new GraphElementRemovedEventArgs(graph));
+                    OnDisplayChanged(new GraphElementRemovedEventArgs(graph));
                 }
                 return removed;
             }
@@ -810,7 +873,7 @@ namespace Graphing
                 graphs.RemoveAt(index);
                 graphable.ValuesChanged -= ValuesChangedSubscriber;
                 graphable.DisplayChanged -= DisplayChangedSubscriber;
-                OnValuesChanged(new GraphElementRemovedEventArgs(graphable));
+                OnDisplayChanged(new GraphElementRemovedEventArgs(graphable));
             }
         }
         /// <summary>
@@ -818,12 +881,42 @@ namespace Graphing
         /// </summary>
         /// <param name="sender"></param>
         /// <param name="eventArgs"></param>
-        protected virtual void ValuesChangedSubscriber(object sender, EventArgs eventArgs)
+        protected virtual void ValuesChangedSubscriber(object sender, IValueEventArgs eventArgs)
         {
             if (ignoreChildEvents)
                 return;
-            EventArgs realEventArgs = eventArgs;
-            if (realEventArgs is ChildChangedEventArgs wrappedEventArgs)
+
+            IValueEventArgs realEventArgs = eventArgs;
+            if (realEventArgs is ChildValueChangedEventArgs wrappedEventArgs)
+                realEventArgs = wrappedEventArgs.Unwrap();
+            if (realEventArgs is ValuesChangedEventArgs valuesChangedEventArgs)
+            {
+                if (valuesChangedEventArgs.BoundsChanged)
+                {
+                    RecalculateLimits();
+                    // Pretend that the child's bounds haven't changed because the collection's bounds have already been changed and sent a BoundsChangedEventArgs.
+                    OnValuesChanged(new ChildValueChangedEventArgs((IGraphable)sender, new ValuesChangedEventArgs(valuesChangedEventArgs.NewValues, false, valuesChangedEventArgs.NewBounds)));
+                }
+                else
+                    OnValuesChanged(new ChildValueChangedEventArgs((IGraphable)sender, eventArgs));
+            }
+        }
+        /// <summary>
+        /// Subscribes to the contained objects' <see cref="IGraphable.DisplayChanged"/> events.
+        /// </summary>
+        /// <param name="sender"></param>
+        /// <param name="eventArgs"></param>
+        protected virtual void DisplayChangedSubscriber(object sender, IDisplayEventArgs eventArgs)
+        {
+            if (ignoreChildEvents)
+                return;
+
+            if (eventArgs is VisibilityChangedEventArgs || (eventArgs is ChildDisplayChangedEventArgs childChangedEvent && childChangedEvent.Unwrap() is VisibilityChangedEventArgs))
+            {
+                RecalculateLimits();
+            }
+            IDisplayEventArgs realEventArgs = eventArgs;
+            if (realEventArgs is ChildDisplayChangedEventArgs wrappedEventArgs)
                 realEventArgs = wrappedEventArgs.Unwrap();
             if (realEventArgs is BoundsChangedEventArgs)
             {
@@ -842,30 +935,7 @@ namespace Graphing
                 Remove((IGraphable)sender);
                 return;
             }
-            if (realEventArgs is ValuesChangedEventArgs valuesChangedEventArgs && valuesChangedEventArgs.BoundsChanged)
-            {
-                RecalculateLimits();
-                // Pretend that the child's bounds haven't changed because the collection's bounds have already been changed and sent a BoundsChangedEventArgs.
-                OnValuesChanged(new ChildChangedEventArgs((IGraphable)sender, new ValuesChangedEventArgs(valuesChangedEventArgs.NewValues, false, valuesChangedEventArgs.NewBounds)));
-                return;
-            }
-            OnValuesChanged(new ChildChangedEventArgs((IGraphable)sender, eventArgs));
-        }
-        /// <summary>
-        /// Subscribes to the contained objects' <see cref="IGraphable.DisplayChanged"/> events.
-        /// </summary>
-        /// <param name="sender"></param>
-        /// <param name="eventArgs"></param>
-        protected virtual void DisplayChangedSubscriber(object sender, EventArgs eventArgs)
-        {
-            if (ignoreChildEvents)
-                return;
-            if (eventArgs is VisibilityChangedEventArgs || (eventArgs is ChildChangedEventArgs childChangedEvent && childChangedEvent.Unwrap() is VisibilityChangedEventArgs))
-            {
-                RecalculateLimits();
-                return;
-            }
-            OnDisplayChanged(new ChildChangedEventArgs((IGraphable)sender, eventArgs));
+            OnDisplayChanged(new ChildDisplayChangedEventArgs((IGraphable)sender, eventArgs));
         }
 
         /// <summary>
@@ -1035,12 +1105,12 @@ namespace Graphing
         /// <summary>
         /// The lower Z bound of the object.
         /// </summary>
-        public virtual float ZMin { get => zMin; set { zMin = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax), false); } }
+        public virtual float ZMin { get => zMin; set { zMin = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax), false); } }
         protected float zMin;
         /// <summary>
         /// The upper Z bound of the object.
         /// </summary>
-        public virtual float ZMax { get => zMax; set { zMax = value; OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax), false); } }
+        public virtual float ZMax { get => zMax; set { zMax = value; OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax), false); } }
         protected float zMax;
 
         /// <summary>
@@ -1050,19 +1120,21 @@ namespace Graphing
         {
             get
             {
-                IGraphable3 graphable3 = (IGraphable3)graphs.FirstOrDefault(g => g is IGraphable3 && g.Visible);
-                return graphable3 != null ? graphable3.ZUnit : "";
+                return FirstVisibleGraph3(this)?.ZUnit ?? "";
             }
             set
             {
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        if (graphs[i] is IGraphable3 graphable3)
-                            graphable3.ZUnit = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            if (graphs[i] is IGraphable3 graphable3)
+                                graphable3.ZUnit = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 OnDisplayChanged(new AxisUnitChangedEventArgs(AxisUI.AxisDirection.Depth, value));
             }
         }
@@ -1073,19 +1145,21 @@ namespace Graphing
         {
             get
             {
-                IGraphable3 graphable3 = (IGraphable3)graphs.FirstOrDefault(g => g is IGraphable3 && g.Visible);
-                return graphable3 != null ? graphable3.ZName : "";
+                return FirstVisibleGraph3(this)?.ZName ?? "";
             }
             set
             {
-                ignoreChildEvents = true;
-                try
+                lock (this)
                 {
-                    for (int i = graphs.Count - 1; i >= 0; i--)
-                        if (graphs[i] is IGraphable3 graphable3)
-                            graphable3.ZName = value;
+                    ignoreChildEvents = true;
+                    try
+                    {
+                        for (int i = graphs.Count - 1; i >= 0; i--)
+                            if (graphs[i] is IGraphable3 graphable3)
+                                graphable3.ZName = value;
+                    }
+                    finally { ignoreChildEvents = false; }
                 }
-                finally { ignoreChildEvents = false; }
                 OnDisplayChanged(new AxisNameChangedEventArgs(AxisUI.AxisDirection.Depth, value));
             }
         }
@@ -1193,19 +1267,40 @@ namespace Graphing
             if (!(oldLimits[0] == XMin && oldLimits[1] == XMax))
             {
                 result = true;
-                OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false);
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax), false);
             }
             if (!(oldLimits[2] == YMin && oldLimits[3] == YMax))
             {
                 result = true;
-                OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false);
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax), false);
             }
             if (!(oldLimits[4] == ZMin && oldLimits[5] == ZMax))
             {
                 result = true;
-                OnValuesChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax), false);
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax), false);
             }
             return result;
+        }
+
+        public static IGraphable3 FirstVisibleGraph3(IGraphable3 graph)
+        {
+            if (!graph.Visible)
+                return null;
+            if (graph is GraphableCollection collection)
+            {
+                foreach (IGraphable3 child in collection.Where(g=>g is IGraphable3))
+                {
+                    if (!child.Visible)
+                        continue;
+                    IGraphable3 result = child;
+                    if (child is GraphableCollection3 childCollection)
+                        result = FirstVisibleGraph3(childCollection);
+                    if (result != null)
+                        return result;
+                }
+                return null;
+            }
+            return graph;
         }
     }
 }

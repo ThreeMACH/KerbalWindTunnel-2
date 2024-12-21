@@ -18,7 +18,7 @@ namespace Graphing
             set
             {
                 _maskCriteria = value;
-                OnValuesChanged(new MaskCriteriaChangedEventArgs(MaskCriteria));
+                OnDisplayChanged(new MaskCriteriaChangedEventArgs(MaskCriteria));
             }
         }
 
