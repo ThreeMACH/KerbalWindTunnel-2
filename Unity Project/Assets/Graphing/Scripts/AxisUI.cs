@@ -378,20 +378,35 @@ namespace Graphing
             if (sender != axis)
                 return;
 
-            AxisDirection realUse = _use;
-            if (_use == AxisDirection.Color && GetComponentInParent<Grapher>()?.GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisDirection.Depth) == null)
-                realUse = AxisDirection.Depth;
-            foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
-                graphDrawer.SetOriginAndScale(realUse, Min, 1 / (Max - Min));
+            lock (boundsChangedEvents)
+                boundsChangedEvents.Enqueue(eventArgs);
+        }
 
-            if (_use == AxisDirection.Color && axisMaterial != null)
-                axisMaterial.SetRange(Min, Max);
+        private readonly Queue<Axis.AxisBoundsEventArgs> boundsChangedEvents = new Queue<Axis.AxisBoundsEventArgs>();
 
-            GenerateTicksAndLabels();
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
+        private void Update()
+        {
+            if (boundsChangedEvents.Count == 0)
+                return;
 
-            RedrawTicks();
+            foreach (Axis.AxisBoundsEventArgs eventArgs in boundsChangedEvents)
+            {
+                AxisDirection realUse = _use;
+                if (_use == AxisDirection.Color && GetComponentInParent<Grapher>()?.GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisDirection.Depth) == null)
+                    realUse = AxisDirection.Depth;
+                foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
+                    graphDrawer.SetOriginAndScale(realUse, Min, 1 / (Max - Min));
 
-            AxisBoundsChangedEvent?.Invoke(this, eventArgs);
+                if (_use == AxisDirection.Color && axisMaterial != null)
+                    axisMaterial.SetRange(Min, Max);
+
+                GenerateTicksAndLabels();
+                RedrawTicks();
+
+                AxisBoundsChangedEvent?.Invoke(this, eventArgs);
+            }
+            boundsChangedEvents.Clear();
         }
 
         private void GenerateTicksAndLabels()
@@ -445,10 +460,12 @@ namespace Graphing
 
         private void Awake()
         {
+            Use = _use;
+            axisText = axisLabel.GetComponent<UI_Tools.Universal_Text.UT_Text>();
             axis.AxisBoundsChangedEvent += BoundsChanged;
             GenerateTicksAndLabels();
-            axisText = axisLabel.GetComponent<UI_Tools.Universal_Text.UT_Text>();
             axis.SetBounds(Min, Max);
+            RecalculateBounds();
         }
 
         // Start is called before the first frame update
@@ -527,7 +544,7 @@ namespace Graphing
         public bool DetachGraphFromAxis(GraphDrawer graphDrawer)
         {
             bool resetAxis = false;
-            if (attachedGraphDrawers.FirstOrDefault(GraphDrawerIsVisible) == graphDrawer)
+            if (FirstVisibleGraph() == graphDrawer.FirstVisibleInHierarchy)
                 resetAxis = true;
 
             if (!attachedGraphDrawers.Remove(graphDrawer))
@@ -537,10 +554,9 @@ namespace Graphing
             if (autoSetMin || autoSetMax)
                 RecalculateBounds();
             if (resetAxis)
-                SetUpAxis(attachedGraphDrawers.FirstOrDefault(GraphDrawerIsVisible));
+                SetUpAxis(FirstVisibleGraph());
             return true;
         }
-        private bool GraphDrawerIsVisible(GraphDrawer graphDrawer) => graphDrawer.Graph.Visible;
 
         /// <summary>
         /// Handler method for any changes affecting the display of the graphs.

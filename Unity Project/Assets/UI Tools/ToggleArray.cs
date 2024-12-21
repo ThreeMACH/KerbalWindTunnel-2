@@ -177,6 +177,19 @@ namespace UI_Tools
             public string label;
             [SerializeField]
             public Toggle.ToggleEvent action;
+            [SerializeField]
+            private bool value;
+            public bool IsOn
+            {
+                get => value;
+                set
+                {
+                    if (Toggle != null)
+                        Toggle.isOn = value;
+                    else
+                        this.@value = value;
+                }
+            }
             public Toggle Toggle
             {
                 get => _toggle;
@@ -186,11 +199,19 @@ namespace UI_Tools
                         return;
                     _toggle?.onValueChanged.RemoveListener(OnEvent);
                     _toggle = value;
-                    _toggle?.onValueChanged.AddListener(OnEvent);
+                    if (_toggle != null)
+                    {
+                        _toggle.onValueChanged.AddListener(OnEvent);
+                        _toggle.isOn = this.@value;
+                    }
                 }
             }
             private Toggle _toggle;
-            private void OnEvent(bool value) => action?.Invoke(value);
+            private void OnEvent(bool value)
+            {
+                this.value = value;
+                action?.Invoke(value);
+            }
             public ToggleArrayItem(string label, UnityEngine.Events.UnityAction<bool> action = null)
             {
                 this.label = label;

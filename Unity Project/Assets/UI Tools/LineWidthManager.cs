@@ -24,6 +24,7 @@ namespace UI_Tools
         private void Awake()
         {
             lineRenderer = GetComponent<LineRenderer>();
+            controller = FindController(transform);
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
@@ -35,11 +36,15 @@ namespace UI_Tools
                 Destroy(this);
                 return;
             }
-            controller = FindController(transform);
+            
             if (controller == null)
             {
-                Destroy(this);
-                return;
+                controller = FindController(transform);
+                if (controller == null)
+                {
+                    Destroy(this);
+                    return;
+                }
             }
             controller.RectTransformDimensionsChanged += UpdateLineRenderer;
             UpdateLineRenderer(this, controller.Size);
