@@ -44,7 +44,7 @@ namespace Graphing
 #pragma warning restore IDE0044 // Add readonly modifier
 
         // Start is called before the first frame update
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start() => RedrawTickmark();
 
 #if UNITY_EDITOR

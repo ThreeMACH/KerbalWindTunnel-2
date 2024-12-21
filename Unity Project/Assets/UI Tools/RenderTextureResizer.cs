@@ -25,7 +25,7 @@ namespace UI_Tools
 
         // Start is called before the first frame update
         public void Start() => OnRectTransformDimensionsChange();
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
             RectTransform imageTransform = rectTransform;
@@ -106,7 +106,7 @@ namespace UI_Tools
             sourceCamera.aspect = (float)width / height;
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
             => graphTex?.Release();
     }

@@ -10,7 +10,7 @@ namespace UI_Tools
         public UnityEngine.UI.Button.ButtonClickedEvent OnLessThan = new UnityEngine.UI.Button.ButtonClickedEvent();
         public UnityEngine.UI.Toggle.ToggleEvent OnTrigger = new UnityEngine.UI.Toggle.ToggleEvent();
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
             OnGreaterThanOrEqual.AddListener(BoolTrue);

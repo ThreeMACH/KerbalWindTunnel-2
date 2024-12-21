@@ -33,7 +33,7 @@ namespace UI_Tools
         public bool isOn { get => toggle.isOn; set => toggle.isOn = value; }
 #pragma warning restore IDE1006 // Naming Styles
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
         {
             toggle = GetComponent<Toggle>();
@@ -45,7 +45,7 @@ namespace UI_Tools
         }
         private void OnValueChanged(bool value)
             => group?.NotifyToggleChange(this);
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
         {
             toggle?.onValueChanged.RemoveListener(OnValueChanged);

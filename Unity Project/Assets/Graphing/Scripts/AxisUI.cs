@@ -452,7 +452,7 @@ namespace Graphing
         }
 
         // Start is called before the first frame update
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
         {
             ticks.Clear();
@@ -957,7 +957,7 @@ namespace Graphing
             EventSystem.current.SetSelectedGameObject(gameObject);
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
         {
             foreach (GraphDrawer graphDrawer in attachedGraphDrawers)

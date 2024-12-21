@@ -20,13 +20,13 @@ namespace UI_Tools
         private LineRenderer lineRenderer;
         private LineWidthManagerController controller;
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
             lineRenderer = GetComponent<LineRenderer>();
         }
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         // Start is called before the first frame update
         void Start()
         {
@@ -44,7 +44,7 @@ namespace UI_Tools
             controller.RectTransformDimensionsChanged += UpdateLineRenderer;
             UpdateLineRenderer(this, controller.Size);
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
         {
             if (controller != null)

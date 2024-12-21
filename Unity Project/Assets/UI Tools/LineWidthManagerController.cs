@@ -8,12 +8,12 @@ namespace UI_Tools
     {
         public event EventHandler<Vector2> RectTransformDimensionsChanged;
         private RectTransform rectTransform;
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
             rectTransform = GetComponent<RectTransform>();
         }
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "<Unity Method>")]
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         protected virtual void OnRectTransformDimensionsChange()
         {
             if (enabled)
