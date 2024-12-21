@@ -67,10 +67,10 @@ namespace Graphing
         /// <summary>Provides a color axis, creating one if one does not exist.</summary>
         /// <param name="side">The side on which to create an axis if one is to be created.</param>
         /// <returns>The color axis.</returns>
-        public AxisUI ProvideColorAxis(AxisSide side = AxisSide.Bottom)
+        public AxisUI ProvideColorAxis(AxisSide side = AxisSide.Bottom, bool returnNullInsteadOfCreate = false)
         {
             AxisUI axis = GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisUI.AxisDirection.Color);
-            return axis ?? AddAxis(side, AxisUI.AxisDirection.Color);
+            return axis ?? (returnNullInsteadOfCreate ? null : AddAxis(side, AxisUI.AxisDirection.Color));
         }
 
         /// <summary>Adds a graph to this <see cref="Grapher"/>.</summary>
@@ -108,11 +108,11 @@ namespace Graphing
         /// <summary>Adds a graph to this <see cref="Grapher"/>, associating it with the default axes.</summary>
         /// <param name="graph">The graph to be added.</param>
         /// <returns>The <see cref="GraphDrawer"/> object associated with this graph.</returns>
-        public GraphDrawer AddGraphToDefaultAxes(IGraphable graph, bool provideColorAxisForCollection = true)
+        public GraphDrawer AddGraphToDefaultAxes(IGraphable graph, bool createColorAxisForCollections = false)
             => AddGraph(graph,
                 ProvidePrimaryHorizontalAxis(),
                 ProvidePrimaryVerticalAxis(),
-                graph is IColorGraph || (provideColorAxisForCollection && graph is GraphableCollection) ? ProvideColorAxis() : null
+                ProvideColorAxis(returnNullInsteadOfCreate: !(graph is IColorGraph || (createColorAxisForCollections && graph is GraphableCollection)))
                 );
         public bool RemoveGraph(IGraphable graph)
         {
