@@ -23,6 +23,8 @@ namespace Graphing
         [SerializeField]
         protected GameObject _graphDrawerPrefab;
 
+        public GameObject GraphDrawerPrefab => _graphDrawerPrefab;
+
         public int ZOffset2D { get; set; } = 10;
 
         public AxisStyle DefaultStyle { get; set; } = new AxisStyle();

@@ -17,8 +17,8 @@ namespace Graphing
         //protected Shader JumpFloodShader;
         //[SerializeField]
         //public Material lineVertexMaterial;
-        [SerializeField]
-        protected GameObject _ownPrefab;
+        //[SerializeField]
+        //protected GameObject _ownPrefab;
 
         protected Grapher grapher;
         protected IGraphable graph;

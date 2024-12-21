@@ -14,7 +14,7 @@ namespace Graphing
                     Destroy(childDrawer.gameObject);
                 foreach (IGraphable graphable in collection.Graphables)
                 {
-                    GraphDrawer childDrawer = Instantiate(_ownPrefab, transform).GetComponent<GraphDrawer>();
+                    GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
                     if (childDrawer.grapher == null)
                         childDrawer.grapher = grapher;
                     childDrawer.SetGraph(graphable, grapher);
@@ -32,7 +32,7 @@ namespace Graphing
                 {
                     if (reason is GraphElementAddedEventArgs addedEvent)
                     {
-                        GraphDrawer childDrawer = Instantiate(_ownPrefab, transform).GetComponent<GraphDrawer>();
+                        GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
                         if (childDrawer.grapher == null)
                             childDrawer.grapher = this.grapher;
                         childDrawer.SetGraph(addedEvent.Graph, grapher);
@@ -46,7 +46,7 @@ namespace Graphing
                     {
                         foreach (IGraphable newGraph in multiAddEvent.Graphs)
                         {
-                            GraphDrawer childDrawer = Instantiate(_ownPrefab, transform).GetComponent<GraphDrawer>();
+                            GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
                             if (childDrawer.grapher == null)
                                 childDrawer.grapher = this.grapher;
                             childDrawer.SetGraph(newGraph, grapher);
