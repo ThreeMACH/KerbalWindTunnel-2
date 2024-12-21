@@ -75,7 +75,7 @@ namespace Graphing
             {
                 IEnumerable<GraphDrawer> drawers = GraphDrawersAffectingBounds;
                 if (!drawers.Any())
-                    return float.NaN;
+                    return 0;
                 return drawers.Min(boundSelector.min);
             }
         }
@@ -86,7 +86,7 @@ namespace Graphing
             {
                 IEnumerable<GraphDrawer> drawers = GraphDrawersAffectingBounds;
                 if (!drawers.Any())
-                    return float.NaN;
+                    return 0;
                 return drawers.Max(boundSelector.max);
             }
         }
