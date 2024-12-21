@@ -618,15 +618,17 @@ namespace KerbalWindTunnel
         // The window is only set to not enabled when the 'X' is clicked.
         public void OnDisable()
         {
+            WindTunnel.Instance?.SetButtonOff();
+            WindTunnel.appButton?.SetFalse(false);
         }
         public void OnEnable()
         {
+            WindTunnel.Instance?.SetButtonOn();
         }
 
         // Called by the Update Vessel button
         public void UpdateVessel()
         {
-
             if (vessel != null)
             {
                 if (vessel is VesselCache.IReleasable releasable)
