@@ -31,14 +31,19 @@ namespace Graphing
             {
                 if (pass == 0)
                 {
-                    SurfMeshGeneration.ConstructQuadSurfMesh(outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, mesh, false);
-                    QuadTessellator tessellator = new QuadTessellator(mesh);
-                    tessellator.SubdivideForDegeneracy();
-                    mesh.SetVertices(tessellator.Vertices.ToList());
-                    mesh.SetIndices(tessellator.Indices.ToList(), MeshTopology.Triangles, 0);
-                    mesh.SetUVs(0, tessellator.Coords.ToList());
-                    //mesh.SetUVs(2, GenerateVertexData(tessellator.Coords, tessellator.Heights, v => v.z).ToList());
-                    mesh.SetUVs(1, GenerateVertexData(tessellator.Coords, tessellator.Heights, outlineMask.MaskCriteria).ToList());
+                    if (outlineMask.Values.Length > 0)
+                    {
+                        SurfMeshGeneration.ConstructQuadSurfMesh(outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, mesh, false);
+                        QuadTessellator tessellator = new QuadTessellator(mesh);
+                        tessellator.SubdivideForDegeneracy(1, 1);
+                        mesh.SetVertices(tessellator.Vertices.ToList());
+                        mesh.SetIndices(tessellator.Indices.ToList(), MeshTopology.Triangles, 0);
+                        mesh.SetUVs(0, tessellator.Coords.ToList());
+                        //mesh.SetUVs(2, GenerateVertexData(tessellator.Coords, tessellator.Heights, v => v.z).ToList());
+                        mesh.SetUVs(1, GenerateVertexData(tessellator.Coords, tessellator.Heights, outlineMask.MaskCriteria).ToList());
+                    }
+                    else
+                        mesh.Clear();
                 }
                 pass = 1;
             }

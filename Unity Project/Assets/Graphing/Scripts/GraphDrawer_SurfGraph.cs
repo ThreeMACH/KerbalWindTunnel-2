@@ -27,13 +27,18 @@ namespace Graphing
             {
                 if (pass == 0)
                 {
-                    SurfMeshGeneration.ConstructQuadSurfMesh(surfGraph.Values, surfGraph.XMin, surfGraph.XMax, surfGraph.YMin, surfGraph.YMax, mesh, false);
-                    QuadTessellator tessellator = new QuadTessellator(mesh);
-                    tessellator.SubdivideForDegeneracy();
-                    mesh.SetVertices(tessellator.Vertices.ToList());
-                    mesh.SetIndices(tessellator.Indices.ToList(), MeshTopology.Triangles, 0);
-                    mesh.SetUVs(0, tessellator.Coords.ToList());
-                    mesh.SetUVs(1, GenerateVertexData(tessellator.Coords, tessellator.Heights, surfGraph.ColorFunc).ToList());
+                    if (surfGraph.Values.Length > 0)
+                    {
+                        SurfMeshGeneration.ConstructQuadSurfMesh(surfGraph.Values, surfGraph.XMin, surfGraph.XMax, surfGraph.YMin, surfGraph.YMax, mesh, false);
+                        QuadTessellator tessellator = new QuadTessellator(mesh);
+                        tessellator.SubdivideForDegeneracy(1, 1);
+                        mesh.SetVertices(tessellator.Vertices.ToList());
+                        mesh.SetIndices(tessellator.Indices.ToList(), MeshTopology.Triangles, 0);
+                        mesh.SetUVs(0, tessellator.Coords.ToList());
+                        mesh.SetUVs(1, GenerateVertexData(tessellator.Coords, tessellator.Heights, surfGraph.ColorFunc).ToList());
+                    }
+                    else
+                        mesh.Clear();
                 }
                 pass = 1;
             }
