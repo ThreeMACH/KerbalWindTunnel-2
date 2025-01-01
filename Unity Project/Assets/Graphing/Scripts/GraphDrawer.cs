@@ -13,12 +13,7 @@ namespace Graphing
         [SerializeField]
         public Material outlineGraphMaterial;
         [SerializeField]
-        protected GameObject _lineRendererPrefab;
-        //protected Shader JumpFloodShader;
-        //[SerializeField]
-        //public Material lineVertexMaterial;
-        //[SerializeField]
-        //protected GameObject _ownPrefab;
+        public Material lineVertexMaterial;
 
         protected Grapher grapher;
         protected IGraphable graph;
@@ -157,9 +152,7 @@ namespace Graphing
                 return;
             if (typeof(ILineGraph).IsAssignableFrom(graphType))
             {
-                Instantiate(_lineRendererPrefab, transform);
-                //MeshRendererSetup();
-                //LineGraphSetup();
+                LineGraphSetup();
                 return;
             }
             if (typeof(SurfGraph).IsAssignableFrom(graphType))

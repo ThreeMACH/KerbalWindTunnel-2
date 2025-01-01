@@ -1,4 +1,5 @@
 ﻿using System;
+using UnityEngine;
 
 namespace Graphing
 {
@@ -132,6 +133,10 @@ namespace Graphing
         /// Provides the mapping function as input to the <see cref="ColorScheme"/>.
         /// </summary>
         System.Func<UnityEngine.Vector3, float> ColorFunc { get; set; }
+        /// <summary>
+        /// Evaluates the color at a given point.
+        /// </summary>
+        UnityEngine.Color EvaluateColor(Vector3 value);
         /// <summary>
         /// Disables the <see cref="ColorScheme"/> and uses a single color.
         /// </summary>

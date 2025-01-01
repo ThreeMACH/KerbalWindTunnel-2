@@ -85,6 +85,7 @@
     <Compile Include="Assets\Graphing\Scripts\Grapher.cs" />
     <Compile Include="Assets\Graphing\Scripts\PlaceholderData.cs" />
     <Compile Include="Assets\Graphing\Scripts\QuadTessellator.cs" />
+    <Compile Include="Assets\Graphing\Scripts\ScreenSpaceLineRenderer.cs" />
     <Compile Include="Assets\Graphing\Scripts\Tickmark.cs" />
     <Compile Include="Assets\Graphing\Scripts\UI\CrosshairController.cs" />
     <Compile Include="Assets\Graphing\Scripts\UI\GraphLayoutGroup.cs" />
@@ -97,6 +98,7 @@
     <None Include="Assets\Graphing\Resources\Shaders\OutlineMap.shader" />
     <None Include="Assets\Graphing\Resources\Shaders\ColorMapContours.shader" />
     <None Include="Assets\Graphing\Resources\Shaders\ColorMap.shader" />
+    <None Include="Assets\Graphing\Resources\Shaders\LineVertexShader.shader" />
     <None Include="AssetBundles\graphingshaders.ksp" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>

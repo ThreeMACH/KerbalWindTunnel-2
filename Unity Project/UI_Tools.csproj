@@ -56,8 +56,6 @@
     <Compile Include="Assets\UI Tools\BooleanInvert.cs" />
     <Compile Include="Assets\UI Tools\FlexibleGridLayoutGroup.cs" />
     <Compile Include="Assets\UI Tools\GUIStyleSetter.cs" />
-    <Compile Include="Assets\UI Tools\LineWidthManager.cs" />
-    <Compile Include="Assets\UI Tools\LineWidthManagerController.cs" />
     <Compile Include="Assets\UI Tools\MasterGUIStyleSetter.cs" />
     <Compile Include="Assets\UI Tools\NonExclusiveToggle.cs" />
     <Compile Include="Assets\UI Tools\NonExclusiveToggleArray.cs" />

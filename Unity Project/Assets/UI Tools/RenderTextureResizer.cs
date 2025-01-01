@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System;
+using UnityEngine;
 
 namespace UI_Tools
 {
@@ -35,27 +36,25 @@ namespace UI_Tools
             }
             else
             {
-                float width = Mathf.Max(Mathf.Ceil(imageTransform.rect.width), 16) * resolutionFactor;
-                float height = Mathf.Max(Mathf.Ceil(imageTransform.rect.height), 16) * resolutionFactor;
+                int width = Mathf.Max(Mathf.CeilToInt(imageTransform.rect.width), 16) * resolutionFactor;
+                int height = Mathf.Max(Mathf.CeilToInt(imageTransform.rect.height), 16) * resolutionFactor;
 
-                RenderTextureDescriptor textureDescriptor = new RenderTextureDescriptor(
-                    Mathf.CeilToInt(width),
-                    Mathf.CeilToInt(height));
-                graphTex = new RenderTexture(textureDescriptor);
+                graphTex = CreateRenderTexture(MakeDescriptor(width, height));
+                sourceCamera.targetTexture = graphTex;
             }
-            imageElement.texture = sourceCamera.targetTexture = graphTex;
+            imageElement.texture = graphTex;
         }
 
         public void OnRectTransformDimensionsChange()
         {
             RectTransform imageTransform = rectTransform;
 
-            float width = Mathf.Max(Mathf.Ceil(imageTransform.rect.width), 16) * resolutionFactor;
-            float height = Mathf.Max(Mathf.Ceil(imageTransform.rect.height), 16) * resolutionFactor;
+            int width = Mathf.Max(Mathf.CeilToInt(imageTransform.rect.width), 16) * resolutionFactor;
+            int height = Mathf.Max(Mathf.CeilToInt(imageTransform.rect.height), 16) * resolutionFactor;
 
             if (graphTex == null)
             {
-                UpdateTexture((int)width, (int)height);
+                UpdateTexture(width, height);
                 return;
             }
 
@@ -63,16 +62,16 @@ namespace UI_Tools
                 return;
 
             if (Mathf.Abs(width - graphTex.width) / graphTex.width > 0.1f || Mathf.Abs(height - graphTex.height) / graphTex.height > 0.1f)
-                UpdateTexture((int)width, (int)height);
+                UpdateTexture(width, height);
         }
 
         public void ForceResize()
         {
             RectTransform imageTransform = rectTransform;
 
-            float width = Mathf.Max(Mathf.Ceil(imageTransform.rect.width), 16) * resolutionFactor;
-            float height = Mathf.Max(Mathf.Ceil(imageTransform.rect.height), 16) * resolutionFactor;
-            UpdateTexture((int)width, (int)height);
+            int width = Mathf.Max(Mathf.CeilToInt(imageTransform.rect.width), 16) * resolutionFactor;
+            int height = Mathf.Max(Mathf.CeilToInt(imageTransform.rect.height), 16) * resolutionFactor;
+            UpdateTexture(width, height);
         }
 
         private void UpdateTexture(int width, int height)
@@ -80,13 +79,11 @@ namespace UI_Tools
             if (scalingGroup != null)
                 scalingGroup.transform.localScale = new Vector3((float)width / height, 1, 1);
 
-            RenderTextureDescriptor textureDescriptor = new RenderTextureDescriptor(
-                    Mathf.CeilToInt(width),
-                    Mathf.CeilToInt(height));
+            RenderTextureDescriptor textureDescriptor = MakeDescriptor(width, height);
 
             if (graphTex == null && sourceCamera.targetTexture == null)
             {
-                graphTex = new RenderTexture(textureDescriptor);
+                graphTex = CreateRenderTexture(textureDescriptor);
             }
             else
             {
@@ -104,6 +101,15 @@ namespace UI_Tools
             imageElement.texture = sourceCamera.targetTexture = graphTex;
 
             sourceCamera.aspect = (float)width / height;
+        }
+
+        private RenderTextureDescriptor MakeDescriptor(int width, int height)
+        {
+            return new RenderTextureDescriptor(width, height, RenderTextureFormat.Default, 24, 0);
+        }
+        private RenderTexture CreateRenderTexture(RenderTextureDescriptor descriptor)
+        {
+            return new RenderTexture(descriptor) { antiAliasing = Math.Max(QualitySettings.antiAliasing, 1) };
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]

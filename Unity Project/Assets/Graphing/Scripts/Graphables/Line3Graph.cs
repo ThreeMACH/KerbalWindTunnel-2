@@ -18,7 +18,7 @@ namespace Graphing
         /// The width of the line in pixels.
         /// </summary>
         public float LineWidth { get => lineWidth; set { lineWidth = value; OnDisplayChanged(new LineWidthChangedEventArgs(LineWidth)); } }
-        protected float lineWidth = 1;
+        protected float lineWidth = 3;
         protected Vector3[] _values;
         /// <summary>
         /// Gets or sets the points in the line.
