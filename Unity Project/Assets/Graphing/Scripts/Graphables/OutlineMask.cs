@@ -7,10 +7,18 @@ namespace Graphing
     /// <summary>
     /// A class representing a contour of a surface graph.
     /// </summary>
-    public class OutlineMask : Graphable3
+    public class OutlineMask : Graphable
     {
-        public override float ZMin { get => base.ZMin; set => Debug.LogError("Cannot set bounds for this type of object."); }
-        public override float ZMax { get => base.ZMax; set => Debug.LogError("Cannot set bounds for this type of object."); }
+        /// <summary>
+        /// The unit for the Z axis.
+        /// </summary>
+        public string ZUnit { get => _zUnit ?? ""; set { _zUnit = value; OnDisplayChanged(new AxisUnitChangedEventArgs(AxisUI.AxisDirection.Depth, ZUnit)); } }
+        private string _zUnit;
+        /// <summary>
+        /// The name of the Z axis.
+        /// </summary>
+        public string ZName { get { return string.IsNullOrEmpty(zName) ? DisplayName : zName; } set { zName = value; OnDisplayChanged(new AxisNameChangedEventArgs(AxisUI.AxisDirection.Depth, ZName)); } }
+        protected string zName = null;
 
         private Func<Vector3, float> _maskCriteria = (v) => v.z;
         public Func<Vector3, float> MaskCriteria {
@@ -37,7 +45,7 @@ namespace Graphing
                 lock (this)
                 {
                     _values = value;
-                    OnValuesChanged(new ValuesChangedEventArgs(Values, false, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                    OnValuesChanged(new ValuesChangedEventArgs(Values, false, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
                 }
             }
         }
@@ -230,7 +238,7 @@ namespace Graphing
                 this.xMax = xRight;
                 this.yMin = yBottom;
                 this.yMax = yTop;
-                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
             }
         }
 

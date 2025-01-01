@@ -19,7 +19,7 @@ namespace Graphing
                         childDrawer.grapher = grapher;
                     childDrawer.SetGraph(graphable, grapher);
                     if (graphable is IGraphable3 graphable3 && !(graphable is GraphableCollection))
-                        ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D);
+                        ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D / transform.localScale.z);
                 }
                 return pass;
             }

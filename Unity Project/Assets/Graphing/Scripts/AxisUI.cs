@@ -301,7 +301,7 @@ namespace Graphing
 
         public Texture2D AxisBackground
         {
-            get => (Texture2D)colorBar.texture;
+            get => colorBar.texture as Texture2D;
             set
             {
                 if (value == null)
@@ -378,25 +378,17 @@ namespace Graphing
             if (sender != axis)
                 return;
 
-            lock (boundsChangedEvents)
-                boundsChangedEvents.Enqueue(eventArgs);
+            boundsChangedEvents.Enqueue(eventArgs);
         }
 
-        private readonly Queue<Axis.AxisBoundsEventArgs> boundsChangedEvents = new Queue<Axis.AxisBoundsEventArgs>();
+        private readonly System.Collections.Concurrent.ConcurrentQueue<Axis.AxisBoundsEventArgs> boundsChangedEvents = new System.Collections.Concurrent.ConcurrentQueue<Axis.AxisBoundsEventArgs>();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Update()
         {
-            if (boundsChangedEvents.Count == 0)
-                return;
-
-            foreach (Axis.AxisBoundsEventArgs eventArgs in boundsChangedEvents)
+            while (boundsChangedEvents.TryDequeue(out var eventArgs))
             {
-                AxisDirection realUse = _use;
-                if (_use == AxisDirection.Color && GetComponentInParent<Grapher>()?.GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisDirection.Depth) == null)
-                    realUse = AxisDirection.Depth;
-                foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
-                    graphDrawer.SetOriginAndScale(realUse, Min, 1 / (Max - Min));
+                SetOriginsAndScales();
 
                 if (_use == AxisDirection.Color && axisMaterial != null)
                     axisMaterial.SetRange(Min, Max);
@@ -406,7 +398,15 @@ namespace Graphing
 
                 AxisBoundsChangedEvent?.Invoke(this, eventArgs);
             }
-            boundsChangedEvents.Clear();
+        }
+
+        private void SetOriginsAndScales()
+        {
+            AxisDirection realUse = _use;
+            if (_use == AxisDirection.Color && GetComponentInParent<Grapher>()?.GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisDirection.Depth) == null)
+                realUse = AxisDirection.Depth;
+            foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
+                graphDrawer.SetOriginAndScale(realUse, Min, 1 / (Max - Min));
         }
 
         private void GenerateTicksAndLabels()
@@ -458,6 +458,7 @@ namespace Graphing
         }
         private const float roundError = 0.05f;
 
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
             Use = _use;
@@ -466,6 +467,10 @@ namespace Graphing
             GenerateTicksAndLabels();
             axis.SetBounds(Min, Max);
             RecalculateBounds();
+            SetOriginsAndScales();
+            
+            if (_use == AxisDirection.Color && axisMaterial != null)
+                axisMaterial.SetRange(Min, Max);
         }
 
         // Start is called before the first frame update
@@ -522,13 +527,12 @@ namespace Graphing
             }
             if (_use == AxisDirection.Color)
             {
-                graphDrawer.ShaderMaterial = AxisMaterial;
+                if (!(graphDrawer.Graph is OutlineMask))
+                    graphDrawer.ShaderMaterial = AxisMaterial;
             }
 
-            AxisDirection realUse = _use;
-            if (_use == AxisDirection.Color && GetComponentInParent<Grapher>()?.GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisDirection.Depth) == null)
-                realUse = AxisDirection.Depth;
-            graphDrawer.SetOriginAndScale(realUse, Min, 1 / (Max - Min));
+            SetOriginsAndScales();
+
             graphDrawer.Graph.DisplayChanged += GraphDisplayChangeHandler;
             graphDrawer.Graph.ValuesChanged += GraphBoundsChangeHandler;
             return true;
@@ -573,7 +577,9 @@ namespace Graphing
 
             if (eventArgs is ValuesChangedEventArgs valuesChangedEventArgs && valuesChangedEventArgs.BoundsChanged)
             {
-                if (!(Use >= AxisDirection.Depth && (sender is IGraphable3)) && !(Use >= AxisDirection.Color && (sender is IColorGraph)))
+                // If the sender is not an IGraphable3 and Use >= Depth, its bounds won't apply
+                // If the sender is not an IColorGraph and Use >= Color, its bounds won't apply
+                if ((Use >= AxisDirection.Depth && !(sender is Graphable3)) && (Use >= AxisDirection.Color && !(sender is IColorGraph)))
                     return;
                 // Set axis bounds for all axes driven by this drawer.
                 if (AutoSetMin || AutoSetMax)
@@ -966,6 +972,7 @@ namespace Graphing
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void OnDestroy()
         {
+            axis.AxisBoundsChangedEvent -= BoundsChanged;
             foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
             {
                 graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeHandler;

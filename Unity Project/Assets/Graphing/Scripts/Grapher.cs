@@ -36,6 +36,8 @@ namespace Graphing
         public AxisUI SecondaryVerticalAxis { get => rightAxisGroup.GetComponentInChildren<AxisUI>(); }
         public AxisUI SecondaryHorizontalAxis { get => topAxisGroup.GetComponentsInChildren<AxisUI>().LastOrDefault(); }
 
+        private System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool active)> activatorQueue = new System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool visible)>();
+
         /// <summary>Provides the primary vertical axis, creating one if one does not exist.</summary>
         /// <returns>The vertical axis designated as primary.</returns>
         public AxisUI ProvidePrimaryVerticalAxis()
@@ -413,6 +415,8 @@ namespace Graphing
             // TODO: Set up legend or other things requiring the name of this graph.
         }
 
+        public void QueueActivation(GraphDrawer graphDrawer, bool visible) => activatorQueue.Enqueue((graphDrawer, visible));
+
         /// <summary>
         /// Unity Awake method.
         /// </summary>
@@ -421,6 +425,14 @@ namespace Graphing
             foreach (AxisUI axis in GetComponentsInChildren<AxisUI>())
                 axis.AxisBoundsChangedEvent += AxisBoundsChangedHandler;
             GetComponentInChildren<CrosshairController>().OnClick += OnGraphClicked;
+        }
+
+        protected virtual void Update()
+        {
+            while (activatorQueue.TryDequeue(out var activator))
+            {
+                activator.drawer.gameObject.SetActive(activator.active);
+            }
         }
 
         /// <summary>

@@ -42,7 +42,7 @@ namespace Graphing
                     meshRenderer.material = _material;
 
                 foreach (GraphDrawer graphDrawer in GetComponentsInChildren<GraphDrawer>(true))
-                    if (graphDrawer != this)
+                    if (graphDrawer != this && !(graphDrawer.graph is OutlineMask))
                         graphDrawer.ShaderMaterial = value;
             }
         }
@@ -102,15 +102,20 @@ namespace Graphing
             if (this.graph == null ||
                 graph is GraphableCollection ||
                 (!this.graph.GetType().IsAssignableFrom(graph.GetType()) && !(this.graph is ILineGraph && graph is ILineGraph)))
-                    ResetGrapher(graph.GetType());
+                ResetGrapher(graph.GetType());
+            else
+                SetupForType(graph.GetType());
 
             this.graph = graph;
 
-            redrawReasons.Clear();
+            lock (redrawReasons)
+                redrawReasons.Clear();
             this.graph.ValuesChanged += OnValuesChangedHandler;
             this.graph.DisplayChanged += OnDisplayChangedHandler;
             if (this.graph is Graphable _graphable)
                 Transpose = _graphable.Transpose;
+            else
+                Transpose = false;
 
             Draw(true);
 
@@ -182,18 +187,15 @@ namespace Graphing
             if (sender != graph)
                 return;
 
-            if (args is VisibilityChangedEventArgs visArgs)
-                gameObject.SetActive(visArgs.Visible);
-            else if (args is TransposeChangedEventArgs transposeArgs)
-                Transpose = transposeArgs.Transpose;
-            else if (args is ColorChangedEventArgs)
-                MarkForRedraw((EventArgs)args);
-            else if (args is LineWidthChangedEventArgs)
-                MarkForRedraw((EventArgs)args);
-            else if (args is MaskLineOnlyChangedEventArgs)
-                MarkForRedraw((EventArgs)args);
-            else if (args is DisplayNameChangedEventArgs displayNameChangedEventArgs)
+            if (args is DisplayNameChangedEventArgs displayNameChangedEventArgs)
                 grapher.DisplayNameChangedHandler((IGraphable)sender, displayNameChangedEventArgs);
+            else if (args is VisibilityChangedEventArgs visibilityArgs)
+            {
+                grapher.QueueActivation(this, visibilityArgs.Visible);
+                MarkForRedraw(visibilityArgs);
+            }
+            else
+                MarkForRedraw((EventArgs)args);
         }
 
         protected virtual void OnValuesChangedHandler(object sender, IValueEventArgs args)
@@ -245,8 +247,10 @@ namespace Graphing
         protected void MarkForRedraw(EventArgs reason)
         {
             lock (redrawReasons)
+            {
                 redrawReasons.Add(reason);
-            markedForRedraw = true;
+                markedForRedraw = true;
+            }
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
@@ -255,7 +259,6 @@ namespace Graphing
             if (markedForRedraw)
             {
                 LateRedraw();
-                markedForRedraw = false;
             }
         }
         protected virtual void LateRedraw() => Draw();
@@ -265,13 +268,23 @@ namespace Graphing
 
         protected virtual void Draw(bool forceRegenerate = false)
         {
-            lock (graph)
+            int localFlag = 0;
+            lock (redrawReasons)
             {
-                int localFlag = 0;
                 if (redrawReasons.Count == 0)
                     redrawReasons.Add(new EventArgs());
                 foreach (IGrouping<Type, EventArgs> reasonGroup in redrawReasons.Reverse<EventArgs>().GroupBy(reason => reason.GetType()).OrderBy(group => EventArgsSort(group.Key)))
                 {
+                    if (reasonGroup.Key == typeof(VisibilityChangedEventArgs))
+                    {
+                        gameObject.SetActive(graph.Visible);
+                        continue;
+                    }
+                    if (reasonGroup.Key == typeof(TransposeChangedEventArgs))
+                    {
+                        Transpose = (reasonGroup.Last() as TransposeChangedEventArgs).Transpose;
+                        continue;
+                    }
                     if (graph is ILineGraph lineGraphable)
                     {
                         localFlag = DrawLineGraph(lineGraphable, reasonGroup, localFlag, forceRegenerate);
@@ -297,6 +310,7 @@ namespace Graphing
                 }
 
                 redrawReasons.Clear();
+                markedForRedraw = false;
             }
         }
 
