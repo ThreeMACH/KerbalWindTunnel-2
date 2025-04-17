@@ -370,6 +370,15 @@ namespace Graphing
             return null;
         }
 
+        public IEnumerable<IGraphable> Flatten()
+        {
+            IEnumerable<IGraphable> collections = Graphables.Where(g => g is GraphableCollection);
+            IEnumerable<IGraphable> graphables = Graphables.Except(collections);
+            foreach (IGraphable childCollection in collections)
+                graphables = graphables.Union(((GraphableCollection)childCollection).Flatten());
+            return graphables;
+        }
+
         /// <summary>
         /// Draws the object on the specified <see cref="UnityEngine.Texture2D"/>.
         /// </summary>
