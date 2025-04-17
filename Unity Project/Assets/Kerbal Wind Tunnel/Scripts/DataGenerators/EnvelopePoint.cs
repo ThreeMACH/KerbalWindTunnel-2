@@ -79,8 +79,11 @@ namespace KerbalWindTunnel.DataGenerators
             }
             Accel_excess = (Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel);
             LDRatio = Math.Abs(lift / drag);
-            dLift = (vessel.GetLiftForceMagnitude(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput) - lift)
-                / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
+            if (vessel is ILiftAoADerivativePredictor derivativePredictor)
+                    dLift = derivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA_level, pitchInput) * Mathf.Deg2Rad; // Deg2Rad = 1/Rad2Deg
+                else
+                    dLift = (vessel.GetLiftForceMagnitude(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput) - lift) /
+                        (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
             //stabilityDerivative = (vessel.GetAeroTorque(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput).x - torque.x)
             //    / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
             //GetStabilityValues(vessel, conditions, AoA_level, out stabilityRange, out stabilityScore);
