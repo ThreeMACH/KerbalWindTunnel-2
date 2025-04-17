@@ -17,13 +17,13 @@ namespace Graphing
         [SerializeField]
         private RectTransform tickHolder;
         [SerializeField]
-        private UnityEngine.UI.Image bar;
+        private Image bar;
         [SerializeField]
         private GameObject _tickPrefab;
         [SerializeField]
         private GameObject _axisBoundSetterPrefab;
         [SerializeField]
-        private UnityEngine.UI.RawImage colorBar;
+        private RawImage colorBar;
         [SerializeField]
         private RectTransform axisLabel;
         [SerializeField]
