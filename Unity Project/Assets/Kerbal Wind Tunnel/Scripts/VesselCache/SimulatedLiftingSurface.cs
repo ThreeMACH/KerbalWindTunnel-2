@@ -116,6 +116,8 @@ namespace KerbalWindTunnel.VesselCache
 
         virtual public Vector3 GetDrag(Vector3 velocityVect, float mach)
         {
+            if (!perpendicularOnly)
+                return GetForce(velocityVect, mach);
             if (!useInternalDragModel)
                 return Vector3.zero;
             float dot = Vector3.Dot(velocityVect, liftVector);

@@ -21,12 +21,14 @@ namespace KerbalWindTunnel.VesselCache
         public const float toleranceF = 2E-5f;
 
         internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
-        internal readonly List<(FloatCurve machCurve, FloatCurve dragCurve)> surfaceDrag = new List<(FloatCurve machCurve, FloatCurve dragCurve)>();
+        internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceDragI = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
+        internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceDragP = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
         internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> bodyLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
         internal FloatCurve2 bodyDrag;
 
         private readonly List<CharacterizedPart> parts = new List<CharacterizedPart>();
         private readonly List<CharacterizedLiftingSurface> surfaces = new List<CharacterizedLiftingSurface>();
+        private readonly List<PartCollection> partCollections = new List<PartCollection>();
 
         private Task taskHandle = null;
 
@@ -93,8 +95,10 @@ namespace KerbalWindTunnel.VesselCache
                 foreach (PartCollection child in collection.partCollections)
                 {
                     if (child is RotorPartCollection rotorCollection && rotorCollection.isRotating)
-                        Debug.LogWarning($"[Kerbal Wind Tunnel] Tried characterizing a rotating part collection ({collection.parts[0].name}). Parts will be treated as non-rotating.");
-                    AddCharacterizedComponents(child);
+                        // Risky since parentCollection may get released. Currently fine since parentCollection is unused.
+                        partCollections.Add(PartCollection.BorrowClone(rotorCollection, rotorCollection.parentCollection));
+                    else // If the collection isn't rotating, recursively add it as regular parts.
+                        AddCharacterizedComponents(child);
                 }
             }
 
@@ -109,7 +113,8 @@ namespace KerbalWindTunnel.VesselCache
                 parts.Clear();
                 surfaces.Clear();
                 surfaceLift.Clear();
-                surfaceDrag.Clear();
+                surfaceDragI.Clear();
+                surfaceDragP.Clear();
                 bodyLift.Clear();
                 bodyDrag = null;
             }
@@ -149,9 +154,13 @@ namespace KerbalWindTunnel.VesselCache
 
         private void CombineParts(Task _)
         {
+            // Offloading one set of superposition work.
+            Task<FloatCurve2> dragSuperposition = Task.Run(() => FloatCurve2.Superposition(parts.Select(p => p.DragCoefficientCurve)));
+
             foreach (var bodyGroup in parts.Where(p => p.LiftMachScalarCurve != null).GroupBy(p => p.LiftMachScalarCurve))
                 bodyLift.Add((bodyGroup.Key, KSPClassExtensions.Superposition(bodyGroup.Select(s => s.LiftCoefficientCurve))));
-            bodyDrag = FloatCurve2.Superposition(parts.Select(p => p.DragCoefficientCurve));
+
+            bodyDrag = dragSuperposition.Result;
         }
         private void CombineSurfaces(Task _)
         {
@@ -170,26 +179,38 @@ namespace KerbalWindTunnel.VesselCache
             foreach (CharacterizedLiftingSurface surf in surfaces)
                 surf.Dispose();
             surfaces.Clear();
+
+            foreach (PartCollection collection in partCollections)
+                collection.Release();
         }
 
         public override float GetPitchInput(Conditions conditions, float AoA, bool dryTorque = false, float guess = float.NaN, float tolerance = 0.0003F)
             => vessel.GetPitchInput(conditions, AoA, dryTorque, guess, tolerance);
 
         public override Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput = 0)
-            => ToVesselFrame(-GetDragForceMagnitude(conditions, AoA, pitchInput) * Vector3.forward +
-            GetLiftForce(conditions, AoA, pitchInput), AoA);
+            => ToVesselFrame(-GetDragForceMagnitude(conditions, AoA, pitchInput) * Vector3.forward, AoA) +
+            GetLiftForce(conditions, AoA, pitchInput);
 
-        public override float GetDragForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
+        public float EvaluateDragCurve(Conditions conditions, float AoA, float pitchInput)
         {
             WaitUntilCharacterized();
 
             float magnitude = 0;
 
-            foreach (var (machCurve, dragCurve) in surfaceDrag)
+            foreach (var (liftMachCurve, liftCurve) in surfaceDragI)
             {
                 float groupMagnitude;
-                groupMagnitude = dragCurve.EvaluateThreadSafe(AoA);
-                groupMagnitude *= machCurve.EvaluateThreadSafe(conditions.mach);
+                groupMagnitude = liftCurve.EvaluateThreadSafe(AoA);
+                groupMagnitude *= liftMachCurve.EvaluateThreadSafe(conditions.mach);
+                magnitude += groupMagnitude;
+            }
+            // These lists could be combined. But separate is easier for debugging.
+            // TODO?
+            foreach (var (liftMachCurve, liftCurve) in surfaceDragP)
+            {
+                float groupMagnitude;
+                groupMagnitude = liftCurve.EvaluateThreadSafe(AoA);
+                groupMagnitude *= liftMachCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += groupMagnitude;
             }
 
@@ -199,7 +220,18 @@ namespace KerbalWindTunnel.VesselCache
             return magnitude * Q;
         }
 
-        public override float GetLiftForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
+        public override float GetDragForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
+        {
+            float magnitude = EvaluateDragCurve(conditions, AoA, pitchInput);
+
+            foreach (PartCollection collection in partCollections)
+                lock (collection)
+                    magnitude += GetDragForceMagnitude(collection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
+
+            return magnitude;
+        }
+
+        public float EvaluateLiftCurve(Conditions conditions, float AoA, float pitchInput = 0)
         {
             WaitUntilCharacterized();
 
@@ -221,6 +253,17 @@ namespace KerbalWindTunnel.VesselCache
             }
 
             return magnitude * conditions.Q;
+        }
+
+        public override float GetLiftForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
+        {
+            float magnitude = EvaluateLiftCurve(conditions, AoA, pitchInput);
+
+            foreach (PartCollection collection in partCollections)
+                lock (collection)
+                    magnitude += GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
+
+            return magnitude;
         }
 
         public override Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput = 0)
@@ -255,7 +298,22 @@ namespace KerbalWindTunnel.VesselCache
             }
 
             float Q = 0.0005f * conditions.atmDensity * conditions.speed * conditions.speed;
-            return magnitude * Q;
+            magnitude *= Q;
+
+            foreach (PartCollection collection in partCollections)
+            {
+                const float delta = 1E-8f;
+                const float invDelta = 1 / (2 * delta);
+                float fplus, fminus;
+                lock (collection)
+                {
+                    fplus = GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA + delta) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA + delta);
+                    fminus = GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA - delta) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA - delta);
+                }
+                magnitude += (fplus - fminus) * invDelta;
+            }
+
+            return magnitude;
         }
     }
 }

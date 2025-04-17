@@ -8,14 +8,17 @@ namespace KerbalWindTunnel.VesselCache
 {
     public class CharacterizedPart : IDisposable
     {
-        private readonly SimulatedPart simulatedPart;
-        private readonly Part part;
+        public readonly SimulatedPart simulatedPart;
+        public readonly Part part;
         public FloatCurve2 DragCoefficientCurve { get; private set; }
         public FloatCurve LiftCoefficientCurve { get; private set; }
         public FloatCurve LiftMachScalarCurve { get => part?.DragCubes.BodyLiftCurve.liftMachCurve; }
 
         private readonly SortedSet<(float aoa, bool continuousDerivative)> partAoAKeys = new SortedSet<(float aoa, bool continuousDerivative)>(CharacterizedVessel.FloatTupleComparer);
         private readonly SortedSet<(float mach, bool continuousDerivative)> dragMachKeys = new SortedSet<(float mach, bool continuousDerivative)>(CharacterizedVessel.FloatTupleComparer);
+
+        public IReadOnlyCollection<(float aoa, bool continuousDerivative)> AoAKeys => partAoAKeys;
+        public IReadOnlyCollection<(float mach, bool continuousDerivative)> MachKeys => dragMachKeys;
         public bool IsValid { get => part != null; }
         public bool NoBodyLift { get => simulatedPart.NoBodyLift; }
 
@@ -57,14 +60,16 @@ namespace KerbalWindTunnel.VesselCache
                     return;
                 characterized = true;
 
+                // Every 15 degrees
                 for (int i = -180; i <= 180; i += AoASpacing)
                     partAoAKeys.Add(CharacterizationExtensions.RoundFloatTuple((Mathf.Deg2Rad * i, true)));
-
+                // Wherever any of the part axes has a minima or maxima dot product with the primary, unrotated, axis.
                 partAoAKeys.UnionWith(
                     CharacterizationExtensions.RoundFloatTuple(GetPartAxes(simulatedPart).SelectMany(AxesToWorldKeys)));
+                // Apply an And to the continuous derivative component.
                 CharacterizationExtensions.AndSortedSet(partAoAKeys);
 
-                if (!(simulatedPart.noDrag || simulatedPart.shieldedFromAirstream))
+                if (!simulatedPart.noDrag && !simulatedPart.shieldedFromAirstream)
                 {
                     dragMachKeys.UnionWith(GetDragMachSet(simulatedPart.cubes));
 
@@ -112,7 +117,7 @@ namespace KerbalWindTunnel.VesselCache
             yield return partToVessel * Vector3.right;
             yield return partToVessel * Vector3.up;
         }
-        private static IEnumerable<(float, bool)> AxesToWorldKeys(Vector3 v)
+        public static IEnumerable<(float, bool)> AxesToWorldKeys(Vector3 v)
         {
             IEnumerable<float> ZeroOne()
             {
@@ -123,7 +128,7 @@ namespace KerbalWindTunnel.VesselCache
                 yield return (v_, false);
         }
 
-        private static IEnumerable<(float mach, bool continuousDerivative)> GetDragMachSet(DragCubeList cubes)
+        public static IEnumerable<(float mach, bool continuousDerivative)> GetDragMachSet(DragCubeList cubes)
         {
             var surfCurves = cubes.SurfaceCurves;
             IEnumerable<Keyframe> machs =
@@ -136,9 +141,9 @@ namespace KerbalWindTunnel.VesselCache
             if (!FloatCurveComparer.Instance.Equals(surfCurves.dragCurveMultiplier, cubes.DragCurveMultiplier))
                 machs = machs.Concat(surfCurves.dragCurveMultiplier.Curve.keys);
 
-            return machs.GroupBy(KeyframeTime).Select(SelectFunc);
+            return machs.GroupBy(KeyframeTime).Select(TangentsEqual);
 
-            (float, bool) SelectFunc(IGrouping<float, Keyframe> group)
+            (float, bool) TangentsEqual(IGrouping<float, Keyframe> group)
             {
                 foreach (var k in group)
                 {

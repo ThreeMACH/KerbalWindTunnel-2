@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using KerbalWindTunnel.Extensions;
 using Smooth.Pools;
 using UnityEngine;
+using static DragCube;
 
 namespace KerbalWindTunnel.VesselCache
 {
@@ -227,7 +228,7 @@ namespace KerbalWindTunnel.VesselCache
             else
                 isAheadOfCoM = part.transformPosition.z > vessel.CoM.z;
 
-            GetForce(velocityVect, mach, pitchInput, pseudoReDragMult, out Vector3 liftForce, out Vector3 dragForce, isAheadOfCoM, !useInternalDragModel);
+            GetForce(velocityVect, mach, pitchInput, pseudoReDragMult, out Vector3 liftForce, out Vector3 dragForce, isAheadOfCoM);
             torque = Vector3.Cross(liftForce, part.CoL - torquePoint);
             torque += Vector3.Cross(dragForce, part.CoP - torquePoint);
             return liftForce + dragForce;
@@ -236,14 +237,47 @@ namespace KerbalWindTunnel.VesselCache
         {
             bool isAheadOfCoM = part.transformPosition.z > vessel.CoM.z;
 
-            GetForce(velocityVect, mach, pitchInput, pseudoReDragMult, out Vector3 liftForce, out Vector3 dragForce, isAheadOfCoM, !useInternalDragModel);
+            GetForce(velocityVect, mach, pitchInput, pseudoReDragMult, out Vector3 liftForce, out Vector3 dragForce, isAheadOfCoM);
             return liftForce + dragForce;
         }
 
-        private void GetForce(Vector3 velocityVect, float mach, float pitchInput, float pseudoReDragMult, out Vector3 liftForce, out Vector3 dragForce, bool isAheadOfCoM, bool? liftOnly = null)
+        private void GetForce(Vector3 velocityVect, float mach, float pitchInput, float pseudoReDragMult, out Vector3 liftForce, out Vector3 dragForce, bool isAheadOfCoM, bool liftOnly = false)
         {
-            if (liftOnly == null)
-                liftOnly = !this.useInternalDragModel;
+            float surfaceInput = GetSurfaceInput(pitchInput, isAheadOfCoM);
+
+            Vector3 relLiftVector;
+            if (surfaceInput != 0)
+                relLiftVector = Quaternion.AngleAxis(surfaceInput, rotationAxis) * liftVector;
+            else
+                relLiftVector = liftVector;
+
+            float dot = Vector3.Dot(velocityVect, relLiftVector);
+            float absdot = omnidirectional ? Math.Abs(dot) : Mathf.Clamp01(dot);
+            lock (this.liftCurve)
+                liftForce = -relLiftVector * Math.Sign(dot) * liftCurve.Evaluate(absdot) * liftMachCurve.Evaluate(mach) * deflectionLiftCoeff * PhysicsGlobals.LiftMultiplier;
+            if (perpendicularOnly)
+                liftForce = Vector3.ProjectOnPlane(liftForce, -velocityVect);
+            liftForce *= 1000;
+            if (liftOnly)
+            {
+                dragForce = Vector3.zero;
+                return;
+            }
+
+            if (useInternalDragModel)
+            {
+                lock (this.dragCurve)
+                    dragForce = -velocityVect * dragCurve.Evaluate(absdot) * dragMachCurve.Evaluate(mach) * deflectionLiftCoeff * PhysicsGlobals.LiftDragMultiplier;
+                dragForce *= 1000;
+            }
+            else
+                dragForce = Vector3.zero;
+
+            dragForce += GetPartDrag_Internal(velocityVect, mach, surfaceInput, pseudoReDragMult);
+        }
+
+        public float GetSurfaceInput(float pitchInput, bool isAheadOfCoM)
+        {
             // Assumes no roll input required.
             // Assumes no yaw input required.
             float surfaceInput = 0;
@@ -262,44 +296,41 @@ namespace KerbalWindTunnel.VesselCache
                 surfaceInput += deployAngle * deploymentDirection;
                 //surfaceInput = Mathf.Clamp(surfaceInput, -1.5f, 1.5f);
             }
+            return surfaceInput;
+        }
 
-            Vector3 relLiftVector;
-            if (surfaceInput != 0)
-                relLiftVector = Quaternion.AngleAxis(surfaceInput, rotationAxis) * liftVector;
+        public Vector3 GetPartDrag(Vector3 velocityVect, float mach, float pitchInput, float pseudoReDragMult, bool dryTorque = false)
+        {
+            bool isAheadOfCoM;
+            if (dryTorque)
+                isAheadOfCoM = part.transformPosition.z > vessel.CoM_dry.z;
             else
-                relLiftVector = liftVector;
+                isAheadOfCoM = part.transformPosition.z > vessel.CoM.z;
 
-            float dot = Vector3.Dot(velocityVect, relLiftVector);
-            float absdot = omnidirectional ? Math.Abs(dot) : Mathf.Clamp01(dot);
-            lock (this.liftCurve)
-                liftForce = -relLiftVector * Math.Sign(dot) * liftCurve.Evaluate(absdot) * liftMachCurve.Evaluate(mach) * deflectionLiftCoeff * PhysicsGlobals.LiftMultiplier;
-            if (perpendicularOnly)
-                liftForce = Vector3.ProjectOnPlane(liftForce, -velocityVect);
-            liftForce *= 1000;
-            if ((bool)liftOnly)
+            float surfaceInput = GetSurfaceInput(pitchInput, isAheadOfCoM);
+            return GetPartDrag_Internal(velocityVect, mach, surfaceInput, pseudoReDragMult);
+        }
+        private Vector3 GetPartDrag_Internal(Vector3 velocityVect, float mach, float surfaceInput, float pseudoReDragMult)
+        {
+            if ((part.dragModel == Part.DragModel.DEFAULT || part.dragModel == Part.DragModel.CUBE) && !part.cubesNone && pseudoReDragMult > 0)
             {
-                dragForce = Vector3.zero;
-                return;
-            }
-
-            lock (this.dragCurve)
-                dragForce = -velocityVect * dragCurve.Evaluate(absdot) * dragMachCurve.Evaluate(mach) * deflectionLiftCoeff * PhysicsGlobals.LiftDragMultiplier;
-            dragForce *= 1000;
-
-            if ((this.part.dragModel == Part.DragModel.DEFAULT || this.part.dragModel == Part.DragModel.CUBE) && !this.part.cubesNone && pseudoReDragMult > 0)
-            {
-                lock (this.part.cubes)
+                lock (part.cubes)
                 {
                     // TODO: Check if neutral needs clamping. It can't be above 1 because math, but will negative values be an issue?
                     // So, since surfaceInput is already multiplied by authorityLimiter%, one would think it isn't needed again here.
                     // But, detailed testing shows it is required.
-                    this.part.cubes.SetCubeWeight("neutral", (this.maxAuthority - Math.Abs(surfaceInput * this.authorityLimiter)) * 0.01f);
-                    this.part.cubes.SetCubeWeight("fullDeflectionPos", Mathf.Clamp01(surfaceInput * this.authorityLimiter * 0.01f));
-                    this.part.cubes.SetCubeWeight("fullDeflectionNeg", Mathf.Clamp01(-surfaceInput * this.authorityLimiter * 0.01f));
+                    part.cubes.SetCubeWeight("neutral", (maxAuthority - Math.Abs(surfaceInput * authorityLimiter)) * 0.01f);
+                    part.cubes.SetCubeWeight("fullDeflectionPos", Mathf.Clamp01(surfaceInput * authorityLimiter * 0.01f));
+                    part.cubes.SetCubeWeight("fullDeflectionNeg", Mathf.Clamp01(-surfaceInput * authorityLimiter * 0.01f));
 
-                    dragForce += this.part.GetAero(velocityVect, mach, pseudoReDragMult);
+                    Vector3 result = part.GetAero(velocityVect, mach, pseudoReDragMult);
+
+                    part.cubes.SetCubeWeight("neutral", 1);
+                    part.cubes.SetCubeWeight("fullDeflectionPos", 0);
+                    part.cubes.SetCubeWeight("fullDeflectionNeg", 0);
                 }
             }
+            return Vector3.zero;
         }
     }
 }
