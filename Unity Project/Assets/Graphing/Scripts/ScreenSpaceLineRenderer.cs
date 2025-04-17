@@ -26,6 +26,13 @@ namespace Graphing
         private int maxElbowSegments = 12;
         [SerializeField]
         public Material material;
+#pragma warning disable IDE0044 // Add readonly modifier
+        [SerializeField]
+        private HashSet<Camera> ignoreCams = new HashSet<Camera>();
+        [SerializeField]
+        private HashSet<Camera> whitelistCams = new HashSet<Camera>();
+#pragma warning restore IDE0044 // Add readonly modifier
+
         [SerializeField]
         [HideInInspector]
         private int maxSegments = 12;
@@ -105,6 +112,19 @@ namespace Graphing
             }
         }
 
+        public void IgnoreCamera(Camera camera)
+        {
+            ignoreCams.Add(camera);
+            whitelistCams.Remove(camera);
+        }
+        public void RemoveIgnoredCamera(Camera camera) => ignoreCams.Remove(camera);
+        public void WhitelistCamera(Camera camera)
+        {
+            whitelistCams.Add(camera);
+            ignoreCams.Remove(camera);
+        }
+        public void RemoveWhitelistCamera(Camera camera) => whitelistCams.Remove(camera);
+
         private void MarkCacheDirty()
         {
             if (meshCache == null)
@@ -114,9 +134,16 @@ namespace Graphing
                     meshCache[key].UpdateWVPMatrix(null, Matrix4x4.zero);
         }
 
+        private bool ValidateCameraTag(Camera camera)
+        {
+            return whitelistCams.Contains(camera) || (whitelistCams.Count == 0 && !ignoreCams.Contains(camera));
+        }
+
         private void SetupMesh(Camera camera)
         {
             if ((camera.cullingMask & (1 << gameObject.layer)) == 0)
+                return;
+            if (!ValidateCameraTag(camera))
                 return;
             BillboardMesh(camera);
         }
