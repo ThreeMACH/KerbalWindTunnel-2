@@ -376,7 +376,7 @@ namespace KerbalWindTunnel
                 timeX = xKeys[0];
                 exactX = true;
             }
-            else if (timeX > xKeys[xKeys.Length - 1])
+            else if (timeX >= xKeys[xKeys.Length - 1])
             {
                 xSquare = xKeys.Length - 2;
                 timeX = xKeys[xKeys.Length - 1];
@@ -396,7 +396,7 @@ namespace KerbalWindTunnel
                 timeY = yKeys[0];
                 exactY = true;
             }
-            else if (timeY > yKeys[yKeys.Length - 1])
+            else if (timeY >= yKeys[yKeys.Length - 1])
             {
                 ySquare = yKeys.Length - 2;
                 timeY = yKeys[yKeys.Length - 1];
@@ -562,6 +562,7 @@ namespace KerbalWindTunnel
             float[,] ddDx_in_Dy_out = new float[xLength, yLength];
             float[,] ddDx_out_Dy_in = new float[xLength, yLength];
             float[,] ddDx_out_Dy_out = new float[xLength, yLength];
+
 
             foreach (FloatCurve2 curve in curves)
             {
