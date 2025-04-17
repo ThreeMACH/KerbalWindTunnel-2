@@ -9,7 +9,9 @@ namespace Graphing
     {
         protected void LineGraphSetup()
         {
-            gameObject.AddComponent<ScreenSpaceLineRenderer>().material = lineVertexMaterial;
+            ScreenSpaceLineRenderer lineRenderer = gameObject.AddComponent<ScreenSpaceLineRenderer>();
+            lineRenderer.material = lineVertexMaterial;
+            lineRenderer.WhitelistCamera(grapher.GetComponentInChildren<Camera>());
         }
 
         protected void GenerateLineGraph()

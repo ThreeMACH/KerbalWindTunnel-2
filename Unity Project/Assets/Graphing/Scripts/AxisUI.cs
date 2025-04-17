@@ -217,8 +217,8 @@ namespace Graphing
             {
                 if (axisMaterial != null)
                 {
-                    foreach (GraphDrawer grapher in attachedGraphDrawers.Where(g => g.ShaderMaterial == axisMaterial))
-                        grapher.ShaderMaterial = value;
+                    foreach (GraphDrawer grapher in attachedGraphDrawers.Where(g => g.SharedSurfGraphMaterial == axisMaterial))
+                        grapher.SurfGraphMaterial = value;
                     if (materialWasInstantiated)
                         Destroy(axisMaterial);
                 }
@@ -527,8 +527,7 @@ namespace Graphing
             }
             if (_use == AxisDirection.Color)
             {
-                if (!(graphDrawer.Graph is OutlineMask))
-                    graphDrawer.ShaderMaterial = AxisMaterial;
+                graphDrawer.SurfGraphMaterial = AxisMaterial;
             }
 
             SetOriginsAndScales();

@@ -13,7 +13,7 @@ namespace Graphing
         [SerializeField]
         public Material outlineGraphMaterial;
         [SerializeField]
-        public Material lineVertexMaterial;
+        protected Material lineVertexMaterial;
 
         protected Grapher grapher;
         protected IGraphable graph;
@@ -22,27 +22,71 @@ namespace Graphing
         protected readonly List<EventArgs> redrawReasons = new List<EventArgs>();
         protected bool ignoreZScalePos = false;
 
-        public Material ShaderMaterial
+        [SerializeField]
+        [HideInInspector]
+        private bool surfMaterialIsUnique = false;
+        [SerializeField]
+        [HideInInspector]
+        private bool outlineMaterialIsUnique = false;
+
+        public Material LineVertexMaterial { get => lineVertexMaterial; }
+
+        public Material SurfGraphMaterial
         {
-            get => _material;
-            set
+            get
             {
-                if (_material == value)
-                    return;
-                
-                _material = value;
-                materialIsUnique = false;
-
-                if (TryGetComponent(out MeshRenderer meshRenderer))
-                    meshRenderer.material = _material;
-
-                foreach (GraphDrawer graphDrawer in GetComponentsInChildren<GraphDrawer>(true))
-                    if (graphDrawer != this && !(graphDrawer.graph is OutlineMask))
-                        graphDrawer.ShaderMaterial = value;
+                surfMaterialIsUnique = true;
+                surfGraphMaterial = Instantiate(surfGraphMaterial);
+                return surfGraphMaterial;
             }
+            set => SetSurfMaterialInternal(value);
         }
-        private Material _material = null;
-        private bool materialIsUnique = false;
+        public Material SharedSurfGraphMaterial
+        {
+            get => surfGraphMaterial;
+            set => SetSurfMaterialInternal(value);
+        }
+
+        public Material OutlineGraphMaterial
+        {
+            get
+            {
+                outlineMaterialIsUnique = true;
+                outlineGraphMaterial = Instantiate(outlineGraphMaterial);
+                return outlineGraphMaterial;
+            }
+            set => SetOutlineMaterialInternal(value);
+        }
+        public Material SharedOutlineGraphMaterial
+        {
+            get => outlineGraphMaterial;
+            set => SetOutlineMaterialInternal(value);
+        }
+
+        private void SetSurfMaterialInternal(Material value)
+        {
+            if (surfMaterialIsUnique)
+                Destroy(surfGraphMaterial);
+            surfMaterialIsUnique = false;
+            surfGraphMaterial = value;
+            if (Graph is SurfGraph && TryGetComponent(out MeshRenderer meshRenderer))
+                meshRenderer.material = value;
+            if (childDrawers != null)
+                foreach (GraphDrawer graphDrawer in childDrawers)
+                    graphDrawer.SetSurfMaterialInternal(value);
+        }
+        private void SetOutlineMaterialInternal(Material value)
+        {
+            if (outlineMaterialIsUnique)
+                Destroy(outlineGraphMaterial);
+            outlineMaterialIsUnique = false;
+            outlineGraphMaterial = value;
+            if (Graph is OutlineMask && TryGetComponent(out MeshRenderer meshRenderer))
+                meshRenderer.material = value;
+            if (childDrawers != null)
+                foreach (GraphDrawer graphDrawer in childDrawers)
+                    graphDrawer.SetOutlineMaterialInternal(value);
+        }
 
         public Bounds Bounds
         {
@@ -395,18 +439,10 @@ namespace Graphing
             grapher?.UnregisterGraphDrawer(this);
             if (mesh != null)
                 Destroy(mesh);
-            if (materialIsUnique)
-                Destroy(_material);
-        }
-
-        public void MakeMaterialUnique()
-        {
-            if (materialIsUnique)
-                return;
-            if (_material == null)
-                return;
-            ShaderMaterial = Instantiate(_material);
-            materialIsUnique = true;
+            if (surfMaterialIsUnique)
+                Destroy(surfGraphMaterial);
+            if (outlineMaterialIsUnique)
+                Destroy(outlineGraphMaterial);
         }
 
         protected static int EventArgsSort(Type eventType)

@@ -14,9 +14,8 @@ namespace Graphing
                 mesh = new Mesh();
             MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
             meshFilter.mesh = mesh;
-            Material outlineMaterial = Instantiate(outlineGraphMaterial);
-            ShaderMaterial = outlineMaterial;
-            materialIsUnique = true;
+            if (TryGetComponent(out MeshRenderer meshRenderer))
+                meshRenderer.material = outlineGraphMaterial;
             ignoreZScalePos = true;
             Vector3 scale = transform.localScale;
             scale.z = 0;
@@ -56,28 +55,6 @@ namespace Graphing
                     mesh.GetUVs(1, heights);
                     //mesh.SetUVs(1, GenerateVertexData(coords, heights, outlineMask.MaskCriteria).ToList());
                 }
-                /*List<Vector3[]> lines = GenerateOutlines(outlineMask, mesh);
-
-                LineRenderer[] renderers = GetComponentsInChildren<LineRenderer>();
-                if (renderers.Length > lines.Count)
-                    for (int i = lines.Count; i < renderers.Length; i++)
-                        Destroy(renderers[i].gameObject);
-
-                for (int i = lines.Count - 1; i >= 0; i--)
-                {
-                    if (lines[i].Length == 0)
-                        continue;
-                    LineRenderer renderer;
-                    if (i < renderers.Length)
-                        renderer = renderers[i];
-                    else
-                        renderer = Instantiate(_lineRendererPrefab, transform).GetComponent<LineRenderer>();
-                    renderer.positionCount = lines[i].Length;
-                    for (int p = lines[i].Length - 1; p >= 0; p--)
-                        lines[i][p].z *= -1;    // Be aware of this minus sign.
-                    renderer.SetPositions(lines[i]);
-                    ((RectTransform)renderer.transform).anchoredPosition3D = new Vector3(0, 0, -grapher.ZOffset2D);
-                }*/
                 pass = 2;
             }
             if (forceRegenerate || pass != 0 || redrawReasons.Key == typeof(MaskLineOnlyChangedEventArgs))
@@ -86,30 +63,12 @@ namespace Graphing
             }
             if (forceRegenerate || redrawReasons.Key == typeof(ColorChangedEventArgs))
             {
-                //if (GetComponent<MeshRenderer>() != null)
-                    //_material.SetRange(outlineMask.ZMin, outlineMask.ZMax);
-                //SetColorMapProperties(mesh, outlineMask);
-                _material.SetColor("_OutlineColor", outlineMask.color);
-                /*if (outlineMask.UseSingleColor)
-                {
-                    foreach (LineRenderer renderer in GetComponentsInChildren<LineRenderer>())
-                        SetLineRendererColors(renderer, outlineMask.color);
-                }
-                else
-                {
-                    foreach (LineRenderer renderer in GetComponentsInChildren<LineRenderer>())
-                        SetLineRendererColors(renderer, outlineMask);
-                }*/
+                // TODO: Does the material need to be made unique if these values are different than shared?
+                outlineGraphMaterial.SetColor("_OutlineColor", outlineMask.color);
             }
             if (forceRegenerate || redrawReasons.Key == typeof(LineWidthChangedEventArgs))
             {
-                /*foreach (LineRenderer renderer in GetComponentsInChildren<LineRenderer>())
-                {
-                    UI_Tools.LineWidthManager lineWidthManager = renderer.GetComponent<UI_Tools.LineWidthManager>();
-                    if (lineWidthManager != null)
-                        lineWidthManager.LineWidth = outlineMask.LineWidth;
-                }*/
-                _material.SetFloat("_OutlineThickness", outlineMask.LineWidth);
+                outlineGraphMaterial.SetFloat("_OutlineThickness", outlineMask.LineWidth);
             }
             return pass;
         }
