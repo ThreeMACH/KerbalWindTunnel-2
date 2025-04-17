@@ -49,15 +49,6 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float Area => relativeWingArea;
 
-        public bool ContainsRotating => ContainsRotatingRecursive(partCollection);
-
-        private static bool ContainsRotatingRecursive(PartCollection partCollection)
-        {
-            if (partCollection is RotorPartCollection rotorPartCollection && rotorPartCollection.isRotating)
-                return true;
-            return partCollection.partCollections.Any(ContainsRotatingRecursive);
-        }
-
         public Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
             return partCollection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out torque, torquePoint);
@@ -305,7 +296,7 @@ namespace KerbalWindTunnel.VesselCache
             Part root = oParts[0];
             while (root.parent != null)
                 root = root.parent;
-            partCollection.AddPart(root);
+            partCollection.AddPartRecursive(root);
 
             CoM /= totalMass;
             CoM_dry /= dryMass;

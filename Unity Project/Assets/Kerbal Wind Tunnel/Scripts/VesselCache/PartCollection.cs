@@ -265,7 +265,7 @@ namespace KerbalWindTunnel.VesselCache
             lock (pool)
                 collection = pool.Borrow();
             collection.parentVessel = vessel;
-            collection.AddPart(originPart);
+            collection.AddPartRecursive(originPart);
             return collection;
         }
 
@@ -303,7 +303,7 @@ namespace KerbalWindTunnel.VesselCache
 
         public virtual void AddPart(Part part)
         {
-            if (parts.Count > 0 && part.HasModuleImplementing<Expansions.Serenity.ModuleRoboticServoRotor>())
+            if (parts.Count > 0 && part.children.Count > 0 && part.HasModuleImplementing<Expansions.Serenity.ModuleRoboticServoRotor>())
             {
                 Expansions.Serenity.ModuleRoboticServoRotor rotorModule = part.FindModuleImplementing<Expansions.Serenity.ModuleRoboticServoRotor>();
                 if (rotorModule.servoIsMotorized && rotorModule.rpmLimit != 0)
@@ -326,7 +326,7 @@ namespace KerbalWindTunnel.VesselCache
             {
                 part.hasLiftModule = true;
                 SimulatedLiftingSurface surface;
-                
+
                 if (liftingSurface is ModuleControlSurface ctrlSurface && (!ctrlSurface.ignorePitch || ctrlSurface.deploy))
                 {
                     surface = SimulatedControlSurface.Borrow(ctrlSurface, simulatedPart);
@@ -374,11 +374,18 @@ namespace KerbalWindTunnel.VesselCache
                         engines.Add(SimulatedEngine.Borrow(engine, simulatedPart));
                 }
             }
+        }
 
+        public virtual void AddPartRecursive(Part part)
+        {
+            AddPart(part);
+            AddPartChildren(part);
+        }
+
+        public void AddPartChildren(Part part)
+        {
             for (int i = part.children.Count - 1; i >= 0; i--)
-            {
-                AddPart(part.children[i]);
-            }
+                AddPartRecursive(part.children[i]);
         }
 
         protected virtual void InitClone(PartCollection collection)

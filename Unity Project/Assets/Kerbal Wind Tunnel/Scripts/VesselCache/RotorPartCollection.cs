@@ -30,13 +30,13 @@ namespace KerbalWindTunnel.VesselCache
 
             // The root part is the rotor hub, so since the rotating mesh is usually cylindrical we
             // only need to evaluate this part once.
-            if (!parts[0].shieldedFromAirstream && inflow.sqrMagnitude > 0)
+            /*if (parts[0] != null && !parts[0].shieldedFromAirstream && inflow.sqrMagnitude > 0)
             {
                 float localVelFactor = inflow.sqrMagnitude;
 
                 aeroForce += parts[0].GetAero(inflow.normalized, conditions.mach, conditions.pseudoReDragMult, out Vector3 pTorque, origin) * localVelFactor * Q;
                 torque += pTorque * localVelFactor * Q;
-            }
+            }*/ // Or not at all since we've moved it to the parent collection.
 
             for (int r = 0; r < rotationCount; r++)
             {
@@ -202,12 +202,12 @@ namespace KerbalWindTunnel.VesselCache
 
             // The root part is the rotor hub, so since the rotating mesh is usually cylindrical we
             // only need to evaluate this part once.
-            if (!parts[0].shieldedFromAirstream && inflow.sqrMagnitude > 0)
+            /*if (parts[0] != null && !parts[0].shieldedFromAirstream && inflow.sqrMagnitude > 0)
             {
                 float localVelFactor = inflow.sqrMagnitude;
                 aeroForce += parts[0].GetAero(inflow.normalized, conditions.mach, conditions.pseudoReDragMult, out Vector3 pTorque, origin) * localVelFactor * Q;
                 torque += pTorque * localVelFactor * Q;
-            }
+            }*/
 
             for (int r = 0; r < rotationCount; r++)
             {
@@ -483,7 +483,11 @@ namespace KerbalWindTunnel.VesselCache
         {
             RotorPartCollection collection = BorrowWithoutAdding(parentCollection?.parentVessel, originPart);
             collection.parentCollection = parentCollection;
-            collection.AddPart(originPart);
+            // The root part doesn't rotate - ish. Todo: Confirm this is true
+            // So we add the root part to the parent
+            parentCollection.AddPart(originPart);
+            // And its children to this collection
+            collection.AddPartChildren(originPart);
             return collection;
         }
 
@@ -502,7 +506,7 @@ namespace KerbalWindTunnel.VesselCache
 
             collection.Init(originPart);
 
-            collection.AddPart(originPart);
+            collection.AddPartRecursive(originPart);
             return collection;
         }
 
@@ -517,10 +521,10 @@ namespace KerbalWindTunnel.VesselCache
             return collection;
         }
 
-        public override void AddPart(Part part)
+        public override void AddPartRecursive(Part part)
         {
             int enginesCount = engines.Count;
-            base.AddPart(part);
+            base.AddPartRecursive(part);
             int enginesCountPost = engines.Count;
             if (enginesCountPost < enginesCount)
             {
