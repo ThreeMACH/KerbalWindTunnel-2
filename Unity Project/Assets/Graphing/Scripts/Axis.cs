@@ -112,7 +112,7 @@ namespace Graphing
             {
                 (max, min) = (min, max);
             }
-            if (min == max || float.IsNaN(min) || float.IsNaN(max) || float.IsInfinity(min) || float.IsInfinity(max))
+            if (float.IsNaN(min) || float.IsNaN(max) || float.IsInfinity(min) || float.IsInfinity(max))
             {
                 this.min = min;
                 this.max = max;
@@ -164,6 +164,8 @@ namespace Graphing
             else
                 c = 40f / 21;
             float range = Mathf.Max(max, -min);
+            if (range == 0)
+                return 1;
             if (range < 0)
                 range = -range;
             float oom = Mathf.Pow(10, Mathf.Floor(Mathf.Log10(range)));
