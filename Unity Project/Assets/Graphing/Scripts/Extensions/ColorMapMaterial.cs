@@ -127,7 +127,7 @@ namespace Graphing.Extensions
                 return;
 
             const int axisResolution = 2520;    // Divisible by all integers [1,10] and 12, 15, and 20
-            int width = axisResolution / GCD(indices.Select(f => (int)(f * axisResolution)));
+            int width = axisResolution / GreatestCommonDenominator(indices.Select(f => (int)(f * axisResolution)));
             axisTex.Resize(width + 1, 1);
             float invWidth = 1f / width;
             for (int i = 0; i <= width; i++)
@@ -135,10 +135,10 @@ namespace Graphing.Extensions
             axisTex.Apply();
         }
 
-        private static int GCD(IEnumerable<int> values)
-            => values.Aggregate(0, GCD);
+        private static int GreatestCommonDenominator(IEnumerable<int> values)
+            => values.Aggregate(0, GreatestCommonDenominator);
 
-        private static int GCD(int a, int b)
+        private static int GreatestCommonDenominator(int a, int b)
         {
             if (a < 0) a = -a;
             if (b < 0) b = -b;
