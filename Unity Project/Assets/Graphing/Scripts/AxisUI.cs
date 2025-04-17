@@ -211,6 +211,7 @@ namespace Graphing
                 }
                 if ((AutoSetMin || AutoSetMax) && GraphDrawersAffectingBounds.Any())
                     RecalculateBounds();
+                LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             }
         }
 
@@ -273,6 +274,7 @@ namespace Graphing
             {
                 _unit = value;
                 axisText.Text = AxisLabel;
+                LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             }
         }
         private string _label = "";
@@ -283,6 +285,7 @@ namespace Graphing
             {
                 _label = value;
                 axisText.Text = AxisLabel;
+                LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             }
         }
 
@@ -912,6 +915,7 @@ namespace Graphing
             }
             axisBoundSetters[0]?.UpdatePosition();
             axisBoundSetters[1]?.UpdatePosition();
+            LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
         }
 
 #if UNITY_EDITOR
