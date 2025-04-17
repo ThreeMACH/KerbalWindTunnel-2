@@ -158,16 +158,17 @@ namespace KerbalWindTunnel.DataGenerators
                 wingArea = results.wingArea;
                 UpdateGraphs();
             }
+            Debug.Log("[KWT] Graphs updated - Envelope");
         }
         private void RethrowErrors(Task<ResultsType> task)
         {
             if (task.Status == TaskStatus.Faulted)
             {
-                Debug.LogError("Wind tunnel task faulted. (Vel)");
+                Debug.LogError("[KWT] Wind tunnel task faulted. (Env)");
                 Debug.LogException(task.Exception);
             }
             else if (task.Status == TaskStatus.Canceled)
-                Debug.Log("Wind tunnel task was canceled. (Vel)");
+                Debug.Log("[KWT] Wind tunnel task was canceled. (Env)");
         }
 
         public static void Clear(Task task = null)

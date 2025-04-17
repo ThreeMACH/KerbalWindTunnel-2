@@ -569,6 +569,7 @@ namespace KerbalWindTunnel
 
         private void RefreshData()
         {
+            Debug.Log("[KWT] Refreshing.");
             if (vessel == null)
                 return;
             Cancel();
