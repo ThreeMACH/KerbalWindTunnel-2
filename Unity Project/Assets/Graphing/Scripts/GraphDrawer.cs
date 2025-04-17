@@ -164,8 +164,12 @@ namespace Graphing
 
         private void ResetGrapher(Type graphType)
         {
-            foreach (GraphDrawer childDrawer in GetComponentsInChildren<GraphDrawer>().Where(drawer => drawer != this))
-                Destroy(childDrawer.gameObject);
+            if (childDrawers != null)
+            {
+                foreach (GraphDrawer child in childDrawers)
+                    Destroy(child.gameObject);
+                childDrawers = null;
+            }
             foreach (Component component in GetComponents<Component>())
             {
                 if (component == this)
@@ -213,7 +217,7 @@ namespace Graphing
             }
             if (typeof(GraphableCollection).IsAssignableFrom(graphType))
             {
-                // No setup required. Just following the pattern.
+                childDrawers = new List<GraphDrawer>();
                 return;
             }
             Debug.LogError("GraphDrawer is not equipped to handle that type of graph.");

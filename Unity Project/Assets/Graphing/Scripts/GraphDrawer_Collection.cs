@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -6,20 +7,18 @@ namespace Graphing
 {
     public partial class GraphDrawer
     {
+        protected List<GraphDrawer> childDrawers;
+
         protected virtual int DrawCollection(GraphableCollection collection, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
             if (forceRegenerate)
             {
-                foreach (GraphDrawer childDrawer in GetComponentsInChildren<GraphDrawer>().Where(drawer => drawer != this))
-                    Destroy(childDrawer.gameObject);
+                foreach (GraphDrawer child in childDrawers)
+                    Destroy(child.gameObject);
+                childDrawers.Clear();
                 foreach (IGraphable graphable in collection.Graphables)
                 {
-                    GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
-                    if (childDrawer.grapher == null)
-                        childDrawer.grapher = grapher;
-                    childDrawer.SetGraph(graphable, grapher);
-                    if (graphable is IGraphable3 graphable3 && !(graphable is GraphableCollection))
-                        ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D / transform.localScale.z);
+                    InstantiateChildGraphDrawer(graphable);
                 }
                 return pass;
             }
@@ -32,37 +31,61 @@ namespace Graphing
                 {
                     if (reason is GraphElementAddedEventArgs addedEvent)
                     {
-                        GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
-                        if (childDrawer.grapher == null)
-                            childDrawer.grapher = this.grapher;
-                        childDrawer.SetGraph(addedEvent.Graph, grapher);
-                    }
-                    else if (reason is GraphElementRemovedEventArgs removedEvent)
-                    {
-                        foreach (GraphDrawer drawer in GetComponentsInChildren<GraphDrawer>().Where(drawer => drawer.graph == removedEvent.Graph))
-                            Destroy(drawer.gameObject);
+                        InstantiateChildGraphDrawer(addedEvent.Graph);
                     }
                     else if (reason is GraphElementsAddedEventArgs multiAddEvent)
                     {
                         foreach (IGraphable newGraph in multiAddEvent.Graphs)
                         {
-                            GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
-                            if (childDrawer.grapher == null)
-                                childDrawer.grapher = this.grapher;
-                            childDrawer.SetGraph(newGraph, grapher);
+                            InstantiateChildGraphDrawer(newGraph);
                         }
+                    }
+                    else if (reason is GraphElementRemovedEventArgs removedEvent)
+                    {
+                        DestroyChildGraphDrawers(removedEvent.Graph);
                     }
                     else if (reason is GraphElementsRemovedEventArgs multiRemoveEvent)
                     {
                         foreach (IGraphable oldGraph in multiRemoveEvent.Graphs)
                         {
-                            foreach (GraphDrawer drawer in GetComponentsInChildren<GraphDrawer>().Where(drawer => drawer.graph == oldGraph))
-                                Destroy(drawer.gameObject);
+                            DestroyChildGraphDrawers(oldGraph);
                         }
                     }
                 }
             }
             return pass;
+        }
+
+        private void InstantiateChildGraphDrawer(IGraphable newGraph)
+        {
+            GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
+            childDrawers.Add(childDrawer);
+            if (childDrawer.grapher == null)
+                childDrawer.grapher = grapher;
+            childDrawer.SharedSurfGraphMaterial = SharedSurfGraphMaterial;
+            childDrawer.SharedOutlineGraphMaterial = SharedOutlineGraphMaterial;
+            childDrawer.SetGraph(newGraph, grapher);
+            if (newGraph is IGraphable3 graphable3 && !(newGraph is GraphableCollection))
+                ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D / transform.localScale.z);
+        }
+        private void DestroyChildGraphDrawers(IGraphable removedGraph)
+        {
+            foreach (GraphDrawer child in childDrawers.Where(drawer => drawer.graph == removedGraph))
+                Destroy(child.gameObject);
+            childDrawers.RemoveAll(drawer => drawer.graph == removedGraph);
+        }
+
+        public IEnumerable<GraphDrawer> GetFlattenedCollection()
+        {
+            if (Graph is GraphableCollection)
+            {
+                IEnumerable<GraphDrawer> collections = childDrawers.Where(d => d.Graph is GraphableCollection);
+                IEnumerable<GraphDrawer> flattenedCollection = childDrawers.Where(d => !(d.Graph is GraphableCollection));
+                foreach (GraphDrawer childDrawer in collections)
+                    flattenedCollection = flattenedCollection.Union(childDrawer.GetFlattenedCollection());
+                return flattenedCollection;
+            }
+            return Enumerable.Empty<GraphDrawer>();
         }
     }
 }
