@@ -50,7 +50,7 @@ namespace KerbalWindTunnel.Extensions
             => ComputeFloatCurve(keys.Select(k => (k, false)), func, delta);
         public static FloatCurve ComputeFloatCurve(IEnumerable<(float value, bool continuousDerivative)> keys, Func<float, float> func, float delta = 0.000001f)
         {
-#if DEBUG
+#if false
             bool comma = false;
             Debug.Log("Making FloatCurve:");
             string keyStr = "Keys: ";
