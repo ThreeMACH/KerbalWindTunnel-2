@@ -39,7 +39,7 @@ namespace Graphing
                     _values = value;
                     zMin = _values.Min(true);
                     zMax = _values.Max(true);
-                    OnValuesChanged(new ValuesChangedEventArgs(Values, false, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                    OnValuesChanged(new ValuesChangedEventArgs(Values, true, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
                 }
             }
         }
