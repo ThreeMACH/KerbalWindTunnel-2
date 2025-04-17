@@ -25,9 +25,12 @@ namespace KerbalWindTunnel.VesselCache
         internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceDragP = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
         internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> bodyLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();
         internal FloatCurve2 bodyDrag;
+        internal FloatCurve2 ctrlDeltaDragPos;
+        internal FloatCurve2 ctrlDeltaDragNeg;
 
         private readonly List<CharacterizedPart> parts = new List<CharacterizedPart>();
         private readonly List<CharacterizedLiftingSurface> surfaces = new List<CharacterizedLiftingSurface>();
+        private readonly List<CharacterizedControlSurface> controls = new List<CharacterizedControlSurface>();
         private readonly List<PartCollection> partCollections = new List<PartCollection>();
 
         private Task taskHandle = null;
@@ -91,7 +94,14 @@ namespace KerbalWindTunnel.VesselCache
                 parts.AddRange(collection.parts.Select(p => new CharacterizedPart(p)));
                 surfaces.AddRange(collection.surfaces.Select(s => new CharacterizedLiftingSurface(s)));
                 // Todo: Treat controls as their own category.
-                surfaces.AddRange(collection.ctrls.Select(c => new CharacterizedLiftingSurface(c)));
+                foreach (SimulatedControlSurface ctrl in collection.ctrls)
+                {
+                    CharacterizedPart ctrlPart = new CharacterizedPart(ctrl.part);
+                    // Controls wrap their part so they can change its drag cubes with deflection.
+                    // We're messing with that, so we can include it.
+                    parts.Add(ctrlPart);
+                    controls.Add(new CharacterizedControlSurface(ctrl, ctrlPart));
+                }
                 foreach (PartCollection child in collection.partCollections)
                 {
                     if (child is RotorPartCollection rotorCollection && rotorCollection.isRotating)
@@ -112,6 +122,7 @@ namespace KerbalWindTunnel.VesselCache
                 taskHandle = null;
                 parts.Clear();
                 surfaces.Clear();
+                controls.Clear();
                 surfaceLift.Clear();
                 surfaceDragI.Clear();
                 surfaceDragP.Clear();
@@ -138,14 +149,17 @@ namespace KerbalWindTunnel.VesselCache
                 List<Task> tasks = new List<Task>();
                 foreach (CharacterizedPart part in parts)
                     tasks.Add(Task.Run(part.Characterize));
-                Task partTask = Task.WhenAll(tasks).ContinueWith(CombineParts);
+                Task partTask = Task.WhenAll(tasks);//.ContinueWith(CombineParts);
+                Task combinePartTask = partTask.ContinueWith(CombineParts);
 
                 tasks.Clear();
                 foreach (CharacterizedLiftingSurface surface in surfaces)
                     tasks.Add(Task.Run(surface.Characterize));
+                foreach (CharacterizedControlSurface control in controls)
+                    tasks.Add(partTask.ContinueWith(control.Characterize)); // Have to wait for parts to finish first.
                 Task surfaceTask = Task.WhenAll(tasks).ContinueWith(CombineSurfaces);
 
-                taskHandle = Task.WhenAll(partTask, surfaceTask);
+                taskHandle = Task.WhenAll(combinePartTask, surfaceTask);
 #if DEBUG
                 taskHandle.ContinueWith(t => Debug.Log("Completed Characterization"));
 #endif
@@ -164,10 +178,19 @@ namespace KerbalWindTunnel.VesselCache
         }
         private void CombineSurfaces(Task _)
         {
-            foreach (var surfGroup in surfaces.Where(s => s.LiftMachScalarCurve != null).GroupBy(s => s.LiftMachScalarCurve))
+            Task<FloatCurve2> posSuperposition = Task.Run(() => FloatCurve2.Superposition(controls.Select(c => c.DeltaDragCoefficientCurve_Pos)));
+            Task<FloatCurve2> negSuperposition = Task.Run(() => FloatCurve2.Superposition(controls.Select(c => c.DeltaDragCoefficientCurve_Neg)));
+
+            IEnumerable <CharacterizedLiftingSurface> allSurfaces = surfaces.Concat(controls);
+            foreach (var surfGroup in allSurfaces.Where(s => s.LiftMachScalarCurve != null).GroupBy(s => s.LiftMachScalarCurve))
                 surfaceLift.Add((surfGroup.Key, KSPClassExtensions.Superposition(surfGroup.Select(s => s.LiftCoefficientCurve))));
-            foreach (var surfGroup in surfaces.Where(s => s.DragMachScalarCurve != null).GroupBy(s => s.DragMachScalarCurve))
-                surfaceDrag.Add((surfGroup.Key, KSPClassExtensions.Superposition(surfGroup.Select(s => s.DragCoefficientCurve))));
+            foreach (var surfGroup in allSurfaces.Where(s => s.LiftMachScalarCurve != null).GroupBy(s => s.LiftMachScalarCurve))
+                surfaceDragI.Add((surfGroup.Key, KSPClassExtensions.Superposition(surfGroup.Select(s => s.DragCoefficientCurve_Induced))));
+            foreach (var surfGroup in allSurfaces.Where(s => s.DragMachScalarCurve != null).GroupBy(s => s.DragMachScalarCurve))
+                surfaceDragP.Add((surfGroup.Key, KSPClassExtensions.Superposition(surfGroup.Select(s => s.DragCoefficientCurve_Parasite))));
+
+            ctrlDeltaDragPos = posSuperposition.Result;
+            ctrlDeltaDragNeg = negSuperposition.Result;
         }
 
         public void Dispose()
@@ -214,7 +237,19 @@ namespace KerbalWindTunnel.VesselCache
                 magnitude += groupMagnitude;
             }
 
-            magnitude += bodyDrag.Evaluate(conditions.mach, AoA) * conditions.pseudoReDragMult;
+            float bodyDrag = this.bodyDrag.Evaluate(conditions.mach, AoA);
+
+            if (pitchInput < 0)
+            {
+                bodyDrag *= 1 + pitchInput;
+                bodyDrag += ctrlDeltaDragNeg.Evaluate(conditions.mach, AoA) * -pitchInput;
+            }
+            else if (pitchInput > 0)
+            {
+                bodyDrag *= 1 - pitchInput;
+                bodyDrag += ctrlDeltaDragPos.Evaluate(conditions.mach, AoA) * pitchInput;
+            }
+            magnitude += bodyDrag * conditions.pseudoReDragMult;
 
             float Q = 0.0005f * conditions.atmDensity * conditions.speed * conditions.speed;
             return magnitude * Q;

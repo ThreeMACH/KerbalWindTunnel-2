@@ -625,6 +625,108 @@ namespace KerbalWindTunnel
             return new FloatCurve2(xKeys, yKeys, values, dDx_in, dDx_out, dDy_in, dDy_out, ddDx_in_Dy_in, ddDx_in_Dy_out, ddDx_out_Dy_in, ddDx_out_Dy_out);
         }
 
+        public static FloatCurve2 Subtract(FloatCurve2 minuend, IEnumerable<FloatCurve2> subtrahends)
+        {
+            SortedSet<float> xKeys = new SortedSet<float>(minuend.xKeys);
+            SortedSet<float> yKeys = new SortedSet<float>(minuend.yKeys);
+            foreach (FloatCurve2 curve in subtrahends)
+            {
+                if (curve == null) continue;
+                xKeys.UnionWith(curve.xKeys);
+                yKeys.UnionWith(curve.yKeys);
+            }
+            return Subtract(minuend, subtrahends, xKeys.ToArray(), yKeys.ToArray());
+        }
+        public static FloatCurve2 Subtract(FloatCurve2 minuend, IEnumerable<FloatCurve2> subtrahends, IEnumerable<float> xKeys, IEnumerable<float> yKeys)
+        {
+            float[] xKeys_ = xKeys.Distinct().ToArray();
+            float[] yKeys_ = yKeys.Distinct().ToArray();
+            Array.Sort(xKeys_);
+            Array.Sort(yKeys_);
+            return Subtract(minuend,subtrahends, xKeys_, yKeys_);
+        }
+        public static FloatCurve2 Subtract(FloatCurve2 minuend, FloatCurve2 subtrahend) => Subtract(minuend, AsEnumerable(subtrahend));
+        private static IEnumerable<T> AsEnumerable<T>(T item) { yield return item; }
+        public static FloatCurve2 Subtract(FloatCurve2 minuend, IEnumerable<FloatCurve2> subtrahends, IList<float> xKeys, IList<float> yKeys)
+        {
+            int xLength = xKeys.Count;
+            int yLength = yKeys.Count;
+            float[,] values = new float[xLength, yLength];
+            float[,] dDx_in = new float[xLength, yLength];
+            float[,] dDx_out = new float[xLength, yLength];
+            float[,] dDy_in = new float[xLength, yLength];
+            float[,] dDy_out = new float[xLength, yLength];
+            float[,] ddDx_in_Dy_in = new float[xLength, yLength];
+            float[,] ddDx_in_Dy_out = new float[xLength, yLength];
+            float[,] ddDx_out_Dy_in = new float[xLength, yLength];
+            float[,] ddDx_out_Dy_out = new float[xLength, yLength];
+
+            bool negate = false;
+
+            foreach (FloatCurve2 curve in AsEnumerable(minuend).Concat(subtrahends))
+            {
+                int multiplier = negate ? -1 : 1;
+                if (curve == null) continue;
+                for (int i = xLength - 1; i >= 0; i--)
+                {
+                    float xTime = xKeys[i];
+                    for (int j = yLength - 1; j >= 0; j--)
+                    {
+                        float yTime = yKeys[j];
+                        if (curve.xKeys.Contains(xTime) && curve.yKeys.Contains(yTime))
+                        {
+                            Keyframe2 value = curve.values[Array.IndexOf(curve.xKeys, xTime), Array.IndexOf(curve.yKeys, yTime)];
+                            values[i, j] += value.value * multiplier;
+                            dDx_in[i, j] += value.dDx_in * multiplier;
+                            dDx_out[i, j] += value.dDx_out * multiplier;
+                            dDy_in[i, j] += value.dDy_in * multiplier;
+                            dDy_out[i, j] += value.dDy_out * multiplier;
+                            ddDx_in_Dy_in[i, j] += value.ddDx_in_Dy_in * multiplier;
+                            ddDx_in_Dy_out[i, j] += value.ddDx_in_Dy_out * multiplier;
+                            ddDx_out_Dy_in[i, j] += value.ddDx_out_Dy_in * multiplier;
+                            ddDx_out_Dy_out[i, j] += value.ddDx_out_Dy_out * multiplier;
+                            continue;
+                        }
+                        values[i, j] += curve.Evaluate(xTime, yTime) * multiplier;
+                        float ddx = curve.EvaluateDerivative(xTime, yTime, (0, 1)) * multiplier;
+                        float ddy = curve.EvaluateDerivative(xTime, yTime, (1, 0)) * multiplier;
+                        float dddxdy = curve.EvaluateDerivative(xTime, yTime, (1, 1)) * multiplier;
+                        dDx_out[i, j] += ddx;
+                        dDy_out[i, j] += ddy;
+                        if (curve.xKeys.Contains(xTime))
+                        {
+                            dDx_in[i, j] += curve.EvaluateDerivative(xTime, yTime, (0, 1), true) * multiplier;
+                            float cross = curve.EvaluateDerivative(xTime, yTime, (1, 1), true) * multiplier;
+                            ddDx_in_Dy_in[i, j] += cross;
+                            ddDx_in_Dy_out[i, j] += cross;
+                            ddDx_out_Dy_in[i, j] += dddxdy;
+                            ddDx_out_Dy_out[i, j] += dddxdy;
+                        }
+                        else if (curve.yKeys.Contains(yTime))
+                        {
+                            dDy_in[i, j] += curve.EvaluateDerivative(xTime, yTime, (0, 1), true) * multiplier;
+                            float cross = curve.EvaluateDerivative(xTime, yTime, (1, 1), true) * multiplier;
+                            ddDx_in_Dy_in[i, j] += cross;
+                            ddDx_out_Dy_in[i, j] += cross;
+                            ddDx_in_Dy_out[i, j] += dddxdy;
+                            ddDx_out_Dy_out[i, j] += dddxdy;
+                        }
+                        else
+                        {
+                            dDx_in[i, j] += ddx;
+                            dDy_in[i, j] += ddy;
+                            ddDx_in_Dy_in[i, j] += dddxdy;
+                            ddDx_in_Dy_out[i, j] += dddxdy;
+                            ddDx_out_Dy_in[i, j] += dddxdy;
+                            ddDx_out_Dy_out[i, j] += dddxdy;
+                        }
+                    }
+                }
+                negate = true;
+            }
+            return new FloatCurve2(xKeys, yKeys, values, dDx_in, dDx_out, dDy_in, dDy_out, ddDx_in_Dy_in, ddDx_in_Dy_out, ddDx_out_Dy_in, ddDx_out_Dy_out);
+        }
+
         public struct Keyframe2
         {
             public float timeX;
