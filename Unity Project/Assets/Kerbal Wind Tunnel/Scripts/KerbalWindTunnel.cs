@@ -114,7 +114,7 @@ namespace KerbalWindTunnel
 
         public void ButtonToggle()
         {
-            if (window == null)
+            if (!(window?.isActiveAndEnabled) ?? false)
                 OnButtonTrue();
             else
                 OnButtonFalse();
