@@ -74,6 +74,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Accord.Net Framework\IOptimizationMethod.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\AeroPredictor.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizationExtensions.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedControlSurface.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedLiftingSurface.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedPart.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\AoACurve.cs" />
