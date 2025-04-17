@@ -305,6 +305,7 @@ namespace Graphing
             graphs.Add(graph);
             graph.ValuesChanged += ValuesChangedSubscriber;
             graph.DisplayChanged += DisplayChangedSubscriber;
+            RecalculateLimits();
         }
         /// <summary>
         /// Constructs a <see cref="GraphableCollection"/> with the provided <see cref="IGraphable"/>s.
@@ -321,6 +322,7 @@ namespace Graphing
                 enumerator.Current.ValuesChanged += ValuesChangedSubscriber;
                 enumerator.Current.DisplayChanged += DisplayChangedSubscriber;
             }
+            RecalculateLimits();
         }
 
         public static IGraphable FirstVisibleGraph(IGraphable graph)
