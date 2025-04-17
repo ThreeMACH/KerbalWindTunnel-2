@@ -43,6 +43,8 @@ namespace Graphing.Meshing
                 for (int i = 0; i < iMax; i++)
                 {
                     vertices[i + j * iMax] = new Vector3(-xValues[i], yValue, values[i, j] * (invertZ ? -1 : 1));
+                    if (float.IsInfinity(values[i, j]))
+                        vertices[i + j * iMax].z = float.NaN;
                     if (i > 0 && j > 0)
                     {
                         int quadIndex = ((i - 1) + (j - 1) * (iMax - 1)) * 4;
