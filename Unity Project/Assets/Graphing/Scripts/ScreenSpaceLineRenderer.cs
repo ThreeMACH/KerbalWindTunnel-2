@@ -19,7 +19,16 @@ namespace Graphing
         [Range(0, 100)]
         private float width = 5;
         [SerializeField]
+        [Range(3, 24)]
+        private int capSegments = 12;
+        [SerializeField]
+        [Range(3, 24)]
+        private int maxElbowSegments = 12;
+        [SerializeField]
         public Material material;
+        [SerializeField]
+        [HideInInspector]
+        private int maxSegments = 12;
 
         private NativeArray<Vert> screenSpacePoints;    // [n]
         private NativeArray<Vert> vertices;             // [(n - 1) * 2 * (c + 2)]
@@ -34,16 +43,6 @@ namespace Graphing
         private readonly List<int> indxList = new List<int>();*/
 
         private Dictionary<Camera, MeshCache> meshCache = new Dictionary<Camera, MeshCache>();
-
-        // Constants for number of segments
-        [SerializeField]
-        [Range(3, 24)]
-        private int capSegments = 12;
-        [SerializeField]
-        [Range(3, 24)]
-        private int maxElbowSegments = 12;
-
-        private int maxSegments = 12;
 
         private const float invPi = 1 / Mathf.PI;
 
