@@ -44,39 +44,57 @@ namespace Graphing
         public static float XMaxSelector(GraphDrawer g) => g.Graph.XMax;
         public static float YMinSelector(GraphDrawer g) => g.Graph.YMin;
         public static float YMaxSelector(GraphDrawer g) => g.Graph.YMax;
-        public static float ZMinSelector(GraphDrawer g) => ((IGraphable3)g.Graph)?.ZMin ?? float.NaN;
-        public static float ZMaxSelector(GraphDrawer g) => ((IGraphable3)g.Graph)?.ZMax ?? float.NaN;
+        public static float ZMinSelector(GraphDrawer g) => (g.Graph as IGraphable3)?.ZMin ?? float.NaN;
+        public static float ZMaxSelector(GraphDrawer g) => (g.Graph as IGraphable3)?.ZMax ?? float.NaN;
         public static float CMinSelector(GraphDrawer g) => (g.Graph as IColorGraph)?.CMin ?? (g.Graph as IGraphable3)?.ZMin ?? float.NaN;
         public static float CMaxSelector(GraphDrawer g) => (g.Graph as IColorGraph)?.CMax ?? (g.Graph as IGraphable3)?.ZMax ?? float.NaN;
         public static bool DepthPredicate(GraphDrawer g) => g.Graph is IGraphable3;
         public static bool ColorPredicate(GraphDrawer g) => g.Graph is IColorGraph || g.Graph is IGraphable3;
+        public static bool CollectionPredicate(GraphDrawer g) => g.Graph is GraphableCollection;
+
         private (Func<GraphDrawer, float> min, Func<GraphDrawer, float> max) boundSelector = (XMinSelector, XMaxSelector);
-        private IEnumerable<GraphDrawer> GraphDrawersAffectingBounds
+        private IEnumerable<GraphDrawer> GraphDrawersAffectingBounds    // TODO: No reason to regenerate every time...
         {
             get
             {
+                IEnumerable<GraphDrawer> graphDrawers;
                 switch (_use)
                 {
                     case AxisDirection.Horizontal:
                     case AxisDirection.Vertical:
                         return attachedGraphDrawers;
                     case AxisDirection.Depth:
-                        return attachedGraphDrawers.Where(DepthPredicate);
+                        graphDrawers = attachedGraphDrawers.Where(DepthPredicate);
+                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(d=>d.Graph is GraphableCollection && !DepthPredicate(d)))
+                            graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(DepthPredicate));
+                        return graphDrawers;
                     case AxisDirection.Color:
-                        return attachedGraphDrawers.Where(ColorPredicate);
+                        graphDrawers = attachedGraphDrawers.Where(ColorPredicate);
+                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(d => d.Graph is GraphableCollection && !ColorPredicate(d)))
+                        {
+                            graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(ColorPredicate));
+                        }
+                        return graphDrawers;
                     default:
                         return Enumerable.Empty<GraphDrawer>();
                 }
             }
         }
+
+        private static Func<float, bool> IsaN = v => !float.IsNaN(v);
         public float AutoMin
         {
             get
             {
-                IEnumerable<GraphDrawer> drawers = GraphDrawersAffectingBounds;
-                if (!drawers.Any())
+                IEnumerable<float> bounds = GraphDrawersAffectingBounds.Select(boundSelector.min).Where(IsaN);
+                if (!bounds.Any())
                     return 0;
-                return drawers.Min(boundSelector.min);
+                float bound = bounds.Min();
+                if (float.IsNegativeInfinity(bound))
+                    return float.MinValue;
+                if (float.IsPositiveInfinity(bound))
+                    return float.MaxValue;
+                return bound;
             }
         }
 
@@ -84,10 +102,15 @@ namespace Graphing
         {
             get
             {
-                IEnumerable<GraphDrawer> drawers = GraphDrawersAffectingBounds;
-                if (!drawers.Any())
+                IEnumerable<float> bounds = GraphDrawersAffectingBounds.Select(boundSelector.max).Where(IsaN);
+                if (!bounds.Any())
                     return 0;
-                return drawers.Max(boundSelector.max);
+                float bound = bounds.Max();
+                if (float.IsNegativeInfinity(bound))
+                    return float.MinValue;
+                if (float.IsPositiveInfinity(bound))
+                    return float.MaxValue;
+                return bound;
             }
         }
 
@@ -277,7 +300,7 @@ namespace Graphing
         private Texture2D shaderMapTex = null;
 
         private readonly List<GraphDrawer> attachedGraphDrawers = new List<GraphDrawer>();
-        public List<GraphDrawer> AttachedGraphDrawers { get => attachedGraphDrawers; }
+        public IEnumerable<GraphDrawer> AttachedGraphDrawers { get => attachedGraphDrawers; }
 
         [SerializeField]
         private int _barThickness = 1;
@@ -508,8 +531,6 @@ namespace Graphing
             if (attachedGraphDrawers.Contains(graphDrawer))
                 return false;
             attachedGraphDrawers.Add(graphDrawer);
-            if (autoSetMin ||  autoSetMax)
-                RecalculateBounds();
             if (FirstVisibleGraph() == graphDrawer.FirstVisibleInHierarchy)
             {
                 // TODO: do we want to limit to only IColorGraphs? The function works for any IGraph...
@@ -525,6 +546,9 @@ namespace Graphing
                 }
                 SetUpAxis(graphDrawer.FirstVisibleInHierarchy);
             }
+            else if (autoSetMin ||  AutoSetMax)
+                RecalculateBounds();
+
             if (_use == AxisDirection.Color)
             {
                 graphDrawer.SurfGraphMaterial = AxisMaterial;
@@ -661,7 +685,7 @@ namespace Graphing
             {
                 Label = "";
                 Unit = "-";
-                SetBounds(0, 0);
+                RecalculateBounds();
                 return;
             }
 
