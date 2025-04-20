@@ -8,11 +8,12 @@ namespace Graphing.Meshing
 {
     public class QuadTessellator
     {
+        public const int maxTessFactor = 5;
         private readonly List<int> indices = new List<int>();
         public List<int> Indices { get => indices; }
         private readonly List<int> indices_backup = new List<int>();
 
-        private readonly List<Vertex> vertices = new List<Vertex>();
+        private readonly List<VertexMeta> vertices = new List<VertexMeta>();
         public IEnumerable<Vector3> Vertices { get => vertices.Select(v => v.position); }
         private readonly List<Vector3> vertices_backup = new List<Vector3>();
 
@@ -22,10 +23,10 @@ namespace Graphing.Meshing
         public bool IndicesAreQuads { get => indicesAreQuads; }
 
         public QuadTessellator(Mesh mesh, int submesh = 0) => Setup(mesh, submesh);
-        public QuadTessellator(IEnumerable<int> indices, IEnumerable<Vector3> vertices) => Setup(indices, vertices);
+        public QuadTessellator(IList<int> indices, IList<Vector3> vertices) => Setup(indices, vertices);
 
-        public IEnumerable<Vector4> Coords { get => vertices.Select(v => v.vertexData.coords); }
-        public IEnumerable<Vector4> Heights { get => vertices.Select(v => v.vertexData.heights); }
+        public IEnumerable<Vector4> Coords { get => vertices.Select(v => v.coords); }
+        public IEnumerable<Vector4> Heights { get => vertices.Select(v => v.heights); }
 
         public void Setup(Mesh mesh, int submesh = 0)
         {
@@ -33,48 +34,21 @@ namespace Graphing.Meshing
                 throw new ArgumentException("Mesh topology must be quads.");
             Setup(mesh.GetIndices(submesh), mesh.vertices);
         }
-        public void Setup(IEnumerable<int> indices, IEnumerable<Vector3> vertices)
+        private void Setup(IList<int> indices, IList<Vector3> vertices)
         {
             indicesAreQuads = true;
             this.indices.Clear();
             this.indices.AddRange(indices);
             this.vertices.Clear();
+            this.vertices.AddRange(vertices.Select(v => new VertexMeta(v)));
             quads.Clear();
 
-            IEnumerator<Vector3> enumerator = vertices.GetEnumerator();
-            int index = -1;
-            while (enumerator.MoveNext())
-            {
-                index++;
-                this.vertices.Add(new Vertex(enumerator.Current, index, overwriteVertexData: false));
-            }
-
-            int[] vertexQuadIndex = new int[this.vertices.Count];
-            for (int i = 0; i < vertexQuadIndex.Length; i++)
-                vertexQuadIndex[i] = -1;
             for (int i = 0; i < this.indices.Count; i += 4)
             {
-                vertexQuadIndex[this.indices[i]] = i;
+                // Todo: this seems to wind the wrong way... If it works, it works.
+                quads.Add(new Quad(vertices, indices[i], indices[i + 3], indices[i + 2], indices[i + 1]));
             }
 
-            for (int i = 0; i < this.vertices.Count; i++)
-            {
-                int quadIndex = vertexQuadIndex[i];
-                if (quadIndex < 0)
-                    continue;
-                Vector4 coords = new Vector4(
-                    this.vertices[i].x, this.vertices[i].y,
-                    this.vertices[this.indices[quadIndex + 1]].x - this.vertices[i].x,
-                    this.vertices[this.indices[quadIndex + 3]].y - this.vertices[i].y);
-                Vector4 heights = new Vector4(this.vertices[i].z, this.vertices[this.indices[quadIndex + 1]].z, this.vertices[this.indices[quadIndex + 3]].z, this.vertices[this.indices[quadIndex + 2]].z);
-                Vertex v = this.vertices[i];
-                v.vertexData = (coords, heights);
-                this.vertices[i] = v;
-            }
-            for (int i = 0; i < this.indices.Count; i += 4)
-            {
-                quads.Add(new Quad(this.vertices[this.indices[i]], this.vertices[this.indices[i + 3]], this.vertices[this.indices[i + 2]], this.vertices[this.indices[i + 1]]));
-            }
             indices_backup.Clear();
             indices_backup.AddRange(this.indices);
             vertices_backup.Clear();
@@ -82,12 +56,16 @@ namespace Graphing.Meshing
         }
         public void Reset() => Setup(indices_backup, vertices_backup);
 
+        // The tessellation into tris could be broken out to a separate method, but I can't be bothered right now.
         public void SubdivideForDegeneracy(float scale = 1, float tolerance = 0.015625f)
         {
             if (!indicesAreQuads)
                 throw new InvalidOperationException("Cannot subdivide when already using tris.");
             indices.Clear();
-            Parallel.For(0, quads.Count, () => new LocalData(scale, tolerance), TessellateQuad, TessPostProcess);
+            Parallel.For(0, quads.Count,
+                () => new LocalData(scale, tolerance),
+                TessellateQuad,
+                TessPostProcess);
             indicesAreQuads = false;
         }
 
@@ -102,22 +80,26 @@ namespace Graphing.Meshing
         private LocalData TessellateQuad(int index, ParallelLoopState loopState, LocalData localData)
         {
             Quad quad = quads[index];
-            int tessFactor = TessFactor(quad.ZDegeneracy, localData.scale, localData.tolerance);
-
-            // First subdivide the quad
-            if (tessFactor <= 0)
+            int tessFactor = TessFactor(quad.zDegeneracy, localData.scale, localData.tolerance);
+            if (quad.isFlat || tessFactor == 0)
             {
-                quad.isFlat = true;
                 localData.quads.Add(quad);
                 return localData;
             }
-            TessQuadInternal(quad, localData, tessFactor, loopState);
 
-            // Then cross-tessellate it (inside TessPostProcess)
+            // First subdivide the quad
+            if (tessFactor > maxTessFactor)
+            {
+                Debug.LogWarning("Quad Tessellation - tessFactor too high.");
+                tessFactor = maxTessFactor;
+            }
+            TessQuadInternal(in quad, localData, tessFactor, loopState);
+
+            // Then cross-tessellate them (inside TessPostProcess)
             return localData;
         }
 
-        private static void TessQuadInternal(Quad quad, LocalData data, int tessFactor, ParallelLoopState loopState = null)
+        private static void TessQuadInternal(in Quad quad, LocalData data, int tessFactor, ParallelLoopState loopState = null)
         {
             if (loopState != null && loopState.ShouldExitCurrentIteration)
                 return;
@@ -133,146 +115,133 @@ namespace Graphing.Meshing
                 return;
             }
 
-            IEnumerable<Quad> newQuads = quad.Subdivide(data.newVertices);
-            foreach (Quad q in newQuads)
-                TessQuadInternal(q, data, tessFactor - 1, loopState);
+            foreach (Quad q in quad.Subdivide(data.newVertices))
+                TessQuadInternal(in q, data, tessFactor - 1, loopState);
         }
 
-        private static void RemoveNewDuplicates(List<Vertex> vertices, List<Vertex> indices)
+        private static void RemoveDuplicates(List<VertexMeta> vertices, IList<int> indices)
         {
+            Dictionary<VertexMeta, int> vertIndices = new Dictionary<VertexMeta, int>(vertices.Count);
+            int[] reIndeces = new int[vertices.Count];
+            int vertCount = -1;
             for (int i = 0; i < vertices.Count; i++)
             {
-                Vertex v1 = vertices[i];
-                if (v1.prohibitMerge)
-                    continue;
-                for (int j = vertices.Count - 1; j > i; j--)
+                if (vertIndices.TryGetValue(vertices[i], out reIndeces[i]))
                 {
-                    Vertex v2 = vertices[j];
-                    if (v2.prohibitMerge || (!v1.overwriteVertexData && !v2.overwriteVertexData))
-                        continue;
-                    if (v1.position != v2.position)
-                        continue;
-                    vertices.RemoveAt(j);
-                    for (int k = indices.Count - 1; k >= 0; k--)
-                    {
-                        if (indices[k].indexIsRelative)
-                        {
-                            if (indices[k].index == j)
-                            {
-                                Vertex vi = indices[k];
-                                vi.index = i;
-                                indices[k] = vi;
-                            }
-                            else if (indices[k].index > j)
-                            {
-                                Vertex vi = indices[k];
-                                vi.index--;
-                                indices[k] = vi;
-                            }
-                        }
-                    }
-                    v1.vertexData = v2.overwriteVertexData ? v1.vertexData : v2.vertexData;
-                    v1.overwriteVertexData = v1.overwriteVertexData && v2.overwriteVertexData;
-                    vertices[i] = v1;
+                    vertices[reIndeces[i]] = VertexMeta.Merge(vertices[reIndeces[i]], vertices[i]);
+                }
+                else
+                {
+                    vertCount++;
+                    reIndeces[i] = vertCount;
+                    vertIndices.Add(vertices[i], vertCount);
+                    vertices[vertCount] = vertices[i];
                 }
             }
-        }
-        private static void RemoveDuplicates(List<Vertex> vertices, List<int> indices, int startIndexV = 0, int endIndexV = -1, int startIndexI = 0)
-        {
-            if (endIndexV < 0)
-                endIndexV = vertices.Count;
+            for (int i = vertices.Count - 1; i > vertCount; i--)
+                vertices.RemoveAt(i);
 
-            for (int i = 0; i < Math.Min(endIndexV, vertices.Count); i++)
-            {
-                Vertex v1 = vertices[i];
-                if (v1.prohibitMerge)
-                    continue;
-                for (int j = vertices.Count - 1; j > Math.Max(i, startIndexV - 1); j--)
-                {
-                    Vertex v2 = vertices[j];
-                    if (v2.prohibitMerge || (!v1.overwriteVertexData && !v2.overwriteVertexData))
-                        continue;
-                    if (v1.position != v2.position)
-                        continue;
-                    vertices.RemoveAt(j);
-                    for (int k = indices.Count - 1; k >= startIndexI; k--)
-                    {
-                        if (indices[k] == j)
-                            indices[k] = i;
-                        else if (indices[k] > j)
-                            indices[k]--;
-                    }
-                    v1.vertexData = v2.overwriteVertexData ? v1.vertexData : v2.vertexData;
-                    v1.overwriteVertexData &= v2.overwriteVertexData;
-                    vertices[i] = v1;
-                }
-            }
-        }
-
-        private static IEnumerable<int> GlobalizeIndices(int offset, List<Vertex> indices)
-        {
-            for (int i = 0; i < indices.Count; i++)
-                yield return indices[i].indexIsRelative ? indices[i].index + offset : indices[i].index;
+            for (int i = indices.Count - 1; i >= 0; i--)
+                indices[i] = reIndeces[indices[i]];
         }
 
         private void TessPostProcess(LocalData data)
         {
+            List<Index> localIndices = new List<Index>(4 * data.quads.Count);
+            List<VertexMeta> localVertices = data.newVertices.Select(v => new VertexMeta(v)).ToList();
+            List<Quad> quads = data.quads;
+
             // Tessellate to tris
-            for (int i = 0; i < data.quads.Count; i++)
+            int newVertCount = data.newVertices.Count;
+            List<VertexMeta> tessdVertices = new List<VertexMeta>(quads.Count);
+            for (int i = 0; i < quads.Count; i++)
             {
-                if (data.quads[i].isFlat)
-                    TessQuadToFlatTris(data.quads[i], data);
+                Quad quad = quads[i];
+                if (quad.isFlat)
+                {
+                    TessQuadToFlatTris(in quad, tessdVertices, localIndices, newVertCount);
+                    Vertex firstInQuad = quad.v0;
+                    Index firstInQuadIndex = quad.v0.index;
+                    if (firstInQuadIndex.isRelative)
+                        localVertices[firstInQuadIndex.index] = new VertexMeta(quad.v0, quad.coords, quad.heights);
+                    else
+                        lock (vertices)
+                            vertices[firstInQuadIndex.index] = VertexMeta.Merge(
+                                vertices[firstInQuadIndex.index],
+                                new VertexMeta(quad.v0, quad.coords, quad.heights));
+                }
                 else
-                    TessQuadToTris(data.quads[i], data);
+                    TessQuadToTris(in quad, tessdVertices, localIndices, newVertCount);
             }
-            // Pre-cull duplicate vertices.
-            RemoveNewDuplicates(data.newVertices, data.newIndices);
+            localVertices.AddRange(tessdVertices);
+
+            /// Remove duplicates amoung the new Vertices:
+            /// The new vertices are all relative indices,
+            /// so we only run RemoveDuplicates on a subset of the index list.
+            int[] relativeIndices = localIndices.Where(i => i.isRelative).Select(i => i.index).ToArray();
+            RemoveDuplicates(localVertices, relativeIndices);
+            for (int i = localIndices.Count - 1, rI = relativeIndices.Length - 1; i >= 0; i--)
+            {
+                if (localIndices[i].isRelative)
+                {
+                    localIndices[i] = new Index(relativeIndices[rI], true);
+                    rI--;
+                }
+            }
+            
             // Integrate vertices and tris then cull duplicate vertices.
             lock (this)
             {
                 int vertCount = vertices.Count;
-                int indexCount = indices.Count;
-                vertices.AddRange(data.newVertices);
-                indices.AddRange(GlobalizeIndices(vertCount, data.newIndices));
-                RemoveDuplicates(vertices, indices, vertCount, vertCount, indexCount);
+                vertices.AddRange(localVertices);
+                indices.AddRange(localIndices.Select(i => i.AsAbsolute(vertCount).index));
+                lock (vertices)
+                    RemoveDuplicates(vertices, indices);
             }
         }
 
-        private static void TessQuadToTris(Quad quad, LocalData data)
+        private static void TessQuadToTris(in Quad quad, List<VertexMeta> outputVertices, List<Index> indices, int indexOffset = 0)
         {
-            Vertex center = new Vertex((quad[0].position + quad[1].position + quad[2].position + quad[3].position) / 4, data.newVertices.Count, true, quad[0].vertexData);
-            data.newVertices.Add(center);
-            data.newIndices.Add(center);
-            data.newIndices.Add(quad[0]);
-            data.newIndices.Add(quad[1]);
-            data.newIndices.Add(center);
-            data.newIndices.Add(quad[1]);
-            data.newIndices.Add(quad[2]);
-            data.newIndices.Add(center);
-            data.newIndices.Add(quad[2]);
-            data.newIndices.Add(quad[3]);
-            data.newIndices.Add(center);
-            data.newIndices.Add(quad[3]);
-            data.newIndices.Add(quad[0]);
+            VertexMeta center = new VertexMeta((quad[0].position + quad[1].position + quad[2].position + quad[3].position) / 4, quad.coords, quad.heights);
+            Index centerIndex = new Index(outputVertices.Count + indexOffset, true);
+            indices.Add(centerIndex);
+            indices.Add(quad[0].index);
+            indices.Add(quad[1].index);
+
+            indices.Add(centerIndex);
+            indices.Add(quad[1].index);
+            indices.Add(quad[2].index);
+
+            indices.Add(centerIndex);
+            indices.Add(quad[2].index);
+            indices.Add(quad[3].index);
+
+            indices.Add(centerIndex);
+            indices.Add(quad[3].index);
+            indices.Add(quad[0].index);
+            outputVertices.Add(center);
         }
-        private static void TessQuadToFlatTris(Quad quad, LocalData data)
+        private static void TessQuadToFlatTris(in Quad quad, List<VertexMeta> outputVertices, List<Index> indices, int indexOffset = 0)
         {
-            data.newIndices.Add(quad[0]);
-            data.newIndices.Add(quad[1]);
-            data.newIndices.Add(quad[2]);
-            Vertex dupe = new Vertex(quad[2].position, data.newVertices.Count, true, quad[0].vertexData)
-            {
-                prohibitMerge = true
-            };
-            data.newVertices.Add(dupe);
-            data.newIndices.Add(dupe);
-            data.newIndices.Add(quad[3]);
-            data.newIndices.Add(quad[0]);
+            Index dupeIndex = new Index(outputVertices.Count + indexOffset, true);
+            indices.Add(quad[0].index);
+            indices.Add(quad[1].index);
+            indices.Add(quad[2].index);
+
+            VertexMeta dupe = new VertexMeta(quad[2].position, quad.coords, quad.heights, true);
+            indices.Add(dupeIndex);
+            indices.Add(quad[3].index);
+            indices.Add(quad[0].index);
+            outputVertices.Add(dupe);
         }
 
-        public struct Quad
+        public readonly struct Quad
         {
-            private Vertex v0, v1, v2, v3;
+            public readonly float zDegeneracy;
+            public readonly Vertex v0, v1, v2, v3;
+            public readonly bool isFlat;
+            public readonly Vector4 coords;
+            public readonly Vector4 heights;
             public Vertex this[int index]
             {
                 get
@@ -285,87 +254,65 @@ namespace Graphing.Meshing
                         case 3: return v3;
                         default: throw new ArgumentOutOfRangeException("Index must be [0, 3].");
                     }
-                    /*return index switch
-                    {
-                        0 => v0,
-                        1 => v1,
-                        2 => v2,
-                        3 => v3,
-                        _ => throw new ArgumentOutOfRangeException("Index must be [0, 3]."),
-                    };*/
-                }
-                set
-                {
-                    switch (index)
-                    {
-                        case 0:
-                            v0 = value;
-                            return;
-                        case 1:
-                            v1 = value;
-                            return;
-                        case 2:
-                            v2 = value;
-                            return;
-                        case 3:
-                            v3 = value;
-                            return;
-                        default:
-                            throw new ArgumentOutOfRangeException("Index must be [0, 3].");
-                    }
                 }
             }
+            public Quad(IList<Vector3> vertices, int i0, int i1, int i2, int i3)
+                : this(
+                      new Vertex(vertices[i0], new Index(i0, false)),
+                      new Vertex(vertices[i1], new Index(i1, false)),
+                      new Vertex(vertices[i2], new Index(i2, false)),
+                      new Vertex(vertices[i3], new Index(i3, false))
+                      )
+            { }
+
             public Quad(Vertex v0, Vertex v1, Vertex v2, Vertex v3)
             {
                 this.v0 = v0;
                 this.v1 = v1;
                 this.v2 = v2;
                 this.v3 = v3;
-                isFlat = false;
-            }
-            public bool isFlat;
+                zDegeneracy = Mathf.Abs(v0.z + v2.z - (v1.z + v3.z)) / 4;
+                isFlat = zDegeneracy == 0;
 
-            public float ZDegeneracy => Mathf.Abs((v0.z + v2.z) / 2 - (v0.z + v1.z + v2.z + v3.z) / 4);
+                // Note that this assumes rectangular quads. Any skew will mess with this,
+                // but dealing with that would require another Vector4 of data per vertex.
+                coords = new Vector4(
+                    v0.x, v0.y,
+                    v3.x - v0.x,
+                    v1.y - v0.y);
+                heights = new Vector4(v0.z, v3.z, v1.z, v2.z);
+            }
+            private Quad(Vertex v0, Vertex v1, Vertex v2, Vertex v3, Vector4 coords, Vector4 heights)
+            {
+                this.v0 = v0;
+                this.v1 = v1;
+                this.v2 = v2;
+                this.v3 = v3;
+                zDegeneracy = Mathf.Abs(v0.z + v2.z - (v1.z + v3.z)) / 4;
+                isFlat = zDegeneracy == 0;
+                this.coords = coords;
+                this.heights = heights;
+            }
 
             public IEnumerable<Quad> Subdivide(List<Vertex> newVertices)
             {
-                int offset = newVertices.Count;
-                Vertex nv0 = new Vertex((v0.position + v1.position + v2.position + v3.position) / 4, offset, true, v0.vertexData);
-                Vertex nv1 = new Vertex((v0.position + v1.position) / 2, offset + 1, true, v0.vertexData);
-                Vertex nv2 = new Vertex((v1.position + v2.position) / 2, offset + 2, true, true);
-                Vertex nv3 = new Vertex((v2.position + v3.position) / 2, offset + 3, true, true);
-                Vertex nv4 = new Vertex((v3.position + v0.position) / 2, offset + 4, true, v0.vertexData);
+                int localOffset = newVertices.Count;
+                Vertex nv0 = new Vertex((v0.position + v1.position + v2.position + v3.position) / 4, new Index(localOffset, true));
+                Vertex nv1 = new Vertex((v0.position + v1.position) / 2, new Index(localOffset + 1, true));
+                Vertex nv2 = new Vertex((v1.position + v2.position) / 2, new Index(localOffset + 2, true));
+                Vertex nv3 = new Vertex((v2.position + v3.position) / 2, new Index(localOffset + 3, true));
+                Vertex nv4 = new Vertex((v3.position + v0.position) / 2, new Index(localOffset + 4, true));
+
                 newVertices.Add(nv0);
                 newVertices.Add(nv1);
                 newVertices.Add(nv2);
                 newVertices.Add(nv3);
                 newVertices.Add(nv4);
-                for (int i = 0; i < 4; i++)
-                {
-                    /*var q = i switch
-                    {
-                        0 => new Quad(v0, nv1, nv0, nv4),
-                        1 => new Quad(nv1, v1, nv2, nv0),
-                        2 => new Quad(nv0, nv2, v2, nv3),
-                        3 => new Quad(nv4, nv0, nv3, v3),
-                        _ => throw new ArgumentOutOfRangeException(),
-                    };*/
-                    Quad q;
-                    switch (i)
-                    {
-                        case 0: q = new Quad(v0, nv1, nv0, nv4);
-                            break;
-                        case 1: q = new Quad(nv1, v1, nv2, nv0);
-                            break;
-                        case 2: q = new Quad(nv0, nv2, v2, nv3);
-                            break;
-                        case 3: q = new Quad(nv4, nv0, nv3, v3);
-                            break;
-                        default: throw new ArgumentOutOfRangeException();
-                    }
-                    //newIndices.AddRange(q.AsVertexSequence());
-                    yield return q;
-                }
+
+                yield return new Quad(v0, nv1, nv0, nv4, coords, heights);
+                yield return new Quad(nv1, v1, nv2, nv0, coords, heights);
+                yield return new Quad(nv0, nv2, v2, nv3, coords, heights);
+                yield return new Quad(nv4, nv0, nv3, v3, coords, heights);
             }
 
             public IEnumerable<Vertex> AsVertexSequence()
@@ -375,61 +322,131 @@ namespace Graphing.Meshing
                 yield return v2;
                 yield return v3;
             }
+            public IEnumerable<VertexMeta> AsVertexMetaSequence()
+            {
+                yield return new VertexMeta(v0, coords, heights);
+                yield return new VertexMeta(v1, coords, heights);
+                yield return new VertexMeta(v2, coords, heights);
+                yield return new VertexMeta(v3, coords, heights);
+            }
         }
 
-        public struct Vertex
+        public readonly struct VertexMeta : IEquatable<VertexMeta>
         {
-            public Vector3 position;
-            public int index;
-            public bool indexIsRelative;
-            public (Vector4 coords, Vector4 heights) vertexData;
-            public bool prohibitMerge;
-            public bool overwriteVertexData;
+            public readonly Vector3 position;
+            public readonly Vector4 coords;
+            public readonly Vector4 heights;
+            public readonly bool validVertexData;
+            public readonly bool prohibitMerge;
+            public VertexMeta(Vertex vertex, bool prohibitMerge = false) : this(vertex.position, prohibitMerge) { }
+            public VertexMeta(Vector3 position, bool prohibitMerge = false)
+            {
+                coords = Vector4.zero;
+                heights = Vector4.zero;
+                validVertexData = false;
+                this.position = position;
+                this.prohibitMerge = prohibitMerge;
+                validVertexData = false;
+            }
+            public VertexMeta(Vertex vertex, Vector4 coords, Vector4 heights, bool prohibitMerge = false)
+                : this(vertex, prohibitMerge)
+            {
+                this.coords = coords;
+                this.heights = heights;
+                validVertexData = true;
+            }
+            public VertexMeta(Vector3 position, Vector4 coords, Vector4 heights, bool prohibitMerge = false)
+                : this(position, prohibitMerge)
+            {
+                this.coords = coords;
+                this.heights = heights;
+                validVertexData = true;
+            }
+
+            public static VertexMeta Merge(VertexMeta a, VertexMeta b)
+            {
+                if (!a.CanMergeWith(b))
+                    throw new InvalidOperationException("The supplied vertices are ineligible to merge.");
+
+                if (b.validVertexData)
+                    return b;
+                else
+                    return a;
+            }
+
+            public bool CanMergeWith(VertexMeta other)
+                => Equals(other);
+
+            public bool Equals(VertexMeta other)
+            {
+                if (prohibitMerge || other.prohibitMerge)
+                {
+                    return (prohibitMerge && other.prohibitMerge) &&
+                        (validVertexData == other.validVertexData) &&
+                        (position == other.position) &&
+                        (coords == other.coords) &&
+                        (heights == other.heights);
+                }
+                else if (validVertexData && other.validVertexData)
+                {
+                    return (position == other.position) &&
+                        (coords == other.coords) &&
+                        (heights == other.heights);
+                }
+                else
+                {
+                    return position == other.position;
+                }
+            }
+
+            public override int GetHashCode()
+                => position.GetHashCode();
+        }
+
+        public readonly struct Vertex
+        {
+            public readonly Vector3 position;
+            public readonly Index index;
 #pragma warning disable IDE1006 // Naming Styles
-            public float x { get => position.x; set => position.x = value; }
-            public float y { get => position.y; set => position.y = value; }
-            public float z { get => position.z; set => position.z = value; }
+            public float x { get => position.x; }
+            public float y { get => position.y; }
+            public float z { get => position.z; }
 #pragma warning restore IDE1006 // Naming Styles
 
-            public Vertex(Vector3 position, int index, bool indexIsRelative, (Vector4, Vector4) data)
+            public Vertex(Vector3 position, Index index)
             {
                 this.position = position;
                 this.index = index;
-                this.indexIsRelative = indexIsRelative;
-                vertexData = data;
-                overwriteVertexData = false;
-                prohibitMerge = false;
-            }
-            public Vertex(Vector3 position, int index, bool indexIsRelative, Vector4 coords, Vector4 heights)
-                : this(position, index, indexIsRelative, (coords, heights)) { }
-            public Vertex(Vector3 position, int index, Vector4 coords, Vector4 heights)
-                : this(position, index, false, coords, heights) { }
-
-            public Vertex(Vector3 position, int index, bool indexIsRelative = false, bool overwriteVertexData = true)
-            {
-                this.position = position;
-                this.index = index;
-                this.indexIsRelative = indexIsRelative;
-                this.overwriteVertexData = overwriteVertexData;
-                vertexData = (Vector4.zero, Vector4.zero);
-                prohibitMerge = false;
             }
         }
 
-        public readonly struct LocalData
+        public readonly struct Index
         {
-            public readonly List<Vertex> newIndices;
-            public readonly List<Vertex> newVertices;
+            public readonly int index;
+            public readonly bool isRelative;
+            public Index(int index, bool isRelative)
+            {
+                this.index = index;
+                this.isRelative = isRelative;
+            }
+            public Index AsAbsolute(int offset) => new Index(isRelative ? index + offset : index, false);
+            public Index AsRelative(int offset) => new Index(isRelative ? index - offset : index, true);
+
+            public static explicit operator int(Index index) => index.index;
+            public static Index operator +(Index index, int offset) => new Index(index.index + offset, index.isRelative);
+            public static Index operator -(Index index, int offset) => new Index(index.index - offset, index.isRelative);
+        }
+
+        private class LocalData
+        {
             public readonly float scale;
             public readonly float invScale;
             public readonly float tolerance;
-            public readonly List<Quad> quads;
+            public readonly List<Quad> quads = new List<Quad>();
+            public readonly List<Vertex> newVertices = new List<Vertex>();
 
             public LocalData(float scale, float tolerance)
             {
-                newIndices = new List<Vertex>();
-                newVertices = new List<Vertex>();
-                quads = new List<Quad>();
                 this.scale = scale;
                 invScale = 1 / scale;
                 this.tolerance = tolerance;
