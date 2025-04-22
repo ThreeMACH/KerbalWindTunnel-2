@@ -283,7 +283,10 @@ namespace Graphing
         /// <returns></returns>
         public override string GetFormattedValueAt(float x, float y, bool withName = false)
         {
-            return string.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y), ZUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
+            string effectiveUnit = ZUnit;
+            if (effectiveUnit == "-")
+                effectiveUnit = "";
+            return string.Format("{2}{0:" + StringFormat + "} {1}", ValueAt(x, y), effectiveUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
         }
     }
 }
