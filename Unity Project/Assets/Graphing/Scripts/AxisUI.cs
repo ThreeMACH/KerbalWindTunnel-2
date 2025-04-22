@@ -661,12 +661,16 @@ namespace Graphing
             if (eventArgs is AxisNameChangedEventArgs axisNameChangedEventArgs)
             {
                 // Set axis label for all axes driven by drawer.
+                if (axisNameChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && axisNameChangedEventArgs.Axis == AxisDirection.Depth))
+                    return;
                 Label = axisNameChangedEventArgs.AxisName;
                 return;
             }
             if (eventArgs is AxisUnitChangedEventArgs axisUnitChangedEventArgs)
             {
                 // Set axis units for all axes driven by drawer.
+                if (axisUnitChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && axisUnitChangedEventArgs.Axis == AxisDirection.Depth))
+                    return;
                 Unit = axisUnitChangedEventArgs.Unit;
                 return;
             }
