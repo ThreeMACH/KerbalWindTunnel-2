@@ -274,7 +274,6 @@ namespace Graphing
             {
                 _unit = value;
                 axisText.Text = AxisLabel;
-                LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             }
         }
         private string _label = "";
@@ -285,7 +284,6 @@ namespace Graphing
             {
                 _label = value;
                 axisText.Text = AxisLabel;
-                LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             }
         }
 
@@ -408,10 +406,15 @@ namespace Graphing
         }
 
         private readonly System.Collections.Concurrent.ConcurrentQueue<Axis.AxisBoundsEventArgs> boundsChangedEvents = new System.Collections.Concurrent.ConcurrentQueue<Axis.AxisBoundsEventArgs>();
+        private readonly System.Collections.Concurrent.ConcurrentQueue<(object sender, IDisplayEventArgs eventArgs)> displayEvents = new System.Collections.Concurrent.ConcurrentQueue<(object, IDisplayEventArgs)>();
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Update()
         {
+            while (displayEvents.TryDequeue(out var displayEvent))
+            {
+                GraphDisplayChangeHandler(displayEvent.sender, displayEvent.eventArgs);
+            }
             while (boundsChangedEvents.TryDequeue(out var eventArgs))
             {
                 SetOriginsAndScales();
@@ -559,7 +562,7 @@ namespace Graphing
 
             SetOriginsAndScales();
 
-            graphDrawer.Graph.DisplayChanged += GraphDisplayChangeHandler;
+            graphDrawer.Graph.DisplayChanged += GraphDisplayChangeListener;
             graphDrawer.Graph.ValuesChanged += GraphBoundsChangeHandler;
             return true;
         }
@@ -579,7 +582,7 @@ namespace Graphing
 
             if (!attachedGraphDrawers.Remove(graphDrawer))
                 return false;
-            graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeHandler;
+            graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeListener;
             graphDrawer.Graph.ValuesChanged -= GraphBoundsChangeHandler;
             if (autoSetMin || autoSetMax)
                 RecalculateBounds();
@@ -612,6 +615,11 @@ namespace Graphing
                     RecalculateBounds();
                 return;
             }
+        }
+
+        private void GraphDisplayChangeListener(object sender, IDisplayEventArgs eventArgs)
+        {
+            displayEvents.Enqueue((sender, eventArgs));
         }
 
         private void GraphDisplayChangeHandler(object sender, IDisplayEventArgs eventArgs)
@@ -1002,7 +1010,7 @@ namespace Graphing
             axis.AxisBoundsChangedEvent -= BoundsChanged;
             foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
             {
-                graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeHandler;
+                graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeListener;
                 graphDrawer.Graph.ValuesChanged -= GraphBoundsChangeHandler;
             }
             if (shaderTex != null)
