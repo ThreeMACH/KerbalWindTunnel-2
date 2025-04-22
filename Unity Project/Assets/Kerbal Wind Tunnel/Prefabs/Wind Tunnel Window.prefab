@@ -2386,26 +2386,32 @@ MonoBehaviour:
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Drag Force
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Lift/Drag Ratio
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Lift Slope
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Pitch Input
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Pitching Torque
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   _serialize_labels:
   - Lift Force
   - Drag Force
@@ -3156,42 +3162,52 @@ MonoBehaviour:
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Max Lift AoA
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Lift/Drag Ratio
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Lift Slope
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Thrust Available
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Drag Force
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Excess Thrust
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Max Lift
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Excess Acceleration
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   - label: Pitch Input
     action:
       m_PersistentCalls:
         m_Calls: []
+    value: 0
   _serialize_labels:
   - Level Flight AoA
   - Max Lift AoA
@@ -13476,6 +13492,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: -210.88
       objectReference: {fileID: 0}
+    - target: {fileID: 7404077153042314289, guid: b021f5d83fc43cd43b3a98f2ead4eb62,
+        type: 3}
+      propertyPath: hasHorizontal
+      value: 0
+      objectReference: {fileID: 0}
     - target: {fileID: 7872513419308091512, guid: b021f5d83fc43cd43b3a98f2ead4eb62,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -13818,6 +13839,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: -210.88
+      objectReference: {fileID: 0}
+    - target: {fileID: 7404077153042314289, guid: b021f5d83fc43cd43b3a98f2ead4eb62,
+        type: 3}
+      propertyPath: hasHorizontal
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 7872513419308091512, guid: b021f5d83fc43cd43b3a98f2ead4eb62,
         type: 3}
