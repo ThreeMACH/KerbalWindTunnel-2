@@ -258,7 +258,7 @@ namespace Graphing
                 bool showSquareBraces = !string.IsNullOrEmpty(label);
                 return string.Format("{0}{1}",
                     _label,
-                    string.IsNullOrEmpty(_unit) ? "-" :
+                    string.IsNullOrEmpty(_unit) ? "" :
                         string.Format("{0}{1}{2}",
                             showSquareBraces ? " [" : "",
                             _unit,

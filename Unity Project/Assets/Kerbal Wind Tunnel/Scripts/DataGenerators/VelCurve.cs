@@ -21,7 +21,7 @@ namespace KerbalWindTunnel.DataGenerators
             Vector2[] blank = new Vector2[0];
             graphables.Add(new LineGraph(blank) { Name = "Level AoA", YUnit = "°", StringFormat = "F2", color = Color.green });
             graphables.Add(new LineGraph(blank) { Name = "Max Lift AoA", YUnit = "°", StringFormat = "F2", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Lift/Drag Ratio", YUnit = "", StringFormat = "F2", color = Color.green });
+            graphables.Add(new LineGraph(blank) { Name = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", color = Color.green });
             graphables.Add(new LineGraph(blank) { Name = "Lift Slope", YUnit = "m^2/°", StringFormat = "F3", color = Color.green });
             graphables.Add(new LineGraph(blank) { Name = "Thrust Available", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
             graphables.Add(new LineGraph(blank) { Name = "Drag", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
