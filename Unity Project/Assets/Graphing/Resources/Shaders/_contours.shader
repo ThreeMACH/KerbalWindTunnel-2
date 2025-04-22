@@ -1,7 +1,7 @@
 ﻿bool _DrawContours;
-sampler2D _ContourTex;
+texture2D _ContourTex;
 fixed4 _ContourColor;
-sampler2D _ContourMapTex;
+texture2D _ContourMapTex;
 float _ContourThickness;
 bool _ContourValuesNormalized;
 int _NumContours;
@@ -39,13 +39,13 @@ fixed4 ApplyContourMap(float f, fixed4 baseColor)
         n = i * wInv_;
         contourCol = _ContourColor;
 #endif
-        float2 index = float2((i + 0.5) * wInv, 0.5); // Pixel coordinate of current point
-        contourCol = tex2D(_ContourTex, index); // Color of current contour
+        int3 index = int3((i + 0.5), 0, 0); // Pixel coordinate of current point
+        contourCol = _ContourTex.Load(index); // Color of current contour
 #ifdef _CONTOURMAPSOURCE_ALPHA
         n = contourCol.a;
         contourCol.a = 1;
 #elif !defined (_CONTOURMAPSOURCE_EVEN)
-        n = tex2D(_ContourMapTex, index);
+        n = _ContourMapTex.Load(index);
 #endif
 #ifndef _CONTOURMAPSOURCE_EVEN
         n = _ContourValuesNormalized ? saturate(n) : (n - _Min) * invRange;

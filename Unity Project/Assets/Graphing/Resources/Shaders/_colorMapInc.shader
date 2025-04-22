@@ -1,6 +1,6 @@
-﻿sampler2D _ColorTex;
+﻿texture2D _ColorTex;
 fixed4 _Color;
-sampler2D _ValueMapTex;
+texture2D _ValueMapTex;
 bool _Step;
 float4 _ColorTex_TexelSize;
             
@@ -35,8 +35,8 @@ fixed4 CustomMap(float f)
     float wInv = _ColorTex_TexelSize.x;
                 
     bool i2_mod = w > 1; // Normally 1, but 0 if the texture is 1 pixel
-    float2 i1 = float2(0, 0); // Pixel coordinate of current segment
-    float4 c1 = tex2D(_ColorTex, i1); // Lerp color value at start of current segment
+    int3 i1 = int3(0, 0, 0); // Pixel coordinate of current segment
+    float4 c1 = _ColorTex.Load(i1); // Lerp color value at start of current segment
     float n1; // = saturate(_useAlpha ? c1.a : tex2D(_ValueMapTex, i1));    // Lerp start of current segment
 #ifdef _MAPSOURCE_ALPHA
                 n1 = saturate(c1.a);
@@ -45,7 +45,7 @@ fixed4 CustomMap(float f)
                 float wInv_ = w > 1 ? 1.0 / (w - 1) : 0;
                 n1 = 0;
 #else
-    n1 = saturate(tex2D(_ValueMapTex, i1));
+    n1 = saturate(_ValueMapTex.Load(i1));
 #endif
                 
     // If f<=0, the below loop won't add anything since sn will always exclude it.
@@ -54,8 +54,8 @@ fixed4 CustomMap(float f)
                 
     for (int i = 0; i < w - 1; i++)
     {
-        float2 i2 = float2((i + i2_mod) * wInv, 0); // Pixel coordinate of next segment
-        float4 c2 = tex2D(_ColorTex, i2); // Lerp value at end of current segment
+        int3 i2 = int3((i + i2_mod), 0, 0); // Pixel coordinate of next segment
+        float4 c2 = _ColorTex.Load(i2); // Lerp value at end of current segment
         float n2; // = saturate(_useAlpha ? c2.a : tex2D(_ValueMapTex, i2));    // Lerp end for current segment
 #ifdef _MAPSOURCE_ALPHA
         n2 = saturate(c2.a);
@@ -63,7 +63,7 @@ fixed4 CustomMap(float f)
 #elif defined (_MAPSOURCE_EVEN)
         n2 = (i + 1.0) * wInv_;
 #else
-        n2 = saturate(tex2D(_ValueMapTex, i2));
+        n2 = saturate(_ValueMapTex.Load(i2));
 #endif
         
         float fn = (f - n1) / (n2 - n1); // Inner Lerp value
