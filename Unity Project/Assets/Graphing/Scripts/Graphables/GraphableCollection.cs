@@ -218,7 +218,7 @@ namespace Graphing
         /// <returns></returns>
         public IGraphable this[string name]
         {
-            get => graphs.FirstOrDefault(g => string.Equals(g.Name, name));
+            get => graphs.FirstOrDefault(g => string.Equals(g.Name, name)) ?? throw new KeyNotFoundException($"Collection does not contain {name}.");
         }
 
         /// <summary>
