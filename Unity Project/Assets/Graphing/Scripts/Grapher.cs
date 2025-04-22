@@ -83,7 +83,7 @@ namespace Graphing
             if (graphs.Contains(graph))
             {
                 Debug.LogWarning($"This graph ({graph.Name}) is already attached to the grapher.");
-                return GetComponentsInChildren<GraphDrawer>().FirstOrDefault(d => d.Graph == graph);
+                return GetComponentsInChildren<GraphDrawer>().First(d => d.Graph == graph);
             }
             graphs.Add(graph);
             GraphDrawer drawer = Instantiate(_graphDrawerPrefab, graphingSystem).GetComponent<GraphDrawer>();
