@@ -580,11 +580,34 @@ namespace KerbalWindTunnel
 
         private void RefreshData()
         {
+#if DEBUG
             Debug.Log("[KWT] Refreshing.");
+#endif
             if (vessel == null)
                 return;
             Cancel();
+
+            float minX, maxX;
+            switch (GraphMode)
             {
+                case 0:
+                    float minY, maxY;
+                    minX = envelopeGrapher.PrimaryHorizontalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryHorizontalAxis.Min;
+                    maxX = envelopeGrapher.PrimaryHorizontalAxis.AutoSetMax ? body.upperSpeed : envelopeGrapher.PrimaryHorizontalAxis.Max;
+                    minY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryVerticalAxis.Min;
+                    maxY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMax ? body.upperAlt : envelopeGrapher.PrimaryVerticalAxis.Max;
+                    taskTracker_surf = envelopeData.Calculate(vessel, cancellationTokenSource.Token, body.celestialBody, minX, maxX, minY, maxY);
+                    break;
+                case 1:
+                    minX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMin ? -20 : aoaCurveGrapher.PrimaryHorizontalAxis.Min;
+                    maxX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMax ? 20 : aoaCurveGrapher.PrimaryHorizontalAxis.Max;
+                    taskTracker_aoa = aoaData.Calculate(vessel, cancellationTokenSource.Token, body.celestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
+                    break;
+                case 2:
+                    minX = Mathf.Min(0, velCurveGrapher.PrimaryHorizontalAxis.Min);
+                    maxX = Mathf.Max(body.upperSpeed, velCurveGrapher.PrimaryHorizontalAxis.Max);
+                    taskTracker_vel = velData.Calculate(vessel, cancellationTokenSource.Token, body.celestialBody, HighlightAltitude, minX, maxX);
+                    break;
             }
         }
 
@@ -616,6 +639,8 @@ namespace KerbalWindTunnel
         public void AoAGraphToggleEvent(int index)
         {
             bool value = aoaToggleArray[index];
+            if (aoaCollection == null)
+                return;
             aoaCollection[index].Visible = value;
         }
 
@@ -623,6 +648,8 @@ namespace KerbalWindTunnel
         public void VelGraphToggleEvent(int index)
         {
             bool value = velToggleArray[index];
+            if (velocityCollection == null)
+                return;
             velocityCollection[index].Visible = value;
         }
 
@@ -650,7 +677,21 @@ namespace KerbalWindTunnel
                 vessel = null;
             }
 
-            updateVesselButton.interactable = false;
+            vessel = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
+            if (WindTunnelSettings.Instance.useCharacterized && vessel is VesselCache.SimulatedVessel simVessel)
+            {
+                vessel = new VesselCache.CharacterizedVessel(simVessel);
+            }
+
+            Cancel();
+
+            VelCurve.Clear(taskTracker_vel?.LastFollowOnTask);
+            AoACurve.Clear(taskTracker_aoa?.LastFollowOnTask);
+            EnvelopeSurf.Clear(taskTracker_surf?.LastFollowOnTask);
+
+            RefreshData();
+
+            //updateVesselButton.interactable = false;
         }
 
         private void Cancel()
@@ -667,6 +708,8 @@ namespace KerbalWindTunnel
         // Called when the value of 'Wet' or 'Dry' toggle changes.
         public void UpdateAoAWetDry()
         {
+            if (aoaCollection == null)
+                return;
             bool wet = ShowAoAGraphsWet;
             bool dry = ShowAoAGraphsDry;
             foreach (var graph in aoaCollection)
@@ -684,9 +727,23 @@ namespace KerbalWindTunnel
         // Called by the 'Settings' button being clicked.
         public void ToggleSettingsWindow()
         {
+            if (settingsDialog == null)
+                settingsDialog = SpawnDialog();
+            else
+            {
+                settingsDialog.Dismiss();
+                settingsDialog = null;
+            }
         }
 
-        private void OnEditorShipModified(ShipConstruct _) => updateVesselButton.interactable = true;
+        private void OnEditorShipModified(ShipConstruct _)
+        {
+            updateVesselButton.interactable = true;
+            // TODO: Move this to the highlight manager.
+            if (HighlightMode > 0 && (highlightManager?.isActiveAndEnabled ?? false))
+                UpdateHighlightingMethod();
+        }
+
         private void OnPartActionUIDismiss(Part _) => updateVesselButton.interactable = true;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
