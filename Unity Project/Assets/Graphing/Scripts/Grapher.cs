@@ -37,6 +37,15 @@ namespace Graphing
         public AxisUI PrimaryHorizontalAxis { get => bottomAxisGroup.GetComponentInChildren<AxisUI>(); }
         public AxisUI SecondaryVerticalAxis { get => rightAxisGroup.GetComponentInChildren<AxisUI>(); }
         public AxisUI SecondaryHorizontalAxis { get => topAxisGroup.GetComponentsInChildren<AxisUI>().LastOrDefault(); }
+        public AxisUI PrimaryColorAxis
+        {
+            get
+            {
+                var axes = GetComponentsInChildren<AxisUI>();
+                return axes.FirstOrDefault(a => a.Use == AxisUI.AxisDirection.Color) ??
+                    axes.FirstOrDefault(a => a.Use == AxisUI.AxisDirection.Depth);
+            }
+        }
 
         private System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool active)> activatorQueue = new System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool visible)>();
 
