@@ -112,19 +112,16 @@ namespace KerbalWindTunnel
             {
                 if (envelopeCollection != null)
                 {
-                    (bool?, bool?, bool?) persistentGraphs = (
-                        envelopeCollection["Fuel-Optimal Path"]?.Visible,
-                        envelopeCollection["Time-Optimal Path"]?.Visible,
-                        envelopeCollection["Envelope Mask"]?.Visible);
                     envelopeCollection.SetVisibility(false);
 
                     envelopeCollection[value].Visible = true;
-                    if (persistentGraphs.Item1 != null)
-                        envelopeCollection["Fuel-Optimal Path"].Visible = (bool)persistentGraphs.Item1;
-                    if (persistentGraphs.Item2 != null)
-                        envelopeCollection["Time-Optimal Path"].Visible = (bool)persistentGraphs.Item2;
-                    if (persistentGraphs.Item3 != null)
-                        envelopeCollection["Envelope Mask"].Visible = (bool)persistentGraphs.Item3;
+                    if (envelopeCollection.HasGraphNamed("Fuel-Optimal Path"))
+                        envelopeCollection["Fuel-Optimal Path"].Visible = ShowFuelOptimalPath;
+                    if (envelopeCollection.HasGraphNamed("Time-Optimal Path"))
+                        envelopeCollection["Time-Optimal Path"].Visible = ShowTimeOptimalPath;
+                    if (envelopeCollection.HasGraphNamed("Envelope Mask"))
+                        envelopeCollection["Envelope Mask"].Visible = WindTunnelSettings.ShowEnvelopeMask;
+                    // TODO: Make use of WindTunnelSettings.ShowEnvelopeMaskAlways
                 }
                 envelopeDropdown.Value = value;
             }
