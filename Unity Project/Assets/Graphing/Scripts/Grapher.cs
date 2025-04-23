@@ -25,6 +25,8 @@ namespace Graphing
 
         public GameObject GraphDrawerPrefab => _graphDrawerPrefab;
 
+        public CrosshairController CrosshairController { get; protected set; }
+
         public int ZOffset2D { get; set; } = 10;
 
         public AxisStyle DefaultStyle { get; set; } = new AxisStyle();
@@ -241,12 +243,11 @@ namespace Graphing
             // Only one axis with the selected use, let's adjust the crosshairs.
             if ((use == AxisUI.AxisDirection.Horizontal || use == AxisUI.AxisDirection.Vertical) && !GetComponentsInChildren<AxisUI>().Where(a => a != (AxisUI)axis).Any(a => a.Use == use))
             {
-                CrosshairController crosshairController = GetComponentInChildren<CrosshairController>();
-                if (!crosshairController.IsHeld)
+                if (!CrosshairController.IsHeld)
                     return;
-                Vector2 normalizedPosition = crosshairController.NormalizedPosition;
+                Vector2 normalizedPosition = CrosshairController.NormalizedPosition;
                 normalizedPosition[(int)use] = Mathf.Clamp01((normalizedPosition[(int)use] * (oldMax - oldMin) + oldMin - min) / (max - min));
-                crosshairController.SetCrosshairPosition(normalizedPosition);
+                CrosshairController.SetCrosshairPosition(normalizedPosition);
                 OnGraphClicked(this, normalizedPosition);
             }
         }
@@ -425,6 +426,7 @@ namespace Graphing
             foreach (AxisUI axis in GetComponentsInChildren<AxisUI>())
                 axis.AxisBoundsChangedEvent += AxisBoundsChangedHandler;
             GetComponentInChildren<CrosshairController>().OnClick += OnGraphClicked;
+            CrosshairController = GetComponentInChildren<CrosshairController>();
         }
 
         protected virtual void Update()
