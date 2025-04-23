@@ -329,21 +329,24 @@ namespace KerbalWindTunnel
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
         {
-            Debug.Log("Window:Start");
-            ascentFuelToggle.SetIsOnWithoutNotify(ShowFuelOptimalPath);
-            ascentTimeToggle.SetIsOnWithoutNotify(ShowFuelOptimalPath);
+#if UNITY_EDITOR
             Debug.Log("Drawing placeholder");
-            GraphDrawer gd1 = envelopeGrapher.AddGraphToDefaultAxes(new OutlineMask(PlaceholderData.surfPlaceholder, 0, 1, 0, 1, v => v.z - 0.5f));
-            GraphDrawer gd2 = envelopeGrapher.AddGraphToDefaultAxes(new SurfGraph(PlaceholderData.surfPlaceholder, 0, 1, 0, 1));
-            GraphDrawer gd3 = envelopeGrapher.AddGraphToDefaultAxes(new LineGraph(new float[] { 0, 0.4f, 0.3f, 0.6f, 0.8f, 0.3f }, 0, 1) { color = Color.black });
-            Debug.Log("Drew placeholder.");
-            //envelopeGrapher.AddGraphToDefaultAxes(new SurfGraph(new float[,] { { 3, 2, 1 }, { 2, 1, 0 }, { 1, 2, 1 }, { 0, 2, 4 } }, 0, 1, 0, 1));
-
-            // Things to actually keep.
-            highlightAltitudeInput.Text = HighlightAltitude.ToString();
-            highlightSpeedInput.Text = HighlightSpeed.ToString();
-            highlightAoAInput.Text = HighlightAoA.ToString();
-
+            GraphableCollection collection = new GraphableCollection3() {
+                    new SurfGraph(new float[0,0], 0, 0, 0, 0),
+                    new OutlineMask(new float[0,0], 0, 0, 0, 0, v => v.z - 0.5f),
+                    new LineGraph(new float[]{ }, 0, 0) { color = Color.black }
+            };
+            envelopeGrapher.AddGraphToDefaultAxes(collection);
+            
+            System.Threading.Tasks.Task.Delay(1000).ContinueWith((_) =>
+            {
+                ((SurfGraph)collection[0]).SetValues(PlaceholderData.surfPlaceholder, 0, 1, 0, 1);
+                ((OutlineMask)collection[1]).SetValues(PlaceholderData.surfPlaceholder, 0, 1, 0, 1);
+                ((LineGraph)collection[2]).SetValues(new float[] { 0, 0.8f, 0.8f, 0.8f, 0.8f, 0.3f }, 0, 1);
+                Debug.Log("Drew placeholder.");
+            });
+            return;
+#endif
             if (!HighLogic.LoadedSceneIsEditor)
                 return;
             if (Instance != null)
@@ -352,6 +355,15 @@ namespace KerbalWindTunnel
                 return;
             }
             Instance = this;
+
+            highlightAltitudeInput.Text = HighlightAltitude.ToString();
+            highlightSpeedInput.Text = HighlightSpeed.ToString();
+            highlightAoAInput.Text = HighlightAoA.ToString();
+
+            aoaToggleArray.Items[0].IsOn = true;
+            aoaToggleArray.Items[1].IsOn = true;
+            velToggleArray.Items[4].IsOn = true;
+
             highlightManager = gameObject.AddComponent<HighlightManager>();
 
             InitializePlanetList();
@@ -367,11 +379,13 @@ namespace KerbalWindTunnel
             velocityCollection = velData.graphables;
             aoaCollection = aoaData.graphables;
             envelopeCollection = envelopeData.graphables;
+            envelopeDropdown.Value = 0;
 
-            velCurveGrapher.AddGraph(velocityCollection);
-            aoaCurveGrapher.AddGraph(aoaCollection);
-            envelopeGrapher.AddGraph(envelopeCollection);
+            velCurveGrapher.AddGraphToDefaultAxes(velocityCollection);
+            aoaCurveGrapher.AddGraphToDefaultAxes(aoaCollection);
+            envelopeGrapher.AddGraphToDefaultAxes(envelopeCollection);
 
+            Graphing.Extensions.ColorMapMaterial.SetClip(envelopeGrapher.PrimaryColorAxis.AxisMaterial, true);
 
             foreach (var resizer in GetComponentsInChildren<UI_Tools.RenderTextureResizer>())
                 resizer.ForceResize();
