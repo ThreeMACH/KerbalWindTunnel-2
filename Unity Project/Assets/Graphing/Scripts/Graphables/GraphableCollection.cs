@@ -218,7 +218,7 @@ namespace Graphing
         /// <returns></returns>
         public IGraphable this[string name]
         {
-            get => graphs.FirstOrDefault(g => string.Equals(g.Name, name)) ?? throw new KeyNotFoundException($"Collection does not contain {name}.");
+            get => graphs.FirstOrDefault(g => string.Equals(g.Name, name));
         }
 
         /// <summary>
@@ -728,7 +728,8 @@ namespace Graphing
                 try
                 {
                     this.SetVisibility(visible);
-                    this[exception].Visible = !visible;
+                    if (HasGraphNamed(exception))
+                        this[exception].Visible = !visible;
                 }
                 finally { ignoreChildEvents = false; }
             }
@@ -953,11 +954,26 @@ namespace Graphing
         /// Determines whether an element is in the <see cref="GraphableCollection"/>.
         /// </summary>
         /// <param name="item"></param>
-        /// <returns></returns>
+        /// <returns>
+        ///   <c>true</c> if the supplied item is in the collection; otherwise, <c>false</c>.
+        /// </returns>
         public bool Contains(IGraphable item)
         {
             return graphs.Contains(item);
         }
+
+        /// <summary>
+        /// Determines whether an element with the given name is in the <see cref="GraphableCollection"/>.
+        /// </summary>
+        /// <param name="name">The name of the item.</param>
+        /// <returns>
+        ///   <c>true</c> if a graph of the specified name exists in the collection; otherwise, <c>false</c>.
+        /// </returns>
+        public bool HasGraphNamed(string name)
+        {
+            return graphs.Any(graph => graph.Name == name);
+        }
+
         /// <summary>
         /// Copies the entire <see cref="GraphableCollection"/> to a compatible one-dimensional array,
         /// starting at the specified index of the target array.
