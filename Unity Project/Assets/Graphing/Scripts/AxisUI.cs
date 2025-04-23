@@ -49,31 +49,30 @@ namespace Graphing
         public static float CMinSelector(GraphDrawer g) => (g.Graph as IColorGraph)?.CMin ?? (g.Graph as IGraphable3)?.ZMin ?? float.NaN;
         public static float CMaxSelector(GraphDrawer g) => (g.Graph as IColorGraph)?.CMax ?? (g.Graph as IGraphable3)?.ZMax ?? float.NaN;
         public static bool DepthPredicate(GraphDrawer g) => g.Graph is IGraphable3;
-        public static bool ColorPredicate(GraphDrawer g) => g.Graph is IColorGraph || g.Graph is IGraphable3;
+        public static bool ColorPredicate(GraphDrawer g) => g.Graph is IColorGraph;
         public static bool CollectionPredicate(GraphDrawer g) => g.Graph is GraphableCollection;
+        public static bool VisiblePredicate(GraphDrawer g) => g.Graph.Visible;
 
         private (Func<GraphDrawer, float> min, Func<GraphDrawer, float> max) boundSelector = (XMinSelector, XMaxSelector);
         private IEnumerable<GraphDrawer> GraphDrawersAffectingBounds    // TODO: No reason to regenerate every time...
         {
             get
             {
-                IEnumerable<GraphDrawer> graphDrawers;
+                IEnumerable<GraphDrawer> graphDrawers = attachedGraphDrawers.Where(VisiblePredicate);
                 switch (_use)
                 {
                     case AxisDirection.Horizontal:
                     case AxisDirection.Vertical:
-                        return attachedGraphDrawers;
+                        return graphDrawers;
                     case AxisDirection.Depth:
-                        graphDrawers = attachedGraphDrawers.Where(DepthPredicate);
-                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(d=>d.Graph is GraphableCollection && !DepthPredicate(d)))
-                            graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(DepthPredicate));
+                        graphDrawers = graphDrawers.Where(DepthPredicate);
+                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d.Graph is GraphableCollection && !DepthPredicate(d)))
+                            graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(VisiblePredicate).Where(DepthPredicate));
                         return graphDrawers;
                     case AxisDirection.Color:
-                        graphDrawers = attachedGraphDrawers.Where(ColorPredicate);
-                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(d => d.Graph is GraphableCollection && !ColorPredicate(d)))
-                        {
-                            graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(ColorPredicate));
-                        }
+                        graphDrawers = graphDrawers.Where(ColorPredicate);
+                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d.Graph is GraphableCollection && !ColorPredicate(d)))
+                            graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(VisiblePredicate).Where(ColorPredicate));
                         return graphDrawers;
                     default:
                         return Enumerable.Empty<GraphDrawer>();
