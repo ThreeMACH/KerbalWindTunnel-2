@@ -24,8 +24,8 @@ namespace Graphing
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
-            inputField = GetComponentInChildren<UI_Tools.Universal_Text.UT_InputField>();
-            toggle = GetComponentInChildren<UnityEngine.UI.Toggle>();
+            inputField = GetComponentInChildren<UI_Tools.Universal_Text.UT_InputField>(true);
+            toggle = GetComponentInChildren<UnityEngine.UI.Toggle>(true);
             inputField.OnEndEdit.AddListener(OnEndEdit);
         }
         internal void UpdateField()

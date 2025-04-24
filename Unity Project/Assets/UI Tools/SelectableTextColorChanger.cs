@@ -27,8 +27,8 @@ public class SelectableTextColorChanger : MonoBehaviour, IPointerEnterHandler, I
 
     private void Start()
     {
-        text = GetComponentInChildren<Text>();
-        tmpText = GetComponentInChildren<TMPro.TMP_Text>();
+        text = GetComponentInChildren<Text>(true);
+        tmpText = GetComponentInChildren<TMPro.TMP_Text>(true);
         if (tmpText != null)
             setMethod = SetTextColorTMP;
         else

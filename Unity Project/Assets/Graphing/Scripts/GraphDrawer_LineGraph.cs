@@ -11,7 +11,7 @@ namespace Graphing
         {
             ScreenSpaceLineRenderer lineRenderer = gameObject.AddComponent<ScreenSpaceLineRenderer>();
             lineRenderer.material = lineVertexMaterial;
-            lineRenderer.WhitelistCamera(grapher.GetComponentInChildren<Camera>());
+            lineRenderer.WhitelistCamera(grapher.GetComponentInChildren<Camera>(true));
         }
 
         protected void GenerateLineGraph()
@@ -38,7 +38,7 @@ namespace Graphing
         {
             if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs))
                 GenerateLineGraph();
-            ScreenSpaceLineRenderer lineRenderer = GetComponentInChildren<ScreenSpaceLineRenderer>();
+            ScreenSpaceLineRenderer lineRenderer = GetComponentInChildren<ScreenSpaceLineRenderer>(true);
             if (forceRegenerate || redrawReasons.Key == typeof(ColorChangedEventArgs))
             {
                 if (lineGraphable.UseSingleColor)

@@ -335,8 +335,8 @@ namespace UI_Tools.Universal_Text
             Graphic targetGraphic = tmp_inputField.targetGraphic;
             Selectable.Transition transition = tmp_inputField.transition;
 
-            Transform textArea_transform = GetComponentInChildren<RectMask2D>()?.transform;
-            GameObject caret = textArea_transform?.GetComponentInChildren<TMP_SelectionCaret>()?.gameObject;
+            Transform textArea_transform = GetComponentInChildren<RectMask2D>(true)?.transform;
+            GameObject caret = textArea_transform?.GetComponentInChildren<TMP_SelectionCaret>(true)?.gameObject;
             if (textArea_transform?.parent == transform)
             {
                 for (int i = textArea_transform.childCount - 1; i >= 0; i--)

@@ -25,7 +25,7 @@ namespace Graphing
 
         public GameObject GraphDrawerPrefab => _graphDrawerPrefab;
 
-        public CrosshairController CrosshairController { get; protected set; }
+        public CrosshairController CrosshairController { get => GetComponentInChildren<CrosshairController>(true); }
 
         public int ZOffset2D { get; set; } = 10;
 
@@ -434,8 +434,7 @@ namespace Graphing
         {
             foreach (AxisUI axis in GetComponentsInChildren<AxisUI>())
                 axis.AxisBoundsChangedEvent += AxisBoundsChangedHandler;
-            GetComponentInChildren<CrosshairController>().OnClick += OnGraphClicked;
-            CrosshairController = GetComponentInChildren<CrosshairController>();
+            CrosshairController.OnClick += OnGraphClicked;
         }
 
         protected virtual void Update()
