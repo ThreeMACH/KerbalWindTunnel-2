@@ -501,24 +501,83 @@ namespace KerbalWindTunnel
 
         private void EnvelopeGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
-            envelopeInfo.Text = envelopeGrapher.GetDisplayValue(clickedPosition);
             clickedPosition = envelopeGrapher.GetGraphCoordinate(clickedPosition);
             HighlightSpeed = clickedPosition.x;
             HighlightAltitude = clickedPosition.y;
-            // Todo: Incorporate AoA
+            HighlightAoA = Mathf.Round(Mathf.Rad2Deg * SetEnvelopeDetails() * 10) / 10;
+
+            SetCrosshair(velCurveGrapher, HighlightSpeed);
+            SetVelDetails();
+
+            SetCrosshair(aoaCurveGrapher, HighlightAoA);
+            SetAoADetails();
+        }
+        private float SetEnvelopeDetails()
+        {
+            EnvelopePoint pointDetails = new EnvelopePoint(vessel, body.celestialBody, HighlightAltitude, HighlightSpeed);
+            envelopeInfo.Text = pointDetails.ToString();
+            return pointDetails.AoA_level;
         }
 
         private void AoaCurveGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
-            aoaCurveInfo.Text = aoaCurveGrapher.GetDisplayValue(clickedPosition);
             HighlightAoA = aoaCurveGrapher.GetGraphCoordinate(clickedPosition).x;
+            SetAoADetails();
+        }
+        private void SetAoADetails()
+        {
+            AoACurve.AoAPoint pointDetails = new AoACurve.AoAPoint(vessel, body.celestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
+            aoaCurveInfo.Text = pointDetails.ToString();
         }
 
         private void VelCurveGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
-            velCurveInfo.Text = velCurveGrapher.GetDisplayValue(clickedPosition);
             HighlightSpeed = velCurveGrapher.GetGraphCoordinate(clickedPosition).x;
-            // Todo: Incorporate AoA
+            HighlightAoA = Mathf.Round(Mathf.Rad2Deg * SetVelDetails() * 10) / 10;
+
+            SetCrosshair(envelopeGrapher, HighlightSpeed, HighlightAltitude);
+            SetEnvelopeDetails();
+
+            SetCrosshair(aoaCurveGrapher, HighlightAoA);
+            SetAoADetails();
+        }
+        private float SetVelDetails()
+        {
+            VelCurve.VelPoint pointDetails = new VelCurve.VelPoint(vessel, body.celestialBody, HighlightAltitude, HighlightSpeed);
+            velCurveInfo.Text = pointDetails.ToString();
+            return pointDetails.AoA_level;
+        }
+
+        private static void SetCrosshair(Grapher grapher, float x, float y)
+        {
+            if (grapher.CrosshairController == null)
+                return;
+            
+            Vector2 heldPosition = grapher.CrosshairController.NormalizedPosition;
+            AxisUI axis = grapher.PrimaryHorizontalAxis;
+            if (axis != null && axis.Min != axis.Max)
+            {
+                heldPosition.x = Mathf.InverseLerp(axis.Min, axis.Max, x);
+            }
+            axis = grapher.PrimaryVerticalAxis;
+            if (axis != null && axis.Min != axis.Max)
+            {
+                heldPosition.y = Mathf.InverseLerp(axis.Min, axis.Max, y);
+            }
+            grapher.CrosshairController.SetCrosshairPosition(heldPosition);
+        }
+
+        private static void SetCrosshair(Grapher grapher, float value)
+        {
+            if (grapher.CrosshairController == null)
+                return;
+            Vector2 heldPosition = grapher.CrosshairController.NormalizedPosition;
+            AxisUI horizontalAxis = grapher.PrimaryHorizontalAxis;
+            if (horizontalAxis != null && horizontalAxis.Min != horizontalAxis.Max)
+            {
+                heldPosition.x = Mathf.InverseLerp(horizontalAxis.Min, horizontalAxis.Max, value);
+                grapher.CrosshairController.SetCrosshairPosition(heldPosition);
+            }
         }
 
         private Vector2 crosshairsPosition;
