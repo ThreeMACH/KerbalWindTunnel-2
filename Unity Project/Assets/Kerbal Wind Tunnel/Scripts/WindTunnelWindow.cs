@@ -6,6 +6,7 @@ using UnityEngine.UI;
 using UI_Tools.Universal_Text;
 using Graphing;
 using KerbalWindTunnel.DataGenerators;
+using KSP.Localization;
 
 namespace KerbalWindTunnel
 {
@@ -459,7 +460,7 @@ namespace KerbalWindTunnel
         }
         private void ParseCelestialBodies(CelestialBody parent, int depth = 0)
         {
-            foreach (CBItem body in FlightGlobals.Bodies.Where(x => x.referenceBody == parent).Select(x => new CBItem(x, depth)).OrderBy(x => x.semiMajorRadius))
+            foreach (CBItem body in FlightGlobals.Bodies.Where(x => x.referenceBody == parent && x.atmosphere).Select(x => new CBItem(x, depth)).OrderBy(x => x.semiMajorRadius))
             {
                 if (body.parent == null)
                     continue;
@@ -882,6 +883,7 @@ namespace KerbalWindTunnel
                         upperSpeed = 7000;
                         break;
                 }
+                name = Localizer.Format("<<1>>", celestialBody.displayName);
             }
 
             public readonly CelestialBody celestialBody;
