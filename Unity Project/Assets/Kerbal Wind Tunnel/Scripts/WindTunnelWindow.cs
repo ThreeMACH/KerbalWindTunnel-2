@@ -192,7 +192,6 @@ namespace KerbalWindTunnel
         public float AscentTargetAltitude
         {
             get => _ascentTargetAlt;
-            // Setter only used externally.
             set
             {
                 if (_ascentTargetAlt == value)
@@ -207,7 +206,6 @@ namespace KerbalWindTunnel
         public float AscentTargetSpeed
         {
             get => _ascentTargetSpeed;
-            // Setter only used externally.
             set
             {
                 if (_ascentTargetSpeed == value)
@@ -420,6 +418,8 @@ namespace KerbalWindTunnel
                     RefreshData();
                 UpdateHighlightingMethod();
             }
+            else
+                highlightSpeedInput.Text = HighlightSpeed.ToString();
         }
 
         // Called by On End Edit of the highlight altitude entry field
@@ -432,6 +432,8 @@ namespace KerbalWindTunnel
                     RefreshData();
                 UpdateHighlightingMethod();
             }
+            else
+                highlightAltitudeInput.Text = HighlightAltitude.ToString();
         }
 
         // Called by On End Edit of the highlight AoA entry field
@@ -526,12 +528,17 @@ namespace KerbalWindTunnel
             Graphing.AxisUI axis;
             axis = envelopeGrapher.PrimaryHorizontalAxis;
             if (axis != null)
-                _ascentTargetSpeed = axis.Min + (axis.Max - axis.Min) * clickedPosition.x;
+            {
+                _ascentTargetSpeed = Mathf.Round(Mathf.Lerp(axis.Min, axis.Max, clickedPosition.x));
+                ascentSpeedInput.Text = _ascentTargetSpeed.ToString();
+            }
             axis = envelopeGrapher.PrimaryVerticalAxis;
             if (axis != null)
-                _ascentTargetAlt = axis.Min + (axis.Max - axis.Min) * clickedPosition.y;
-            envelopeGrapher.GetComponentInChildren<Graphing.UI.CrosshairController>().SetCrosshairPosition(crosshairsPosition);
-            EnvelopeGrapher_GraphClicked(this, crosshairsPosition);
+            {
+                _ascentTargetAlt = Mathf.Round(Mathf.Lerp(axis.Min, axis.Max, clickedPosition.y) / 10) * 10;
+                ascentAltitudeInput.Text = _ascentTargetAlt.ToString();
+            }
+            envelopeGrapher.CrosshairController?.SetCrosshairPosition(crosshairsPosition);
             selectOnGraphToggle.isOn = false;
             UpdateAscentTarget();
         }
@@ -544,12 +551,16 @@ namespace KerbalWindTunnel
             if (!value)
             {
                 if (selectingAscentTarget)
+                {
                     envelopeGrapher.GraphClicked -= EnvelopeGrapher_AscentClicked;
+                    envelopeGrapher.GraphClicked += EnvelopeGrapher_GraphClicked;
+                }
                 selectingAscentTarget = false;
                 return;
             }
-            crosshairsPosition = envelopeGrapher.GetComponentInChildren<Graphing.UI.CrosshairController>().NormalizedPosition;
+            crosshairsPosition = envelopeGrapher.CrosshairController.NormalizedPosition;
             envelopeGrapher.GraphClicked += EnvelopeGrapher_AscentClicked;
+            envelopeGrapher.GraphClicked -= EnvelopeGrapher_GraphClicked;
             selectingAscentTarget = true;
         }
 
