@@ -414,7 +414,7 @@ namespace KerbalWindTunnel
         // Called by On End Edit of the highlight speed entry field
         public void SetHighlightSpeed(string speed)
         {
-            if (float.TryParse(speed, out float result) && result != _highlightSpeed)
+            if (float.TryParse(speed, out float result) && result != _highlightSpeed && result >= 0)
             {
                 _highlightSpeed = result;
                 if (GraphMode == 1)
@@ -428,7 +428,7 @@ namespace KerbalWindTunnel
         // Called by On End Edit of the highlight altitude entry field
         public void SetHighlightAltitude(string altitude)
         {
-            if (float.TryParse(altitude, out float result) && result != _highlightAltitude)
+            if (float.TryParse(altitude, out float result) && result != _highlightAltitude && result > -CelestialBody.Radius * 0.5f && result <= CelestialBody.atmosphereDepth)
             {
                 _highlightAltitude = result;
                 if (GraphMode > 0)
@@ -442,11 +442,13 @@ namespace KerbalWindTunnel
         // Called by On End Edit of the highlight AoA entry field
         public void SetHighlightAoA(string AoA)
         {
-            if (float.TryParse(AoA, out float result) && result != _highlightAoA)
+            if (float.TryParse(AoA, out float result) && result != _highlightAoA && result >= -180 && result <= 180)
             {
                 _highlightAoA = result;
                 UpdateHighlightingMethod();
             }
+            else
+                highlightAoAInput.Text = HighlightAoA.ToString();
         }
 
         public readonly List<CBItem> planets = new List<CBItem>();
