@@ -9,6 +9,7 @@ namespace KerbalWindTunnel.AssetLoader
     [KSPAddon(KSPAddon.Startup.Instantly, true)]
     public class WindTunnelAssetLoader : MonoBehaviour
     {
+        public const string inputLockID = "WindTunnel";
         internal static bool useTMP = true;
         private const string assetBundlePath = "GameData/WindTunnel/windtunnelassetbundle.dat";
         private const string windowPrefabName = "Wind Tunnel Window";
@@ -57,8 +58,13 @@ namespace KerbalWindTunnel.AssetLoader
                 if (go.name == "AxisBoundPanel")
                     go.AddComponent<CanvasLayerSetter>();
                 if (useTMP)
-                    foreach (Dropdown dropdown in go.GetComponentsInChildren<Dropdown>())
+                    foreach (Dropdown dropdown in go.GetComponentsInChildren<Dropdown>(true))
                         dropdown.template?.gameObject.AddComponent<CanvasLayerSetter>();
+                foreach (UT_InputField inputField in go.GetComponentsInChildren<UT_InputField>(true))
+                {
+                    Extensions.InputLockSelectHandler inputLockHandler = inputField.gameObject.AddComponent<Extensions.InputLockSelectHandler>();
+                    inputLockHandler.Setup(inputLockID, ControlTypes.KEYBOARDINPUT);
+                }
             }
             if (_windowPrefab == null)
                 Debug.LogError("[KWT] Failed to load UI prefab.");
@@ -228,7 +234,7 @@ namespace KerbalWindTunnel.AssetLoader
         }
         private static void SetWindowSkin(GameObject rootObject, UIStyle style, SkinSettingStrictness strictness = SkinSettingStrictness.Loose)
         {
-            foreach (Image image in rootObject.GetComponentsInChildren<Image>())
+            foreach (Image image in rootObject.GetComponentsInChildren<Image>(true))
             {
                 for (Transform transform = image.transform; transform != null; transform = transform.parent)
                 {
