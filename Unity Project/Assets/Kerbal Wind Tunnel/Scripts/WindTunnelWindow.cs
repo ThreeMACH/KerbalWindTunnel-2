@@ -366,7 +366,7 @@ namespace KerbalWindTunnel
             highlightManager = gameObject.AddComponent<HighlightManager>();
 
             InitializePlanetList();
-            gAccel = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
+            gAccel = (float)(PhysicsGlobals.GravitationalAcceleration * Planetarium.fetch.Home.GeeASL);
             int homeIndex = planets.FindIndex(x => x.celestialBody == Planetarium.fetch.CurrentMainBody);
             if (homeIndex < 0)
                 homeIndex = 0;
@@ -515,7 +515,7 @@ namespace KerbalWindTunnel
         }
         private float SetEnvelopeDetails()
         {
-            EnvelopePoint pointDetails = new EnvelopePoint(vessel, body.celestialBody, HighlightAltitude, HighlightSpeed);
+            EnvelopePoint pointDetails = new EnvelopePoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed);
             envelopeInfo.Text = pointDetails.ToString();
             return pointDetails.AoA_level;
         }
@@ -527,7 +527,7 @@ namespace KerbalWindTunnel
         }
         private void SetAoADetails()
         {
-            AoACurve.AoAPoint pointDetails = new AoACurve.AoAPoint(vessel, body.celestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
+            AoACurve.AoAPoint pointDetails = new AoACurve.AoAPoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
             aoaCurveInfo.Text = pointDetails.ToString();
         }
 
@@ -544,7 +544,7 @@ namespace KerbalWindTunnel
         }
         private float SetVelDetails()
         {
-            VelCurve.VelPoint pointDetails = new VelCurve.VelPoint(vessel, body.celestialBody, HighlightAltitude, HighlightSpeed);
+            VelCurve.VelPoint pointDetails = new VelCurve.VelPoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed);
             velCurveInfo.Text = pointDetails.ToString();
             return pointDetails.AoA_level;
         }
@@ -628,26 +628,36 @@ namespace KerbalWindTunnel
         public static float gAccel;// = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
         public const float AoAdelta = 0.1f * Mathf.Deg2Rad;
         private CBItem body;// = Planetarium.fetch.CurrentMainBody;
-        private float _targetAltitude = 17700;
-        public float TargetAltitude
+        public CelestialBody CelestialBody { get => body.celestialBody; }
+
+#if DEBUG
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "DEBUG Only")]
+        private void CharacterizedTestDump()
         {
-            get { return _targetAltitude; }
-            set
+            VesselCache.SimulatedVessel simVessel_test = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
+            VesselCache.CharacterizedVessel charVessel = new VesselCache.CharacterizedVessel(simVessel_test);
+
+            AeroPredictor.Conditions conditions = new AeroPredictor.Conditions(CelestialBody, 100, 0);
+
+            Debug.Log("Truth Data");
+            Debug.LogFormat("Angle\tLift_true\tLift_Char\tDrag_true\tDrag_Char");
+            for (int i = -180; i <= 180; i++)
             {
-                _targetAltitude = value;
-                ascentAltitudeInput.Text = value.ToString("F0");
+                float lift_true = simVessel_test.GetLiftForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                float lift_char = charVessel.GetLiftForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                float drag_true = simVessel_test.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                float drag_char = charVessel.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * i);
+
+                Debug.LogFormat($"{Mathf.Deg2Rad * i}\t{lift_true}\t{lift_char}\t{drag_true}\t{drag_char}");
             }
+            Debug.Log("End data");
+
+            Debug.Log($"{simVessel_test.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * 5)} == {charVessel.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * 5)}");
+            Debug.Log("Vessel Lift Curve");
+            foreach (var k in charVessel.surfaceLift[0].liftCurve.Curve.keys)
+                Debug.LogFormat($"{k.time}\t{k.value}\t{k.inTangent}\t{k.outTangent}");
         }
-        private float _targetSpeed = 1410;
-        public float TargetSpeed
-        {
-            get { return _targetSpeed; }
-            set
-            {
-                _targetSpeed = value;
-                ascentSpeedInput.Text = value.ToString("F1");
-            }
-        }
+#endif
 
         private void RefreshData()
         {
@@ -667,17 +677,17 @@ namespace KerbalWindTunnel
                     maxX = envelopeGrapher.PrimaryHorizontalAxis.AutoSetMax ? body.upperSpeed : envelopeGrapher.PrimaryHorizontalAxis.Max;
                     minY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryVerticalAxis.Min;
                     maxY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMax ? body.upperAlt : envelopeGrapher.PrimaryVerticalAxis.Max;
-                    taskTracker_surf = envelopeData.Calculate(vessel, cancellationTokenSource.Token, body.celestialBody, minX, maxX, minY, maxY);
+                    taskTracker_surf = envelopeData.Calculate(vessel, cancellationTokenSource.Token, CelestialBody, minX, maxX, minY, maxY);
                     break;
                 case 1:
                     minX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMin ? -20 : aoaCurveGrapher.PrimaryHorizontalAxis.Min;
                     maxX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMax ? 20 : aoaCurveGrapher.PrimaryHorizontalAxis.Max;
-                    taskTracker_aoa = aoaData.Calculate(vessel, cancellationTokenSource.Token, body.celestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
+                    taskTracker_aoa = aoaData.Calculate(vessel, cancellationTokenSource.Token, CelestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
                     break;
                 case 2:
                     minX = Mathf.Min(0, velCurveGrapher.PrimaryHorizontalAxis.Min);
                     maxX = Mathf.Max(body.upperSpeed, velCurveGrapher.PrimaryHorizontalAxis.Max);
-                    taskTracker_vel = velData.Calculate(vessel, cancellationTokenSource.Token, body.celestialBody, HighlightAltitude, minX, maxX);
+                    taskTracker_vel = velData.Calculate(vessel, cancellationTokenSource.Token, CelestialBody, HighlightAltitude, minX, maxX);
                     break;
             }
         }
@@ -694,7 +704,7 @@ namespace KerbalWindTunnel
         // Called when the highlighting mode or conditions are changed
         private void UpdateHighlightingMethod()
         {
-            highlightManager?.UpdateHighlighting((HighlightManager.HighlightMode)HighlightMode, body.celestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
+            highlightManager?.UpdateHighlighting((HighlightManager.HighlightMode)HighlightMode, CelestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
         }
 
         // Called when the Graph Mode is changed by a toggle or externally.
