@@ -190,6 +190,8 @@ namespace KerbalWindTunnel
         }
         private bool _showTimeOptimalPath = true;
 
+        public bool autoSetAscentTarget = true;
+
         public float AscentTargetAltitude
         {
             get => _ascentTargetAlt;
@@ -202,7 +204,7 @@ namespace KerbalWindTunnel
                 UpdateAscentTarget();
             }
         }
-        private float _ascentTargetAlt;
+        private float _ascentTargetAlt = -1;
 
         public float AscentTargetSpeed
         {
@@ -216,7 +218,7 @@ namespace KerbalWindTunnel
                 UpdateAscentTarget();
             }
         }
-        private float _ascentTargetSpeed;
+        private float _ascentTargetSpeed = -1;
 
         // Set by each of the Graph Mode toggles
         public int GraphMode
@@ -485,9 +487,21 @@ namespace KerbalWindTunnel
         {
             if (float.TryParse(altitude, out float result) && result != _ascentTargetAlt)
             {
-                _ascentTargetAlt = result;
+                if (result >= 0)
+                {
+                    _ascentTargetAlt = result;
+                    autoSetAscentTarget = false;
+                }
+                else
+                {
+                    _ascentTargetAlt = -1;
+                    autoSetAscentTarget = true;
+                    ascentAltitudeInput.Text = "";
+                }
                 UpdateAscentTarget();
             }
+            else
+                ascentAltitudeInput.Text = AscentTargetAltitude >= 0 ? AscentTargetAltitude.ToString() : "";
         }
 
         // Called in On End Edit of the ascent target entry box
@@ -495,9 +509,21 @@ namespace KerbalWindTunnel
         {
             if (float.TryParse(speed, out float result) && result != _ascentTargetSpeed)
             {
-                _ascentTargetSpeed = result;
+                if (result >= 0)
+                {
+                    _ascentTargetSpeed = result;
+                    autoSetAscentTarget = false;
+                }
+                else
+                {
+                    _ascentTargetSpeed = -1;
+                    autoSetAscentTarget = true;
+                    ascentSpeedInput.Text = "";
+                }
                 UpdateAscentTarget();
             }
+            else
+                ascentSpeedInput.Text = AscentTargetSpeed >= 0 ? AscentTargetSpeed.ToString() : "";
         }
 
         private void EnvelopeGrapher_GraphClicked(object _, Vector2 clickedPosition)
@@ -592,14 +618,21 @@ namespace KerbalWindTunnel
                 _ascentTargetSpeed = Mathf.Round(Mathf.Lerp(axis.Min, axis.Max, clickedPosition.x));
                 ascentSpeedInput.Text = _ascentTargetSpeed.ToString();
             }
+            else
+                _ascentTargetSpeed = -1;
+
             axis = envelopeGrapher.PrimaryVerticalAxis;
             if (axis != null)
             {
                 _ascentTargetAlt = Mathf.Round(Mathf.Lerp(axis.Min, axis.Max, clickedPosition.y) / 10) * 10;
                 ascentAltitudeInput.Text = _ascentTargetAlt.ToString();
             }
+            else
+                _ascentTargetAlt = -1;
+
             envelopeGrapher.CrosshairController?.SetCrosshairPosition(crosshairsPosition);
             selectOnGraphToggle.isOn = false;
+            autoSetAscentTarget = false;
             UpdateAscentTarget();
         }
 
@@ -714,6 +747,14 @@ namespace KerbalWindTunnel
         private void UpdateAscentTarget()
         {
             envelopeData.CalculateOptimalLines(cancellationTokenSource.Token);
+        }
+        internal void ProvideAscentTarget((float speed, float altitude) maxSustainableEnergy)
+        {
+            if (_ascentTargetSpeed < 0)
+                _ascentTargetSpeed = maxSustainableEnergy.speed;
+            if (_ascentTargetAlt < 0)
+                _ascentTargetAlt = maxSustainableEnergy.altitude;
+            // TODO: Set the text fields to these numbers. Can't do it here since this will be called from a worker thread.
         }
 
         // Called whenever one of the AoA graph selection toggles *changes*.

@@ -11,6 +11,7 @@ namespace KerbalWindTunnel.DataGenerators
 {
     public class EnvelopeSurf
     {
+        private static readonly (float speed, float altitude) ascentOrigin = (10, 0);
         public readonly GraphableCollection graphables = new GraphableCollection3();
         public EnvelopePoint[,] EnvelopePoints { get; private set; } = null;
         private float left, right, bottom, top;
@@ -240,11 +241,43 @@ namespace KerbalWindTunnel.DataGenerators
         private void CalculateOptimalLinesTask(ResultsType results, CancellationToken cancellationToken)
         {
             EnvelopePoint[,] data = results.data;
-            (float, float) initialCoords = (10, 0);
-            (float, float) exitCoords = (WindTunnelWindow.Instance.AscentTargetSpeed, WindTunnelWindow.Instance.AscentTargetAltitude);
-            (float, float, float) speedBounds = (results.speedBounds.left, (results.speedBounds.right - results.speedBounds.left) / (data.GetUpperBound(0) + 1), results.speedBounds.right);
-            (float, float, float) altitudeBounds = (results.altitudeBounds.bottom, (results.altitudeBounds.top - results.altitudeBounds.bottom) / (data.GetUpperBound(1) + 1), results.altitudeBounds.top);
+            
+            (float speed, float altitude) initialCoords = ascentOrigin;
+            (float speed, float altitude) exitCoords = (WindTunnelWindow.Instance.AscentTargetSpeed, WindTunnelWindow.Instance.AscentTargetAltitude);
+            (float lower, float step, float upper) speedBounds = (results.speedBounds.left, (results.speedBounds.right - results.speedBounds.left) / (data.GetUpperBound(0) + 1), results.speedBounds.right);
+            (float lower, float step, float upper) altitudeBounds = (results.altitudeBounds.bottom, (results.altitudeBounds.top - results.altitudeBounds.bottom) / (data.GetUpperBound(1) + 1), results.altitudeBounds.top);
+
+            if (WindTunnelWindow.Instance.autoSetAscentTarget || exitCoords.speed < 0 || exitCoords.altitude < 0)
+            {
+                exitCoords = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
+                WindTunnelWindow.Instance.ProvideAscentTarget(exitCoords);
+            }
             EnvelopeLine.CalculateOptimalLines(exitCoords, initialCoords, speedBounds, altitudeBounds, data, cancellationToken, graphables);
+        }
+
+        public static (float speed, float altitude) GetMaxSustainableEnergy(EnvelopePoint[,] data, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds)
+        {
+            int speedLength = data.GetUpperBound(0);
+            int altLength = data.GetUpperBound(1);
+            (float speed, float altitude) result = ascentOrigin;
+            int altIndex = 0;
+            float g = (float)(WindTunnelWindow.Instance.CelestialBody.GeeASL * PhysicsGlobals.GravitationalAcceleration);
+            for (int h = 0; h <= altLength; h++)
+            {
+                // Below this speed, the energy is less than the current result
+                float Vmin = Mathf.Sqrt(2 * g * (altitudeBounds.step * (altIndex - h)) + result.speed * result.speed);
+
+                for (int v = speedLength; v >= 0 && v * speedBounds.step + speedBounds.lower >= Vmin; v--)
+                {
+                    if (data[v, h].Thrust_excess >= 0)
+                    {
+                        altIndex = h;
+                        result = (speedBounds.step * v + speedBounds.lower, altitudeBounds.step * h + altitudeBounds.lower);
+                        break;
+                    }
+                }
+            }
+            return result;
         }
 
         private readonly struct SurfCoords : IEquatable<SurfCoords>
