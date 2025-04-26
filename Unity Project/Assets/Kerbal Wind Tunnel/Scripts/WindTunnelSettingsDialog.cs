@@ -191,32 +191,29 @@ namespace KerbalWindTunnel
             List<DialogGUIBase> dialog = new List<DialogGUIBase>
             {
                 new DialogGUIToggle(WindTunnelSettings.UseCoefficients, "Lift, Drag as coefficients",
-                    delegate (bool b) {
-                        //Instance.graphDirty = true;
-                        //Instance.graphRequested = false;
-                        WindTunnelSettings.UseCoefficients = !WindTunnelSettings.UseCoefficients;
-                        ////GraphGenerator.UpdateGraphs();
+                    b => {
+                        WindTunnelSettings.UseCoefficients = b;
+                        // TODO: Have this update the graphs.
+                        //GraphGenerator.UpdateGraphs();
                     }),
-                new DialogGUIToggle(WindTunnelSettings.DefaultToMach, "Default to speed as Mach", delegate (bool b) { WindTunnelSettings.DefaultToMach = !WindTunnelSettings.DefaultToMach; }),
-                new DialogGUIToggle(WindTunnelSettings.StartMinimized, "Start minimized", delegate (bool b) { WindTunnelSettings.StartMinimized = !WindTunnelSettings.StartMinimized; }),
-                new DialogGUIToggle(WindTunnelSettings.UseSingleColorHighlighting, "Use simple part highlighting", delegate (bool b) {WindTunnelSettings.UseSingleColorHighlighting = !WindTunnelSettings.UseSingleColorHighlighting; }),
-                new DialogGUIToggle(WindTunnelSettings.ShowEnvelopeMask, "Show flight envelope outline on graphs", delegate (bool b) {WindTunnelSettings.ShowEnvelopeMask = !WindTunnelSettings.ShowEnvelopeMask; }),
-                new DialogGUIToggle(WindTunnelSettings.ShowEnvelopeMaskAlways && WindTunnelSettings.ShowEnvelopeMask, "Show flight envelope outline even on flight envelope", delegate (bool b) {if(WindTunnelSettings.ShowEnvelopeMask) WindTunnelSettings.ShowEnvelopeMaskAlways = !WindTunnelSettings.ShowEnvelopeMaskAlways; }),
-                ////new DialogGUIToggle(WindTunnelSettings.AutoFitAxes, string.Format("Auto-fit axes to graph data\n(Uncheck to plot full range)"), delegate (bool b) {WindTunnelSettings.AutoFitAxes = !WindTunnelSettings.AutoFitAxes; grapher.AutoFitAxes = WindTunnelSettings.AutoFitAxes; })
+                //new DialogGUIToggle(WindTunnelSettings.DefaultToMach, "Default to speed as Mach", (b) => WindTunnelSettings.DefaultToMach = b), // TODO: Implement this
+                new DialogGUIToggle(WindTunnelSettings.UseCharacterized, "Use faster vessel characterization",  b=> WindTunnelSettings.UseCharacterized = b),
+                new DialogGUIToggle(WindTunnelSettings.StartMinimized, "Start minimized", b => WindTunnelSettings.StartMinimized = b),
+                new DialogGUIToggle(WindTunnelSettings.UseSingleColorHighlighting, "Use simple part highlighting", b => WindTunnelSettings.UseSingleColorHighlighting = b),
+                new DialogGUIToggle(() => WindTunnelSettings.ShowEnvelopeMask, "Show flight envelope outline on graphs", b => WindTunnelSettings.ShowEnvelopeMask = b),
+                new DialogGUIToggle(WindTunnelSettings.ShowEnvelopeMaskAlways && WindTunnelSettings.ShowEnvelopeMask, "Show flight envelope outline even on flight envelope", b => {WindTunnelSettings.ShowEnvelopeMaskAlways = b; WindTunnelSettings.ShowEnvelopeMask |= b; }),
             };
 
-            /*if (!FARVesselCache.FARHook.FARInstalled)
-                dialog.Add(new DialogGUIHorizontalLayout(TextAnchor.MiddleLeft,
-                    new DialogGUILabel(() => string.Format("Propeller rotation evaluations: {0}", WindTunnelSettings.RotationCount), UISkinManager.defaultSkin.toggle, true),
-                    new DialogGUISlider(() => Mathf.Log(WindTunnelSettings.RotationCount, 2), 0, 4, true, 100, 20, value => WindTunnelSettings.RotationCount = (int)Mathf.Pow(2, value))));
-            */
-            if (ToolbarManager.ToolbarAvailable)
-                dialog.Add(new DialogGUIToggle(WindTunnelSettings.UseBlizzy, "Use Blizzy's Toolbar", delegate (bool b) { WindTunnelSettings.UseBlizzy = !WindTunnelSettings.UseBlizzy; }));
 
-            dialog.Add(new DialogGUIButton("Accept", delegate {
-                ////WindTunnelWindow.Instance.Visible = true;
-                settingsDialog.Dismiss();
-            }));
+            dialog.Add(new DialogGUIHorizontalLayout(TextAnchor.MiddleLeft,
+                new DialogGUILabel(() => string.Format("Propeller rotation evaluations: {0}", WindTunnelSettings.RotationCount), UISkinManager.defaultSkin.toggle, true),
+                new DialogGUISlider(() => Mathf.Log(WindTunnelSettings.RotationCount, 2), 0, 4, true, 100, 20, value => WindTunnelSettings.RotationCount = (int)Mathf.Pow(2, value))
+                ));
+
+            if (ToolbarManager.ToolbarAvailable)
+                dialog.Add(new DialogGUIToggle(WindTunnelSettings.UseBlizzy, "Use Blizzy's Toolbar", b => WindTunnelSettings.UseBlizzy = b));
+
+            dialog.Add(new DialogGUIButton("Accept", () => settingsDialog.Dismiss()));
 
             return PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new MultiOptionDialog("KWTSettings", "", "Kerbal Wind Tunnel Settings", UISkinManager.defaultSkin, dialog.ToArray()),
