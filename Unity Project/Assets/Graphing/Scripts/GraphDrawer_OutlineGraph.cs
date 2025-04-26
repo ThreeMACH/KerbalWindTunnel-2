@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using Graphing.Meshing;
+using Graphing.Extensions;
 
 namespace Graphing
 {
@@ -25,6 +26,7 @@ namespace Graphing
 
         protected int DrawOutlineGraph(OutlineMask outlineMask, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
+            const float tessTolerance = 1 / 16f;
             // TODO: Most of this is working, but wrong. E.G. Shouldn't need a new mesh every bounds changed, just shift the mesh position.
             if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs) || redrawReasons.Key == typeof(BoundsChangedEventArgs))
             {
@@ -34,7 +36,7 @@ namespace Graphing
                     {
                         SurfMeshGeneration.ConstructQuadSurfMesh(outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, mesh, false);
                         QuadTessellator tessellator = new QuadTessellator(mesh);
-                        tessellator.SubdivideForDegeneracy(1, 1);
+                        tessellator.SubdivideForDegeneracy(Mathf.Abs(outlineMask.Values.Max() - outlineMask.Values.Min()), tessTolerance);
                         mesh.SetVertices(tessellator.Vertices.ToList());
                         mesh.SetIndices(tessellator.Indices.ToList(), MeshTopology.Triangles, 0);
                         mesh.SetUVs(0, tessellator.Coords.ToList());
