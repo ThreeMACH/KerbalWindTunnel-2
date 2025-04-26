@@ -167,7 +167,7 @@ namespace KerbalWindTunnel
 
         public abstract Vector3 GetThrustForce(Conditions conditions, float AoA);
         public virtual Vector3 GetThrustForce(Conditions conditions) => GetThrustForce(conditions, 0);
-        public virtual Vector3 GetthrustForceFlightFrame(Conditions conditions, float AoA)
+        public virtual Vector3 GetThrustForceFlightFrame(Conditions conditions, float AoA)
         {
             return ToFlightFrame(GetThrustForce(conditions, AoA), AoA);
         }
