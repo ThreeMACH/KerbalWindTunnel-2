@@ -15,7 +15,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool useCharacterized = false;
+        private bool useCharacterized = true;
 
         public static bool UseCoefficients
         {
@@ -27,7 +27,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool useCoefficients = true;
+        private bool useCoefficients = true;
 
         public static bool DefaultToMach
         {
@@ -39,7 +39,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool defaultToMach;
+        private bool defaultToMach;
 
         public static bool StartMinimized
         {
@@ -51,7 +51,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool startMinimized;
+        private bool startMinimized;
 
         public static bool UseSingleColorHighlighting
         {
@@ -64,7 +64,7 @@ namespace KerbalWindTunnel
         }
 
         [Persistent]
-        public bool useSingleColorHighlighting = true;
+        private bool useSingleColorHighlighting = true;
 
         public static bool HighlightIgnoresLiftingSurfaces
         {
@@ -77,7 +77,7 @@ namespace KerbalWindTunnel
         }
 
         [Persistent]
-        public bool highlightIgnoresLiftingSurfaces = false;
+        private bool highlightIgnoresLiftingSurfaces = false;
 
         public static bool ShowEnvelopeMask
         {
@@ -89,7 +89,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool showEnvelopeMask = true;
+        private bool showEnvelopeMask = true;
 
         public static bool ShowEnvelopeMaskAlways
         {
@@ -101,7 +101,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool showEnvelopeMaskAlways = false;
+        private bool showEnvelopeMaskAlways = false;
 
         public static bool UseBlizzy
         {
@@ -113,7 +113,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool useBlizzy = false;
+        private bool useBlizzy = false;
 
         public static bool AutoFitAxes
         {
@@ -125,7 +125,7 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public bool autoFitAxes = true;
+        private bool autoFitAxes = true;
 
         public static int RotationCount
         {
@@ -137,12 +137,12 @@ namespace KerbalWindTunnel
             }
         }
         [Persistent]
-        public int rotationCount = 1;
+        private int rotationCount = 1;
 
         private static bool settingsChanged = false;
         private static bool settingsLoaded = false;
 
-        internal static WindTunnelSettings Instance = new WindTunnelSettings();
+        public static readonly WindTunnelSettings Instance = new WindTunnelSettings();
 
         public static void InitializeSettings()
         {

@@ -24,7 +24,7 @@ namespace KerbalWindTunnel.VesselCache
 
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
-            int rotationCount = WindTunnelSettings.Instance.rotationCount;
+            int rotationCount = WindTunnelSettings.RotationCount;
 
             float Q = 0.0005f * conditions.atmDensity;
 
@@ -133,7 +133,7 @@ namespace KerbalWindTunnel.VesselCache
 
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
-            int rotationCount = WindTunnelSettings.Instance.rotationCount;
+            int rotationCount = WindTunnelSettings.RotationCount;
             float Q = 0.0005f * conditions.atmDensity;
 
             for (int r = 0; r < rotationCount; r++)
@@ -196,7 +196,7 @@ namespace KerbalWindTunnel.VesselCache
 
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
-            int rotationCount = Math.Abs(angularVelocity) > 0 ? WindTunnelSettings.Instance.rotationCount : 1;
+            int rotationCount = Math.Abs(angularVelocity) > 0 ? WindTunnelSettings.RotationCount : 1;
 
             float Q = 0.0005f * conditions.atmDensity;
 
@@ -300,7 +300,7 @@ namespace KerbalWindTunnel.VesselCache
                 engineThrust = Vector3.zero;
                 engineTorque = Vector3.zero;
                 float Q = 0.0005f * conditions.atmDensity;
-                int rotationCount = WindTunnelSettings.Instance.rotationCount;
+                int rotationCount = WindTunnelSettings.RotationCount;
 
                 for (int r = 0; r < rotationCount; r++)
                 {
@@ -349,7 +349,7 @@ namespace KerbalWindTunnel.VesselCache
                 Vector3 propThrust = Vector3.zero;
                 Vector3 propTorque = Vector3.zero;
                 float Q = 0.0005f * conditions.atmDensity;
-                int rotationCount = WindTunnelSettings.Instance.rotationCount;
+                int rotationCount = WindTunnelSettings.RotationCount;
 
                 for (int r = 0; r < rotationCount; r++)
                 {
@@ -422,7 +422,7 @@ namespace KerbalWindTunnel.VesselCache
             if (enginesUseVelCurve && isRotating)
             {
                 burnRate = 0;
-                int rotationCount = WindTunnelSettings.Instance.rotationCount;
+                int rotationCount = WindTunnelSettings.RotationCount;
                 for (int r = 0; r < rotationCount; r++)
                 {
                     Quaternion rotation = Quaternion.AngleAxis(360f / rotationCount * r, axis);

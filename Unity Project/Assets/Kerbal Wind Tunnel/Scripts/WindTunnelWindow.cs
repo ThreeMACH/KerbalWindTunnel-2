@@ -802,7 +802,7 @@ namespace KerbalWindTunnel
             }
 
             vessel = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
-            if (WindTunnelSettings.Instance.useCharacterized && vessel is VesselCache.SimulatedVessel simVessel)
+            if (WindTunnelSettings.UseCharacterized && vessel is VesselCache.SimulatedVessel simVessel)
             {
                 vessel = new VesselCache.CharacterizedVessel(simVessel);
             }
