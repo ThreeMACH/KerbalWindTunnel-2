@@ -21,18 +21,20 @@ namespace Graphing
             {
                 if (lineGraph.Values == null)
                     return;
-                values = lineGraph.Values.Select(v2 => lineGraph.Transpose ? new Vector3(v2.y, v2.x, 0) : new Vector3(v2.x, v2.y, 0)).ToArray();
+                values = lineGraph.Values.Select(v2 => lineGraph.Transpose ? new Vector3(v2.y, v2.x, 0) : new Vector3(v2.x, v2.y, 0)).Where(NotNaN).ToArray();
             }
             else// if (graph is Line3Graph line3Graph)
             {
                 Line3Graph line3Graph = (Line3Graph)graph;
                 if (line3Graph.Values == null)
                     return;
-                values = line3Graph.Values.Select(v3 => line3Graph.Transpose ? new Vector3(v3.y, v3.x, -v3.z) : new Vector3(v3.x, v3.y, -v3.z)).ToArray();
+                values = line3Graph.Values.Select(v3 => line3Graph.Transpose ? new Vector3(v3.y, v3.x, -v3.z) : new Vector3(v3.x, v3.y, -v3.z)).Where(NotNaN).ToArray();
             }
             ScreenSpaceLineRenderer lineRenderer = GetComponent<ScreenSpaceLineRenderer>();
             lineRenderer.Points = values;
         }
+
+        protected bool NotNaN(Vector3 v) => !(float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z));
 
         protected int DrawLineGraph(ILineGraph lineGraphable, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
