@@ -8,6 +8,11 @@ namespace Graphing
     [RequireComponent(typeof(RectTransform))]
     public partial class GraphDrawer : MonoBehaviour
     {
+        static readonly Unity.Profiling.ProfilerMarker s_surfgraphMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(SurfGraph)");
+        static readonly Unity.Profiling.ProfilerMarker s_outlineMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(Outline)");
+        static readonly Unity.Profiling.ProfilerMarker s_lineMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(LineGraph)");
+        static readonly Unity.Profiling.ProfilerMarker s_genericMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw");
+
         [SerializeField]
         public Material surfGraphMaterial;
         [SerializeField]
@@ -309,6 +314,17 @@ namespace Graphing
 
         protected virtual void Draw(bool forceRegenerate = false)
         {
+#if ENABLE_PROFILER
+            if (graph is ILineGraph)
+                s_lineMarker.Begin();
+            else if (graph is SurfGraph)
+                s_surfgraphMarker.Begin();
+            else if (graph is OutlineMask)
+                s_outlineMarker.Begin();
+            else
+                s_genericMarker.Begin();
+#endif
+
             int localFlag = 0;
             lock (redrawReasons)
             {
@@ -353,6 +369,17 @@ namespace Graphing
                 redrawReasons.Clear();
                 markedForRedraw = false;
             }
+
+#if ENABLE_PROFILER
+            if (graph is ILineGraph)
+                s_lineMarker.End();
+            else if (graph is SurfGraph)
+                s_surfgraphMarker.End();
+            else if (graph is OutlineMask)
+                s_outlineMarker.End();
+            else
+                s_genericMarker.End();
+#endif
         }
 
         /// <summary>

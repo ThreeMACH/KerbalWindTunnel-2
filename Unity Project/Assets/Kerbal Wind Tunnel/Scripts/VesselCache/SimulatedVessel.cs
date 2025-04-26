@@ -10,6 +10,8 @@ namespace KerbalWindTunnel.VesselCache
     public class SimulatedVessel : AeroPredictor, IReleasable
     {
         public static bool accountForControls = false;
+        static readonly Unity.Profiling.ProfilerMarker s_getLiftMarker = new Unity.Profiling.ProfilerMarker("SimulatedVessel.GetLiftForce");
+        static readonly Unity.Profiling.ProfilerMarker s_getAeroMarker = new Unity.Profiling.ProfilerMarker("SimulatedVessel.GetAeroForce");
 
         /*RootSolverSettings pitchInputSolverSettings = new RootSolverSettings(
             RootSolver.LeftBound(-1),
@@ -51,35 +53,23 @@ namespace KerbalWindTunnel.VesselCache
 
         public Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
-            return partCollection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out torque, torquePoint);
+            s_getAeroMarker.Begin();
+            Vector3 result = partCollection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out torque, torquePoint);
+            s_getAeroMarker.End();
+            return result;
         }
         public override Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput = 0)
-        {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.GetAeroForce(Conditions, float, float)");
-#endif
-            var value = GetAeroForce(conditions, AoA, pitchInput, out _, Vector3.zero);
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return value;
-        }
+        => GetAeroForce(conditions, AoA, pitchInput, out _, Vector3.zero);
 
         public Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
-            return partCollection.GetLiftForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out torque, torquePoint);
+            s_getLiftMarker.Begin();
+            Vector3 result = partCollection.GetLiftForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out torque, torquePoint);
+            s_getLiftMarker.End();
+            return result;
         }
         public override Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput = 0)
-        {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.GetLiftFoce(Conditions, float, float)");
-#endif
-            var value = GetLiftForce(conditions, AoA, pitchInput, out _, Vector3.zero);
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return value;
-        }
+            => GetLiftForce(conditions, AoA, pitchInput, out _, Vector3.zero);
 
         // TODO: Add ITorqueProvider and thrust effect on torque
         public override float GetAoA(Conditions conditions, float offsettingForce, bool useThrust = true, bool dryTorque = false, float guess = float.NaN, float pitchInputGuess = float.NaN, bool lockPitchInput = false, float tolerance = 0.0003f)

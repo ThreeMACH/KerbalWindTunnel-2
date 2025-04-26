@@ -8,6 +8,11 @@ namespace KerbalWindTunnel.VesselCache
 {
     public class PartCollection : IReleasable
     {
+        static readonly Unity.Profiling.ProfilerMarker s_getAeroMarker = new Unity.Profiling.ProfilerMarker("PartCollection.GetAeroForce");
+        static readonly Unity.Profiling.ProfilerMarker s_getAeroMarker_static = new Unity.Profiling.ProfilerMarker("PartCollection.GetAeroForceStatic");
+        static readonly Unity.Profiling.ProfilerMarker s_getAeroMarker_dynamic = new Unity.Profiling.ProfilerMarker("PartCollection.GetAeroForceDynamic");
+        static readonly Unity.Profiling.ProfilerMarker s_getLiftMarker = new Unity.Profiling.ProfilerMarker("PartCollection.GetLiftForce");
+
         public SimulatedVessel parentVessel;
 
         public PartCollection parentCollection;
@@ -23,15 +28,18 @@ namespace KerbalWindTunnel.VesselCache
 
         public virtual Vector3 GetAeroForce(Vector3 inflow, AeroPredictor.Conditions conditions, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
+            s_getAeroMarker.Begin();
             Vector3 aeroForce = GetAeroForceStatic(inflow, conditions, out torque, torquePoint);
             aeroForce += GetAeroForceDynamic(inflow, conditions, pitchInput, out Vector3 pTorque, torquePoint);
             torque += pTorque;
+            s_getAeroMarker.End();
             return aeroForce;
         }
 
         // Excludes control surfaces that may be deflected.
         public virtual Vector3 GetAeroForceStatic(Vector3 inflow, AeroPredictor.Conditions conditions, out Vector3 torque, Vector3 torquePoint)
         {
+            s_getAeroMarker_static.Begin();
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
 
@@ -74,12 +82,14 @@ namespace KerbalWindTunnel.VesselCache
                 torque += pTorque;
             }
 
+            s_getAeroMarker_static.End();
             return aeroForce;
         }
 
         // Includes only control surfaces that may be deflected.
         public virtual Vector3 GetAeroForceDynamic(Vector3 inflow, AeroPredictor.Conditions conditions, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
+            s_getAeroMarker_dynamic.Begin();
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
 
@@ -108,11 +118,13 @@ namespace KerbalWindTunnel.VesselCache
                 torque += pTorque;
             }
 
+            s_getAeroMarker_dynamic.End();
             return aeroForce;
         }
 
         public virtual Vector3 GetLiftForce(Vector3 inflow, AeroPredictor.Conditions conditions, float pitchInput, out Vector3 torque, Vector3 torquePoint)
         {
+            s_getLiftMarker.Begin();
             Vector3 aeroForce = Vector3.zero;
             torque = Vector3.zero;
 
@@ -153,6 +165,7 @@ namespace KerbalWindTunnel.VesselCache
                 torque += pTorque;
             }
 
+            s_getLiftMarker.End();
             return aeroForce;
         }
 

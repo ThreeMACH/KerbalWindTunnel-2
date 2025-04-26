@@ -9,7 +9,15 @@ namespace KerbalWindTunnel.VesselCache
 {
     public class CharacterizedVessel : AeroPredictor, ILiftAoADerivativePredictor, IDisposable
     {
+        static readonly Unity.Profiling.ProfilerMarker s_getLiftMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.GetLiftForce");
+        static readonly Unity.Profiling.ProfilerMarker s_getLiftMagMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.GetLiftForceMagnitude");
+        static readonly Unity.Profiling.ProfilerMarker s_getDragMagMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.GetDragForceMagnitude");
+        static readonly Unity.Profiling.ProfilerMarker s_evalLiftMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.EvaluateLiftCurve");
+        static readonly Unity.Profiling.ProfilerMarker s_evalDragMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.EvaluateDragCurve");
+
         public readonly SimulatedVessel vessel;
+
+        public override AeroPredictor GetThreadSafeObject() => this;
 
         public override float Mass => vessel.Mass;
 
@@ -218,6 +226,7 @@ namespace KerbalWindTunnel.VesselCache
         {
             WaitUntilCharacterized();
 
+            s_evalDragMarker.Begin();
             float magnitude = 0;
 
             foreach (var (liftMachCurve, liftCurve) in surfaceDragI)
@@ -252,17 +261,20 @@ namespace KerbalWindTunnel.VesselCache
             magnitude += bodyDrag * conditions.pseudoReDragMult;
 
             float Q = 0.0005f * conditions.atmDensity * conditions.speed * conditions.speed;
+            s_evalDragMarker.End();
             return magnitude * Q;
         }
 
         public override float GetDragForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
         {
+            s_getDragMagMarker.Begin();
             float magnitude = EvaluateDragCurve(conditions, AoA, pitchInput);
 
             foreach (PartCollection collection in partCollections)
                 lock (collection)
                     magnitude += GetDragForceMagnitude(collection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
 
+            s_getDragMagMarker.End();
             return magnitude;
         }
 
@@ -270,6 +282,7 @@ namespace KerbalWindTunnel.VesselCache
         {
             WaitUntilCharacterized();
 
+            s_evalLiftMarker.Begin();
             float magnitude = 0;
 
             foreach (var (liftMachCurve, liftCurve) in surfaceLift)
@@ -287,22 +300,36 @@ namespace KerbalWindTunnel.VesselCache
                 magnitude += groupMagnitude;
             }
 
+            s_evalLiftMarker.End();
             return magnitude * conditions.Q;
         }
 
         public override float GetLiftForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
         {
+            s_getLiftMagMarker.Begin();
             float magnitude = EvaluateLiftCurve(conditions, AoA, pitchInput);
 
             foreach (PartCollection collection in partCollections)
                 lock (collection)
                     magnitude += GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
 
+            s_getLiftMagMarker.End();
             return magnitude;
         }
 
+        public override void GetAeroCombined(Conditions conditions, float AoA, float pitchInput, out Vector3 forces, out Vector3 torques, bool dryTorque = false)
+        {
+            torques = GetAeroTorque(conditions, AoA, pitchInput, dryTorque);
+            forces = GetAeroForce(conditions, AoA, pitchInput);
+        }
+
         public override Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput = 0)
-            => ToVesselFrame(GetLiftForceMagnitude(conditions, AoA, pitchInput) * Vector3.up, AoA);
+        {
+            s_getLiftMarker.Begin();
+            Vector3 result = ToVesselFrame(GetLiftForceMagnitude(conditions, AoA, pitchInput) * Vector3.up, AoA);
+            s_getLiftMarker.End();
+            return result;
+        }
 
         public override Vector3 GetAeroTorque(Conditions conditions, float AoA, float pitchInput = 0, bool dryTorque = false)
             => vessel.GetAeroTorque(conditions, AoA, pitchInput, dryTorque);
