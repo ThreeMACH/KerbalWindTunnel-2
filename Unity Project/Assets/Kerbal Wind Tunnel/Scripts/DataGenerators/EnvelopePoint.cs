@@ -1,5 +1,6 @@
 ﻿using System;
 using UnityEngine;
+using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
 namespace KerbalWindTunnel.DataGenerators
 {
@@ -42,22 +43,22 @@ namespace KerbalWindTunnel.DataGenerators
             this.dynamicPressure = 0.0005f * conditions.atmDensity * speed * speed;
             float weight = (vessel.Mass * gravParameter / ((radius + altitude) * (radius + altitude))) - (vessel.Mass * speed * speed / (radius + altitude));
             //AoA_max = vessel.GetMaxAoA(conditions, out Lift_max, maxA_guess);
-            AoA_level = vessel.GetAoA(conditions, weight, guess: AoA_guess, pitchInputGuess: 0, lockPitchInput: true);
+            AoA_level = vessel.FindLevelAoA(conditions, weight, guess: AoA_guess);
             Vector3 thrustForce = vessel.GetThrustForce(conditions, AoA_level);
             fuelBurnRate = vessel.GetFuelBurnRate(conditions, AoA_level);
             if (float.IsNaN(maxA_guess))
             {
-                AoA_max = vessel.GetMaxAoA(conditions, out Lift_max, maxA_guess);
+                AoA_max = vessel.FindMaxAoA(conditions, out Lift_max, maxA_guess);
                 //Lift_max = AeroPredictor.GetLiftForceMagnitude(vessel.GetAeroForce(conditions, AoA_max, 1) + thrustForce, AoA_max);
             }
             else
             {
                 AoA_max = maxA_guess;
-                Lift_max = AeroPredictor.GetLiftForceMagnitude(vessel.GetLiftForce(conditions, AoA_max, 1) + (vessel.ThrustIsConstantWithAoA ? AeroPredictor.ToVesselFrame(thrustForce, AoA_max) : vessel.GetThrustForce(conditions, AoA_max)), AoA_max);
+                Lift_max = AeroPredictor.GetLiftForceComponent(vessel.GetLiftForce(conditions, AoA_max, 1) + (vessel.ThrustIsConstantWithAoA ? AeroPredictor.ToVesselFrame(thrustForce, AoA_max) : vessel.GetThrustForce(conditions, AoA_max)), AoA_max);
             }
 
             if (AoA_level < AoA_max)
-                pitchInput = vessel.GetPitchInput(conditions, AoA_level, guess: pitchI_guess);
+                pitchInput = vessel.FindStablePitchInput(conditions, AoA_level, guess: pitchI_guess);
             else
                 pitchInput = 1;
 
@@ -71,13 +72,13 @@ namespace KerbalWindTunnel.DataGenerators
             aeroforce = AeroPredictor.ToFlightFrame(force, AoA_level); //vessel.GetLiftForce(body, speed, altitude, AoA_level, mach, atmDensity);
             drag = -aeroforce.z;
             float lift = aeroforce.y;
-            Thrust_excess = -drag - AeroPredictor.GetDragForceMagnitude(thrustForce, AoA_level);
+            Thrust_excess = -drag - AeroPredictor.GetDragForceComponent(thrustForce, AoA_level);
             if (weight > Lift_max)// AoA_level >= AoA_max)
             {
                 Thrust_excess = Lift_max - weight;
                 AoA_level = AoA_max;
             }
-            Accel_excess = (Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel);
+            Accel_excess = Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel;
             LDRatio = Math.Abs(lift / drag);
             if (vessel is ILiftAoADerivativePredictor derivativePredictor)
                     dLift = derivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA_level, pitchInput) * Mathf.Deg2Rad; // Deg2Rad = 1/Rad2Deg

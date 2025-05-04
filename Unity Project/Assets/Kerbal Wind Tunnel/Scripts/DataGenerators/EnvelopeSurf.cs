@@ -98,8 +98,8 @@ namespace KerbalWindTunnel.DataGenerators
 #if ENABLE_PROFILER
             UnityEngine.Profiling.Profiler.BeginSample($"EnvelopeSurf.Calculate {resolution.IndexOf((speedSegments, altitudeSegments))}");
 #endif
-            if (aeroPredictorToClone is VesselCache.SimulatedVessel simVessel)
-                simVessel.InitMaxAoA(body, (upperBoundAltitude - lowerBoundAltitude) * 0.25f + lowerBoundAltitude);
+            if (aeroPredictorToClone is VesselCache.SimulatedVessel simVessel && !simVessel.DirectAoAInitialized)
+                simVessel.InitMaxAoA();
             EnvelopePoint[] results = new EnvelopePoint[(speedSegments + 1) * (altitudeSegments + 1)];
             float stepSpeed = (upperBoundSpeed - lowerBoundSpeed) / speedSegments;
             float stepAltitude = (upperBoundAltitude - lowerBoundAltitude) / altitudeSegments;

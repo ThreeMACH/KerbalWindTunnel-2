@@ -56,7 +56,7 @@ namespace KerbalWindTunnel.VesselCache
         {
             Vector3 inflow = AeroPredictor.InflowVect(aoa);
             Vector3 drag = controlSurface.GetPartDrag(inflow, mach, deflection, 1);
-            return AeroPredictor.GetDragForceMagnitude(drag, aoa);
+            return AeroPredictor.GetDragForceComponent(drag, aoa);
         }
 
         protected override void Null()

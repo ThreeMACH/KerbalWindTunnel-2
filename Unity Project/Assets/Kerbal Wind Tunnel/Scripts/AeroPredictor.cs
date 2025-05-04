@@ -15,123 +15,51 @@ namespace KerbalWindTunnel
 
         public abstract float Area { get; }
 
-        public virtual float GetMaxAoA(Conditions conditions, float tolerance = 0.0003f)
+        public virtual Func<double, double> AerodynamicObjectiveFunc(Conditions conditions, float pitchInput, int scalar = 1)
         {
-            return (float)Accord.Math.Optimization.BrentSearch.Maximize((aoa) => GetLiftForceMagnitude(conditions, (float)aoa, 1), 10 * Mathf.Deg2Rad, 60 * Mathf.Deg2Rad, tolerance);
+            double AerodynamicObjectiveFuncInternal(double aoa) =>
+                GetLiftForceMagnitude(conditions, (float)aoa, pitchInput) * scalar;
+            return AerodynamicObjectiveFuncInternal;
         }
-        public virtual float GetMaxAoA(Conditions conditions, out float lift, float guess = float.NaN, float tolerance = 0.0003f)
+        public virtual Func<double, double> LevelFlightObjectiveFunc(Conditions conditions, float offsettingForce, float pitchInput = 0)
         {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("AeroPredictor.GetMaxAoA()");
-#endif
-            Accord.Math.Optimization.BrentSearch maximizer = new Accord.Math.Optimization.BrentSearch((aoa) => GetLiftForceMagnitude(conditions, (float)aoa, 1), 10 * Mathf.Deg2Rad, 60 * Mathf.Deg2Rad, tolerance);
-            if (float.IsNaN(guess) || float.IsInfinity(guess))
-                maximizer.Maximize();
+            if (ThrustIsConstantWithAoA)
+            {
+                Vector3 thrustForce = GetThrustForce(conditions);
+                double LevelFlightObjectiveFuncInternal_ConstantThrust(double aoa) =>
+                    GetLiftForceComponent(GetLiftForce(conditions, (float)aoa, pitchInput) + thrustForce, (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal_ConstantThrust;
+            }
             else
             {
-                maximizer.LowerBound = guess - 5 * Mathf.Deg2Rad;
-                maximizer.UpperBound = guess + 5 * Mathf.Deg2Rad;
-                if (!maximizer.Maximize())
-                {
-                    maximizer.LowerBound = guess - 10 * Mathf.Deg2Rad;
-                    maximizer.UpperBound = guess + 10 * Mathf.Deg2Rad;
-                    if (!maximizer.Maximize())
-                    {
-                        maximizer.LowerBound = Math.Min(10 * Mathf.Deg2Rad, guess - 15 * Mathf.Deg2Rad);
-                        maximizer.UpperBound = Mathf.Clamp(guess + 15 * Mathf.Deg2Rad, 60 * Mathf.Deg2Rad, 90 * Mathf.Deg2Rad);
-                        maximizer.Maximize();
-                    }
-                }
+                double LevelFlightObjectiveFuncInternal(double aoa) =>
+                    GetLiftForceComponent(GetLiftForce(conditions, (float)aoa, pitchInput) + GetThrustForce(conditions, (float)aoa), (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal;
             }
-            lift = (float)maximizer.Value;
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return (float)maximizer.Solution;
         }
-        public virtual float GetMinAoA(Conditions conditions, float guess = float.NaN, float tolerance = 0.0003f)
+        public virtual Func<double, double> LevelFlightObjectiveFunc(Conditions conditions, float offsettingForce, Func<float, float> pitchInput)
         {
-            Accord.Math.Optimization.BrentSearch minimizer = new Accord.Math.Optimization.BrentSearch((aoa) => GetLiftForceMagnitude(conditions, (float)aoa, 1), -60 * Mathf.Deg2Rad, -10 * Mathf.Deg2Rad, tolerance);
-            if (float.IsNaN(guess) || float.IsInfinity(guess))
-                minimizer.Maximize();
+            if (ThrustIsConstantWithAoA)
+            {
+                Vector3 thrustForce = GetThrustForce(conditions);
+                double LevelFlightObjectiveFuncInternal_ConstantThrust(double aoa) =>
+                    GetLiftForceComponent(GetLiftForce(conditions, (float)aoa, pitchInput((float)aoa)) + thrustForce, (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal_ConstantThrust;
+            }
             else
             {
-                minimizer.LowerBound = guess - 2 * Mathf.Deg2Rad;
-                minimizer.UpperBound = guess + 2 * Mathf.Deg2Rad;
-                if (!minimizer.Maximize())
-                {
-                    minimizer.LowerBound = guess - 5 * Mathf.Deg2Rad;
-                    minimizer.UpperBound = guess + 5 * Mathf.Deg2Rad;
-                    if (!minimizer.Maximize())
-                    {
-                        minimizer.LowerBound = Mathf.Clamp(guess - 10 * Mathf.Deg2Rad, -90 * Mathf.Deg2Rad, -60 * Mathf.Deg2Rad);
-                        minimizer.UpperBound = Math.Max(-10 * Mathf.Deg2Rad, guess + 10 * Mathf.Deg2Rad);
-                        minimizer.Maximize();
-                    }
-                }
+                double LevelFlightObjectiveFuncInternal(double aoa) =>
+                    GetLiftForceComponent(GetLiftForce(conditions, (float)aoa, pitchInput((float)aoa)) + GetThrustForce(conditions, (float)aoa), (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal;
             }
-            return (float)minimizer.Solution;
         }
-
-        public virtual float GetAoA(Conditions conditions, float offsettingForce, bool useThrust = true, bool dryTorque = false, float guess = float.NaN, float pitchInputGuess = float.NaN, bool lockPitchInput = false, float tolerance = 0.0003f)
+        public virtual Func<double, double> PitchInputObjectiveFunc(Conditions conditions, float aoa, bool dryTorque = false)
         {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("AeroPredictor.GetAoA(Conditions, float, bool, bool, float, float, bool, float");
-#endif
-            if (lockPitchInput && (float.IsNaN(pitchInputGuess) || float.IsInfinity(pitchInputGuess)))
-                pitchInputGuess = 0;
-            Accord.Math.Optimization.BrentSearch solver;
-            switch (ThrustIsConstantWithAoA)
-            {
-                case true when lockPitchInput:
-                    Vector3 thrustForce = useThrust ? this.GetThrustForce(conditions) : Vector3.zero;
-                    solver = new Accord.Math.Optimization.BrentSearch((aoa) => GetLiftForceMagnitude(this.GetLiftForce(conditions, (float)aoa, pitchInputGuess) + thrustForce, (float)aoa) - offsettingForce,
-                        -10 * Mathf.Deg2Rad, 35 * Mathf.Deg2Rad, tolerance);
-                    break;
-                case true when !lockPitchInput:
-                    thrustForce = useThrust ? this.GetThrustForce(conditions) : Vector3.zero;
-                    solver = new Accord.Math.Optimization.BrentSearch((aoa) => GetLiftForceMagnitude(this.GetLiftForce(conditions, (float)aoa, GetPitchInput(conditions, (float)aoa, dryTorque, pitchInputGuess)) + thrustForce, (float)aoa)
-                        - offsettingForce, -10 * Mathf.Deg2Rad, 35 * Mathf.Deg2Rad, tolerance);
-                    break;
-                case false when lockPitchInput:
-                    solver = new Accord.Math.Optimization.BrentSearch((aoa) => GetLiftForceMagnitude(this.GetLiftForce(conditions, (float)aoa, pitchInputGuess) + this.GetThrustForce(conditions, (float)aoa), (float)aoa) - offsettingForce,
-                        -10 * Mathf.Deg2Rad, 35 * Mathf.Deg2Rad, tolerance);
-                    break;
-                case false when !lockPitchInput:
-                default:
-                    solver = new Accord.Math.Optimization.BrentSearch((aoa) => GetLiftForceMagnitude(this.GetLiftForce(conditions, (float)aoa, GetPitchInput(conditions, (float)aoa, dryTorque, pitchInputGuess)) + this.GetThrustForce(conditions, (float)aoa), (float)aoa)
-                        - offsettingForce, -10 * Mathf.Deg2Rad, 35 * Mathf.Deg2Rad, tolerance);
-                    break;
-
-            }
-
-            if (float.IsNaN(guess) || float.IsInfinity(guess))
-                solver.FindRoot();
-            else
-            {
-                solver.LowerBound = guess - 2 * Mathf.Deg2Rad;
-                solver.UpperBound = guess + 2 * Mathf.Deg2Rad;
-                if (!solver.FindRoot())
-                {
-                    solver.LowerBound = guess - 5 * Mathf.Deg2Rad;
-                    solver.UpperBound = guess + 5 * Mathf.Deg2Rad;
-                    if (!solver.FindRoot())
-                    {
-                        solver.LowerBound = Math.Min(-10 * Mathf.Deg2Rad, guess - 10 * Mathf.Deg2Rad);
-                        solver.UpperBound = Math.Max(35 * Mathf.Deg2Rad, guess + 10 * Mathf.Deg2Rad);
-                        solver.FindRoot();
-                    }
-                }
-            }
-
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return (float)solver.Solution;
+            double PitchInputObjectiveFuncInternal(double input) =>
+                GetAeroTorque(conditions, aoa, (float)input, dryTorque).x;
+            return PitchInputObjectiveFuncInternal;
         }
 
-        public abstract float GetPitchInput(Conditions conditions, float AoA, bool dryTorque = false, float guess = float.NaN, float tolerance = 0.0003f);
-        
         public abstract Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput = 0);
 
         public virtual Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput = 0)
@@ -149,18 +77,18 @@ namespace KerbalWindTunnel
 
         public virtual float GetLiftForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
         {
-            return GetLiftForceMagnitude(GetLiftForce(conditions, AoA, pitchInput), AoA);
+            return GetLiftForceComponent(GetLiftForce(conditions, AoA, pitchInput), AoA);
         }
-        public static float GetLiftForceMagnitude(Vector3 force, float AoA)
+        public static float GetLiftForceComponent(Vector3 force, float AoA)
         {
             return ToFlightFrame(force, AoA).y;
         }
 
         public virtual float GetDragForceMagnitude(Conditions conditions, float AoA, float pitchInput = 0)
         {
-            return GetDragForceMagnitude(GetAeroForce(conditions, AoA, pitchInput), AoA);
+            return GetDragForceComponent(GetAeroForce(conditions, AoA, pitchInput), AoA);
         }
-        public static float GetDragForceMagnitude(Vector3 force, float AoA)
+        public static float GetDragForceComponent(Vector3 force, float AoA)
         {
             return -ToFlightFrame(force, AoA).z;
         }
@@ -247,10 +175,5 @@ namespace KerbalWindTunnel
                 Q = 0.0005f * atmDensity * this.speed * this.speed;
             }
         }
-    }
-
-    public interface ILiftAoADerivativePredictor
-    {
-        float GetLiftForceMagnitudeAoADerivative(AeroPredictor.Conditions conditions, float AoA, float pitchInput = 0);
     }
 }

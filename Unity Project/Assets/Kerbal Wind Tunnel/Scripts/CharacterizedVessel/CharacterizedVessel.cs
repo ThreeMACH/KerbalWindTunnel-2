@@ -4,10 +4,11 @@ using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
 using KerbalWindTunnel.Extensions;
+using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class CharacterizedVessel : AeroPredictor, ILiftAoADerivativePredictor, IDisposable
+    public class CharacterizedVessel : AeroPredictor, ILiftAoADerivativePredictor, IDirectAoAMaxProvider, IDisposable
     {
         static readonly Unity.Profiling.ProfilerMarker s_getLiftMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.GetLiftForce");
         static readonly Unity.Profiling.ProfilerMarker s_getLiftMagMarker = new Unity.Profiling.ProfilerMarker("CharacterizedVessel.GetLiftForceMagnitude");
@@ -25,6 +26,8 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float Area => vessel.Area;
 
+        public bool DirectAoAInitialized => maxAoATaskHandle?.IsCompleted ?? false;
+
         public const int tolerance = 5;
         public const float toleranceF = 2E-5f;
 
@@ -36,12 +39,15 @@ namespace KerbalWindTunnel.VesselCache
         internal FloatCurve2 ctrlDeltaDragPos;
         internal FloatCurve2 ctrlDeltaDragNeg;
 
+        internal FloatCurve aoaMax;
+
         private readonly List<CharacterizedPart> parts = new List<CharacterizedPart>();
         private readonly List<CharacterizedLiftingSurface> surfaces = new List<CharacterizedLiftingSurface>();
         private readonly List<CharacterizedControlSurface> controls = new List<CharacterizedControlSurface>();
         private readonly List<PartCollection> partCollections = new List<PartCollection>();
 
         private Task taskHandle = null;
+        private Task maxAoATaskHandle = null;
 
         public static readonly IComparer<(float, bool)> FloatTupleComparer = Comparer<(float, bool)>.Create((x, y) =>
         {
@@ -59,7 +65,7 @@ namespace KerbalWindTunnel.VesselCache
              *      - Map their Lift curve local AoA to vessel AoA according to their lift vector
              *      - Treat parts as three lifting surfaces with lift vectors along their primary axes
              *      
-             *      L = f(M) * f(AoA) * f(q)
+             *      L = f(M) * CL(AoA) * q
              *  
              *  - For each group, make a FloatCurve of lift coefficient using the union of those
              *    AoA keys within each group.
@@ -69,10 +75,11 @@ namespace KerbalWindTunnel.VesselCache
              *  - Group lifting surfaces by their DragMach curve if their drag curve is non-zero
              *      - Map their Drag curve local AoA to vessel AoA according to their lift vector
              *      
-             *      D = f(M) * f(AoA) * f(q)
+             *      D = f(M) * CD(AoA) * q
              *  
              *  - For each group, make a FloatCurve of drag coefficient using the union of those
              *    AoA keys within each group.
+             *  - Repeat using the LiftMachCurve for those surfaces where PerpendicularOnly is not true.
              *  
              *  - Find the union of all Mach keys for every draggy part's Tip, Tail, Surface, Multiplier, and Power.
              *  - Find the vessel AoA equating to 0, 90, 180, and 270 (-90) local AoA using each part's primary axes.
@@ -152,12 +159,16 @@ namespace KerbalWindTunnel.VesselCache
             {
                 if (taskHandle != null)
                     return;
+                if (maxAoATaskHandle != null)
+                    return;
+#if DEBUG
                 Debug.Log("Starting Characterization");
+#endif
 
                 List<Task> tasks = new List<Task>();
                 foreach (CharacterizedPart part in parts)
                     tasks.Add(Task.Run(part.Characterize));
-                Task partTask = Task.WhenAll(tasks);//.ContinueWith(CombineParts);
+                Task partTask = Task.WhenAll(tasks);
                 Task combinePartTask = partTask.ContinueWith(CombineParts);
 
                 tasks.Clear();
@@ -168,6 +179,7 @@ namespace KerbalWindTunnel.VesselCache
                 Task surfaceTask = Task.WhenAll(tasks).ContinueWith(CombineSurfaces);
 
                 taskHandle = Task.WhenAll(combinePartTask, surfaceTask);
+                maxAoATaskHandle = taskHandle.ContinueWith(CharacterizeMaxAoA);
 #if DEBUG
                 taskHandle.ContinueWith(t => Debug.Log("Completed Characterization"));
 #endif
@@ -201,6 +213,31 @@ namespace KerbalWindTunnel.VesselCache
             ctrlDeltaDragNeg = negSuperposition.Result;
         }
 
+        private void CharacterizeMaxAoA(Task _)
+        {
+            // Since L = f(M) * f(AoA) * q, the peak with respect to AoA becomes only a function of M.
+            // This lets us precompute the max AoA for a given Mach.
+            // This should even be a FloatCurve since the liftMachCurves that shift the weighting between parts and surfaces
+            // is itself a FloatCurve.
+            const float machStep = 0.002f;
+
+            SortedSet<float> machKeys = new SortedSet<float>();
+            foreach (var (liftMachCurve, _) in surfaceLift)
+                machKeys.UnionWith(liftMachCurve.ExtractTimes());
+            foreach (var (liftMachCurve, _) in bodyLift)
+                machKeys.UnionWith(liftMachCurve.ExtractTimes());
+
+            Conditions baseConditions = new Conditions(WindTunnelWindow.Instance.CelestialBody ?? Planetarium.fetch.Home, 0, 0);
+
+            float GetAoAMax(float mach)
+            {
+                Conditions conditions = new Conditions(baseConditions.body, baseConditions.speedOfSound * mach, 0);
+                return this.FindMaxAoA(conditions, out float lift, 30 * Mathf.Deg2Rad); // TODO: Use some heuristic based on the keys to have a good guess.
+            }
+
+            aoaMax = KSPClassExtensions.ComputeFloatCurve(machKeys, GetAoAMax, machStep);
+        }
+
         public void Dispose()
         {
             foreach (CharacterizedPart part in parts)
@@ -214,9 +251,6 @@ namespace KerbalWindTunnel.VesselCache
             foreach (PartCollection collection in partCollections)
                 collection.Release();
         }
-
-        public override float GetPitchInput(Conditions conditions, float AoA, bool dryTorque = false, float guess = float.NaN, float tolerance = 0.0003F)
-            => vessel.GetPitchInput(conditions, AoA, dryTorque, guess, tolerance);
 
         public override Vector3 GetAeroForce(Conditions conditions, float AoA, float pitchInput = 0)
             => ToVesselFrame(-GetDragForceMagnitude(conditions, AoA, pitchInput) * Vector3.forward, AoA) +
@@ -272,7 +306,7 @@ namespace KerbalWindTunnel.VesselCache
 
             foreach (PartCollection collection in partCollections)
                 lock (collection)
-                    magnitude += GetDragForceMagnitude(collection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
+                    magnitude += GetDragForceComponent(collection.GetAeroForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
 
             s_getDragMagMarker.End();
             return magnitude;
@@ -311,7 +345,7 @@ namespace KerbalWindTunnel.VesselCache
 
             foreach (PartCollection collection in partCollections)
                 lock (collection)
-                    magnitude += GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
+                    magnitude += GetLiftForceComponent(collection.GetLiftForce(InflowVect(AoA) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA);
 
             s_getLiftMagMarker.End();
             return magnitude;
@@ -339,6 +373,39 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float GetFuelBurnRate(Conditions conditions, float AoA)
             => vessel.GetFuelBurnRate(conditions, AoA);
+
+        public override Func<double, double> LevelFlightObjectiveFunc(Conditions conditions, float offsettingForce, float pitchInput = 0)
+        {
+            if (ThrustIsConstantWithAoA)
+            {
+                Vector3 thrustForce = GetThrustForce(conditions);
+                double LevelFlightObjectiveFuncInternal_ConstantThrust(double aoa) =>
+                    GetLiftForceMagnitude(conditions, (float)aoa, pitchInput) + GetLiftForceComponent(thrustForce, (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal_ConstantThrust;
+            }
+            else
+            {
+                double LevelFlightObjectiveFuncInternal(double aoa) =>
+                    GetLiftForceMagnitude(conditions, (float)aoa, pitchInput) + GetLiftForceComponent(GetThrustForce(conditions, (float)aoa), (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal;
+            }
+        }
+        public override Func<double, double> LevelFlightObjectiveFunc(Conditions conditions, float offsettingForce, Func<float, float> pitchInput)
+        {
+            if (ThrustIsConstantWithAoA)
+            {
+                Vector3 thrustForce = GetThrustForce(conditions);
+                double LevelFlightObjectiveFuncInternal_ConstantThrust(double aoa) =>
+                    GetLiftForceMagnitude(conditions, (float)aoa, pitchInput((float)aoa)) + GetLiftForceComponent(thrustForce, (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal_ConstantThrust;
+            }
+            else
+            {
+                double LevelFlightObjectiveFuncInternal(double aoa) =>
+                    GetLiftForceMagnitude(conditions, (float)aoa, pitchInput((float)aoa)) + GetLiftForceComponent(GetThrustForce(conditions, (float)aoa), (float)aoa) - offsettingForce;
+                return LevelFlightObjectiveFuncInternal;
+            }
+        }
 
         public float GetLiftForceMagnitudeAoADerivative(Conditions conditions, float AoA, float pitchInput = 0)
         {
@@ -369,13 +436,26 @@ namespace KerbalWindTunnel.VesselCache
                 float fplus, fminus;
                 lock (collection)
                 {
-                    fplus = GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA + delta) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA + delta);
-                    fminus = GetLiftForceMagnitude(collection.GetLiftForce(InflowVect(AoA - delta) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA - delta);
+                    fplus = GetLiftForceComponent(collection.GetLiftForce(InflowVect(AoA + delta) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA + delta);
+                    fminus = GetLiftForceComponent(collection.GetLiftForce(InflowVect(AoA - delta) * conditions.speed, conditions, pitchInput, out _, Vector3.zero), AoA - delta);
                 }
                 magnitude += (fplus - fminus) * invDelta;
             }
 
             return magnitude;
+        }
+
+        private void WaitUntilAoACharacterized()
+        {
+            if (maxAoATaskHandle == null)
+                Characterize();
+            maxAoATaskHandle.Wait(new TimeSpan(0, 1, 0));
+        }
+
+        public float GetAoAMax(Conditions conditions)
+        {
+            WaitUntilAoACharacterized();
+            return aoaMax.EvaluateThreadSafe(conditions.mach);
         }
     }
 }

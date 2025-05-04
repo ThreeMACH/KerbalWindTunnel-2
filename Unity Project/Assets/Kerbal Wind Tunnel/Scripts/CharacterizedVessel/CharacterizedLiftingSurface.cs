@@ -76,7 +76,7 @@ namespace KerbalWindTunnel.VesselCache
                 {
                     Vector3 inflow = AeroPredictor.InflowVect(aoa);
                     Vector3 lift = simulatedLiftingSurface.GetLift(inflow, evalPt) / machMag;
-                    return AeroPredictor.GetLiftForceMagnitude(lift, aoa);
+                    return AeroPredictor.GetLiftForceComponent(lift, aoa);
                 }
 
                 LiftCoefficientCurve = KSPClassExtensions.ComputeFloatCurve(liftAoAKeys, SurfLiftForce, CharacterizedVessel.toleranceF);
@@ -122,7 +122,7 @@ namespace KerbalWindTunnel.VesselCache
                 {
                     Vector3 inflow = AeroPredictor.InflowVect(aoa);
                     Vector3 lift = simulatedLiftingSurface.GetLift(inflow, evalPt_induced) / machMag_induced;
-                    return AeroPredictor.GetDragForceMagnitude(lift, aoa);
+                    return AeroPredictor.GetDragForceComponent(lift, aoa);
                 }
 
                 if (!simulatedLiftingSurface.perpendicularOnly)
@@ -142,7 +142,7 @@ namespace KerbalWindTunnel.VesselCache
                         drag = -inflow * simulatedLiftingSurface.dragCurve.Evaluate(absdot) * simulatedLiftingSurface.deflectionLiftCoeff * PhysicsGlobals.LiftDragMultiplier;
                     drag *= 1000;
 
-                    return AeroPredictor.GetDragForceMagnitude(drag, aoa);
+                    return AeroPredictor.GetDragForceComponent(drag, aoa);
                 }
 
                 if (simulatedLiftingSurface.useInternalDragModel)

@@ -93,7 +93,7 @@ namespace KerbalWindTunnel.VesselCache
                         Vector3 lift = Vector3.zero;
                         Vector3 inflow = AeroPredictor.InflowVect(aoa);
                         lift = simulatedPart.GetLift(inflow, evalPt);
-                        return AeroPredictor.GetLiftForceMagnitude(lift, aoa) / machMag;
+                        return AeroPredictor.GetLiftForceComponent(lift, aoa) / machMag;
                     }
 
                     LiftCoefficientCurve = KSPClassExtensions.ComputeFloatCurve(partAoAKeys, PartLiftForce, CharacterizedVessel.toleranceF);
@@ -107,7 +107,7 @@ namespace KerbalWindTunnel.VesselCache
         {
             Vector3 inflow = AeroPredictor.InflowVect(aoa);
             Vector3 drag = simulatedPart.GetAero(inflow, mach, 1);
-            return AeroPredictor.GetDragForceMagnitude(drag, aoa);
+            return AeroPredictor.GetDragForceComponent(drag, aoa);
         }
 
         public static IEnumerable<Vector3> GetPartAxes(SimulatedPart part)

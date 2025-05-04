@@ -6,6 +6,7 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Graphing;
+using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
 namespace KerbalWindTunnel.DataGenerators
 {
@@ -179,16 +180,16 @@ namespace KerbalWindTunnel.DataGenerators
                 this.mach = conditions.mach;
                 this.dynamicPressure = 0.0005f * conditions.atmDensity * speed * speed;
                 float weight = (vessel.Mass * gravParameter / ((radius + altitude) * (radius + altitude))) - (vessel.Mass * speed * speed / (radius + altitude));
-                AoA_max = vessel.GetMaxAoA(conditions, out Lift_max);
-                AoA_level = Math.Min(vessel.GetAoA(conditions, weight), AoA_max);
+                AoA_max = vessel.FindMaxAoA(conditions, out Lift_max);
+                AoA_level = vessel.FindLevelAoA(conditions, weight);
                 Vector3 thrustForce = vessel.GetThrustForce(conditions, AoA_level);
-                pitchInput = vessel.GetPitchInput(conditions, AoA_level);
+                pitchInput = vessel.FindStablePitchInput(conditions, AoA_level);
                 Thrust_available = AeroPredictor.GetUsefulThrustMagnitude(thrustForce);
                 Vector3 force = vessel.GetAeroForce(conditions, AoA_level, pitchInput);
-                drag = AeroPredictor.GetDragForceMagnitude(force, AoA_level);
-                Thrust_excess = -drag - AeroPredictor.GetDragForceMagnitude(thrustForce, AoA_level);
+                drag = AeroPredictor.GetDragForceComponent(force, AoA_level);
+                Thrust_excess = -drag - AeroPredictor.GetDragForceComponent(thrustForce, AoA_level);
                 Accel_excess = Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel;
-                LDRatio = Math.Abs(AeroPredictor.GetLiftForceMagnitude(force, AoA_level) / drag);
+                LDRatio = Math.Abs(AeroPredictor.GetLiftForceComponent(force, AoA_level) / drag);
                 if (vessel is ILiftAoADerivativePredictor derivativePredictor)
                     dLift = derivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA_level, pitchInput) * Mathf.Deg2Rad; // Deg2Rad = 1/Rad2Deg
                 else

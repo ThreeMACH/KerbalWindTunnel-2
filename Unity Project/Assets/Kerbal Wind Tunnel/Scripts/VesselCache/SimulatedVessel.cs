@@ -1,15 +1,14 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
-using KerbalWindTunnel.Extensions;
-using Smooth.Pools;
 using UnityEngine;
+using Smooth.Pools;
+using KerbalWindTunnel.Extensions;
+using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
 namespace KerbalWindTunnel.VesselCache
 {
-    public class SimulatedVessel : AeroPredictor, IReleasable
+    public class SimulatedVessel : AeroPredictor, IReleasable, IDirectAoAMaxProvider
     {
-        public static bool accountForControls = false;
         static readonly Unity.Profiling.ProfilerMarker s_getLiftMarker = new Unity.Profiling.ProfilerMarker("SimulatedVessel.GetLiftForce");
         static readonly Unity.Profiling.ProfilerMarker s_getAeroMarker = new Unity.Profiling.ProfilerMarker("SimulatedVessel.GetAeroForce");
 
@@ -41,7 +40,7 @@ namespace KerbalWindTunnel.VesselCache
         
         public FloatCurve DragCurvePseudoReynolds;
         public FloatCurve maxAoA = null;
-        public static List<float> AoAMachs = null;
+        public static SortedSet<float> AoAMachs = null;
 
         public override AeroPredictor GetThreadSafeObject() => BorrowClone(this);
 
@@ -71,86 +70,16 @@ namespace KerbalWindTunnel.VesselCache
         public override Vector3 GetLiftForce(Conditions conditions, float AoA, float pitchInput = 0)
             => GetLiftForce(conditions, AoA, pitchInput, out _, Vector3.zero);
 
-        // TODO: Add ITorqueProvider and thrust effect on torque
-        public override float GetAoA(Conditions conditions, float offsettingForce, bool useThrust = true, bool dryTorque = false, float guess = float.NaN, float pitchInputGuess = float.NaN, bool lockPitchInput = false, float tolerance = 0.0003f)
+        public override Func<double, double> PitchInputObjectiveFunc(Conditions conditions, float aoa, bool dryTorque = false)
         {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.GetAoA(Conditions, float, bool, bool, float, float, bool)");
-#endif
-            float value;
-
-            if (!accountForControls)
-                value = base.GetAoA(conditions, offsettingForce, useThrust, dryTorque, guess, 0, true, tolerance);
-            else if (lockPitchInput)
-                value = base.GetAoA(conditions, offsettingForce, useThrust, dryTorque, guess, pitchInputGuess, lockPitchInput, tolerance);
-            else
-            {
-                float approxAoA = GetAoA(conditions, offsettingForce, useThrust, dryTorque, guess, pitchInputGuess, true, 1 * Mathf.Deg2Rad);
-                value = base.GetAoA(conditions, offsettingForce, useThrust, dryTorque, approxAoA, pitchInputGuess, lockPitchInput, tolerance);
-            }
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return value;
-        }
-
-        // TODO: Add ITorqueProvider and thrust effect on torque
-        public override float GetPitchInput(Conditions conditions, float AoA, bool dryTorque = false, float guess = float.NaN, float tolerance = 0.0003f)
-        {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.GetPitchInput(Conditions, float, bool, float)");
-#endif
-            Vector3 inflow = InflowVect(AoA) * conditions.speed;
+            Vector3 inflow = InflowVect(aoa) * conditions.speed;
             partCollection.GetAeroForceStatic(inflow, conditions, out Vector3 staticTorque, dryTorque ? CoM_dry : CoM);
             float staticPitchTorque = staticTorque.x;
-            float value;
-            Accord.Math.Optimization.BrentSearch solver = new Accord.Math.Optimization.BrentSearch((input) =>
+            return (input) =>
             {
                 partCollection.GetAeroForceDynamic(inflow, conditions, (float)input, out Vector3 torque, dryTorque ? CoM_dry : CoM);
                 return torque.x + staticPitchTorque;
-            }, -0.3, 0.3, tolerance);
-            if (solver.FindRoot())
-                value = (float)solver.Solution;
-            else
-            {
-                solver.LowerBound = -1;
-                solver.UpperBound = 1;
-                if (solver.FindRoot())
-                    value = (float)solver.Solution;
-                else if (this.GetAeroTorque(conditions, AoA, 0, dryTorque).x > 0)
-                    value = -1;
-                else
-                    value = 1;
-            }
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return value;
-        }
-
-        // Since, on Kerbin at least, speed of sound doesn't vary with altitude
-        public override float GetMaxAoA(Conditions conditions, out float lift, float guess = float.NaN, float tolerance = 0.0003F)
-        {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.GetMaxAoA(Conditions, float, float, float)");
-#endif
-            // Rotating parts ruin everything... Because their mach number is the sum of the inflow and their rotation,
-            // the FloatCurve method isn't valid.
-            // Except, it turns out that mach number isn't calculated per-part, but is a vessel-wide number.
-            //if (partCollection.partCollections.Count > 0)
-                //return base.GetMaxAoA(conditions, out lift, guess, tolerance);
-
-            if (!(conditions.body.bodyName.Equals("Kerbin", StringComparison.InvariantCultureIgnoreCase) ||
-                conditions.body.bodyName.Equals("Laythe", StringComparison.InvariantCultureIgnoreCase)))
-                return base.GetMaxAoA(conditions, out lift, guess, tolerance);
-            if (maxAoA == null)
-                InitMaxAoA(conditions.body, conditions.altitude);
-            float aoa = maxAoA.Evaluate(conditions.mach);
-            lift = GetLiftForceMagnitude(conditions, aoa, 1);
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
-            return aoa;
+            };
         }
 
         public override Vector3 GetAeroTorque(Conditions conditions, float AoA, float pitchInput = 0, bool dryTorque = false)
@@ -319,43 +248,33 @@ namespace KerbalWindTunnel.VesselCache
             partCollection = PartCollection.BorrowClone(this, vessel);
         }
 
-        public void InitMaxAoA(CelestialBody body, float altitude = 0)
+        public void InitMaxAoA()
         {
             // If there are rotating parts, this won't ever come in handy so it's not worth the time.
             // Except, it turns out that mach number isn't calculated per-part, but is a vessel-wide number.
             //if (partCollection.partCollections.Count > 0)
                 //return;
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.InitMaxAoA()");
-#endif
-            maxAoA = new FloatCurve();
-            FindAoAMachs();
             const float machStep = 0.002f;
-            Conditions conditions = new Conditions(body, 0, altitude);
+            DirectAoAInitialized = false;
+#if ENABLE_PROFILER
+            UnityEngine.Profiling.Profiler.BeginSample("SimulatedVessel.InitMaxAoA");
+#endif
+            FindAoAMachs();
 
-            for (int i = 0; i < AoAMachs.Count; i++)
+            Conditions baseConditions = new Conditions(WindTunnelWindow.Instance.CelestialBody ?? Planetarium.fetch.Home, 0, 0);
+
+            float GetAoAMax(float mach)
             {
-                float inTangent = 0;
-                float outTangent = 0;
-
-                Conditions stepConditions = new Conditions(body, conditions.speedOfSound * AoAMachs[i], altitude);
-                float stepMaxAoA = base.GetMaxAoA(stepConditions, out _, 30 * Mathf.Deg2Rad);
-
-                if (i > 0)
-                {
-                    Conditions inConditions = new Conditions(body, conditions.speedOfSound * (AoAMachs[i] - machStep), altitude);
-                    inTangent = (stepMaxAoA - base.GetMaxAoA(inConditions, out _, 30 * Mathf.Deg2Rad)) / machStep;
-                }
-                if (i < AoAMachs.Count - 1)
-                {
-                    Conditions outConditions = new Conditions(body, conditions.speedOfSound * (AoAMachs[i] + machStep), altitude);
-                    outTangent = (base.GetMaxAoA(outConditions, out _, 30 * Mathf.Deg2Rad) - stepMaxAoA) / machStep;
-                }
-                maxAoA.Add(AoAMachs[i], stepMaxAoA, inTangent, outTangent);
+                Conditions conditions = new Conditions(baseConditions.body, baseConditions.speedOfSound * mach, 0);
+                return this.FindMaxAoA(conditions, out float lift, 30 * Mathf.Deg2Rad);
             }
+
+            maxAoA = KSPClassExtensions.ComputeFloatCurve(AoAMachs, GetAoAMax, machStep);
+
 #if ENABLE_PROFILER
             UnityEngine.Profiling.Profiler.EndSample();
 #endif
+            DirectAoAInitialized = true;
         }
 
         private void FindAoAMachs()
@@ -363,12 +282,14 @@ namespace KerbalWindTunnel.VesselCache
             if (AoAMachs != null)
                 return;
 
-            AoAMachs = new List<float>();
+            AoAMachs = new SortedSet<float>();
             foreach (var curve in PhysicsGlobals.LiftingSurfaceCurves.Values)
-                foreach (Keyframe key in curve.liftMachCurve.Curve.keys)
-                    if (!AoAMachs.Contains(key.time))
-                        AoAMachs.Add(key.time);
-            AoAMachs.Sort();
+                AoAMachs.UnionWith(curve.liftMachCurve.ExtractTimes());
         }
+
+        public float GetAoAMax(Conditions conditions)
+            => maxAoA.Evaluate(conditions.mach);
+
+        public bool DirectAoAInitialized { get; protected set; } = false;
     }
 }
