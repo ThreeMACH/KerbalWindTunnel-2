@@ -27,7 +27,7 @@ namespace KerbalWindTunnel.VesselCache
 
         public const int AoASpacing = 15;
 
-        private static readonly FloatCurve2.DiffSettings settings = new FloatCurve2.DiffSettings(1E-8f, CharacterizedVessel.toleranceF);
+        private static readonly FloatCurve2.DiffSettings settings = new FloatCurve2.DiffSettings(1E-6f, CharacterizedVessel.toleranceF, true);
 
         public CharacterizedPart(Part part, SimulatedVessel vessel)
         {

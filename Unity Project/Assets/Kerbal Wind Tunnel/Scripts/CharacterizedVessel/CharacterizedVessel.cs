@@ -25,7 +25,7 @@ namespace KerbalWindTunnel.VesselCache
 
         public override float Area => vessel.Area;
 
-        public const int tolerance = 6;
+        public const int tolerance = 5;
         public const float toleranceF = 2E-5f;
 
         internal readonly List<(FloatCurve machCurve, FloatCurve liftCurve)> surfaceLift = new List<(FloatCurve machCurve, FloatCurve liftCurve)>();

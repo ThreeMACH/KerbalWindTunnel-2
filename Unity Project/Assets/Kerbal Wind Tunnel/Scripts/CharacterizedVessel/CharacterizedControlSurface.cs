@@ -1,15 +1,11 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 namespace KerbalWindTunnel.VesselCache
 {
     public class CharacterizedControlSurface : CharacterizedLiftingSurface
     {
-        private static readonly FloatCurve2.DiffSettings settings = new FloatCurve2.DiffSettings(1E-8f, CharacterizedVessel.toleranceF);
+        private static readonly FloatCurve2.DiffSettings settings = new FloatCurve2.DiffSettings(1E-6f, CharacterizedVessel.toleranceF, true);
         private readonly SimulatedControlSurface controlSurface;
         public readonly CharacterizedPart basePart;
         public FloatCurve2 DeltaDragCoefficientCurve_Pos { get; private set; }
