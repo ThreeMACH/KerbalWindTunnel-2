@@ -50,25 +50,6 @@ namespace KerbalWindTunnel.Extensions
             => ComputeFloatCurve(keys.Select(k => (k, false)), func, delta);
         public static FloatCurve ComputeFloatCurve(IEnumerable<(float value, bool continuousDerivative)> keys, Func<float, float> func, float delta = 0.000001f)
         {
-#if false
-            bool comma = false;
-            Debug.Log("Making FloatCurve:");
-            string keyStr = "Keys: ";
-            string valStr = "Values: ";
-            foreach (var (key, cd) in keys)
-            {
-                if (comma)
-                {
-                    keyStr += ", ";
-                    valStr += ", ";
-                }
-                keyStr += key;
-                valStr += func(key);
-                comma = true;
-            }
-            Debug.Log(keyStr);
-            Debug.Log(valStr);
-#endif
             float invDelta = 1 / delta;
 
             FloatCurve curve = new FloatCurve();
@@ -94,39 +75,31 @@ namespace KerbalWindTunnel.Extensions
 
         public static float EvaluateDerivative(this FloatCurve curve, float time)
         {
-            if (curve.Curve.keys.Length == 0)
+            if (curve.Curve.keys.Length <= 1)
                 return 0;
             if (time < curve.minTime || time > curve.maxTime)
                 return 0;
-            int k0Index;
-            for (k0Index = 0; k0Index < curve.Curve.keys.Length; k0Index++)
-            {
-                if (curve.Curve.keys[k0Index].time <= time)
-                    break;
-            }
+            
+            int k0Index = FindIndex(curve.Curve.keys, time, out bool exact);
             Keyframe keyframe0 = curve.Curve.keys[k0Index];
-            if (time == curve.maxTime)
-            {
-                float dt1 = keyframe0.time - curve.Curve.keys[k0Index - 1].time;
-                return keyframe0.inTangent * dt1;
-            }
-            Keyframe keyframe1 = curve.Curve.keys[k0Index + 1];
 
-            float dt = keyframe1.time - keyframe0.time;
+            if (time == curve.maxTime)
+                return keyframe0.inTangent / 2;
 
             if (time == curve.minTime)
-                return keyframe0.outTangent * dt;
+                return keyframe0.outTangent / 2;
 
-            float t = (time - keyframe0.time) / dt;
+            if (exact)
+                return (keyframe0.inTangent + keyframe0.outTangent) / 2;
 
-            if (t == 0)
-            {
-                float dt1 = curve.Curve.keys[k0Index + 2].time - keyframe1.time;
-                return (keyframe1.inTangent * dt + keyframe1.outTangent * dt1) / 2;
-            }
+            Keyframe keyframe1 = curve.Curve.keys[k0Index + 1];
+            float dt = keyframe1.time - keyframe0.time;
 
-            float m0 = keyframe0.outTangent * dt;
-            float m1 = keyframe1.inTangent * dt;
+            float invDt = 1 / dt;
+            float t = (time - keyframe0.time) * invDt;
+
+            float m0 = keyframe0.outTangent;
+            float m1 = keyframe1.inTangent;
 
             float t2 = t * t;
 
@@ -135,8 +108,24 @@ namespace KerbalWindTunnel.Extensions
             float c = 3 * t2 - 2 * t;
             float d = -6 * t2 + 6 * t;
 
-            return a * keyframe0.value + b * m0 + c * m1 + d * keyframe1.value;
+            return b * m0 + c * m1 + (a * keyframe0.value + d * keyframe1.value) * invDt;
         }
+
+        static int FindIndex(Keyframe[] keys, float value, out bool exact)
+        {
+            Keyframe valueKey = new Keyframe(value, 0);
+            int result = Array.BinarySearch(keys, valueKey, keyframeTimeComparer);
+            if (result >= 0)
+            {
+                exact = true;
+                return result;
+            }
+            exact = false;
+            return (~result) - 1;
+        }
+
+        public static Comparer<Keyframe> keyframeTimeComparer = Comparer<Keyframe>.Create((k1, k2) => k1.time.CompareTo(k2.time));
+
         public static float EvaluateThreadSafe(this FloatCurve curve, float time)
         {
             lock (curve)
@@ -146,8 +135,9 @@ namespace KerbalWindTunnel.Extensions
             if (time >= curve.maxTime)
                 return curve.Curve.keys[curve.Curve.length - 1].value;
 
-            Keyframe keyframe0 = curve.Curve.keys.Last(k => k.time < time);
-            Keyframe keyframe1 = curve.Curve.keys[curve.Curve.keys.IndexOf(keyframe0) + 1];
+            int index0 = FindIndex(curve.Curve.keys, time, out _);
+            Keyframe keyframe0 = curve.Curve.keys[index0];
+            Keyframe keyframe1 = curve.Curve.keys[index0 + 1];
 
             float dt = keyframe1.time - keyframe0.time;
             float t = (time - keyframe0.time) / dt;
@@ -185,29 +175,23 @@ namespace KerbalWindTunnel.Extensions
 
         public static FloatCurve Superposition(IEnumerable<FloatCurve> curves, IList<float> sortedUniqueKeys)
         {
-            Dictionary<FloatCurve, SortedSet<float>> keysDict = new Dictionary<FloatCurve, SortedSet<float>>();
-            foreach (FloatCurve curve in curves)
-            {
-                if (curve == null)
-                    continue;
-                keysDict.Add(curve, new SortedSet<float>(curve.ExtractTimes()));
-            }
-
             FloatCurve result = new FloatCurve();
             int length = sortedUniqueKeys.Count;
-            Span<float> values = stackalloc float[length];
-            Span<float> inTangents = stackalloc float[length];
-            Span<float> outTangents = stackalloc float[length];
+            Span<float> values = new float[length];
+            Span<float> inTangents = new float[length];
+            Span<float> outTangents = new float[length];
 
             foreach (FloatCurve curve in curves)
             {
                 if (curve == null)
                     continue;
+                SortedSet<float> curveKeys = new SortedSet<float>(curve.ExtractTimes());
+
                 for (int i = length - 1; i >= 0; i--)
                 {
                     float f = sortedUniqueKeys[i];
                     // This curve has this keyframe
-                    if (keysDict[curve].Contains(f))
+                    if (curveKeys.Contains(f))
                     {
                         Keyframe keyframe = curve.Curve.keys.First(k => k.time.Equals(f));
                         inTangents[i] += keyframe.inTangent;
