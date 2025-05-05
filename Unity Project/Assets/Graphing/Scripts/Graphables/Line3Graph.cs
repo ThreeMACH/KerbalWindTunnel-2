@@ -42,6 +42,9 @@ namespace Graphing
             SetValuesInternal(values);
         }
 
+        protected bool NotNaN(Vector3 v) => !(float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z));
+        protected bool NotInf(Vector3 v) => !(float.IsInfinity(v.x) || float.IsInfinity(v.y) || float.IsInfinity(v.z));
+
         /// <summary>
         /// Draws the object on the specified <see cref="Texture2D"/>.
         /// </summary>
@@ -58,19 +61,18 @@ namespace Graphing
             int width = texture.width;
             int height = texture.height;
             int[] xPix, yPix;
-            // TODO: Add robustness for NaNs and Infinities.
             if (!Transpose)
             {
-                xPix = _values.Select(vect => Mathf.RoundToInt((vect.x - xLeft) / xRange * width)).ToArray();
-                yPix = _values.Select(vect => Mathf.RoundToInt((vect.y - yBottom) / yRange * height)).ToArray();
+                xPix = _values.Where(NotNaN).Where(NotInf).Select(vect => Mathf.RoundToInt((vect.x - xLeft) / xRange * width)).ToArray();
+                yPix = _values.Where(NotNaN).Where(NotInf).Select(vect => Mathf.RoundToInt((vect.y - yBottom) / yRange * height)).ToArray();
             }
             else
             {
-                xPix = _values.Select(vect => Mathf.RoundToInt((vect.y - yBottom) / yRange * width)).ToArray();
-                yPix = _values.Select(vect => Mathf.RoundToInt((vect.x - xLeft) / xRange * height)).ToArray();
+                xPix = _values.Where(NotNaN).Where(NotInf).Select(vect => Mathf.RoundToInt((vect.y - yBottom) / yRange * width)).ToArray();
+                yPix = _values.Where(NotNaN).Where(NotInf).Select(vect => Mathf.RoundToInt((vect.x - xLeft) / xRange * height)).ToArray();
             }
 
-            for (int i = _values.Length - 2; i >= 0; i--)
+            for (int i = xPix.Length - 2; i >= 0; i--)
             {
                 DrawingHelper.DrawLine(ref texture, xPix[i], yPix[i], xPix[i + 1], yPix[i + 1], EvaluateColor(new Vector3(xPix[i], yPix[i], _values[i].z)), EvaluateColor(new Vector3(xPix[i + 1], yPix[i + 1], _values[i + 1].z)));
                 for (int w = 2; w <= LineWidth; w++)
