@@ -271,7 +271,6 @@ namespace KerbalWindTunnel.VesselCache
                 magnitude += groupMagnitude;
             }
             // These lists could be combined. But separate is easier for debugging.
-            // TODO?
             foreach (var (liftMachCurve, liftCurve) in surfaceDragP)
             {
                 float groupMagnitude;
@@ -284,12 +283,10 @@ namespace KerbalWindTunnel.VesselCache
 
             if (pitchInput < 0)
             {
-                bodyDrag *= 1 + pitchInput;
                 bodyDrag += ctrlDeltaDragNeg.Evaluate(conditions.mach, AoA) * -pitchInput;
             }
             else if (pitchInput > 0)
             {
-                bodyDrag *= 1 - pitchInput;
                 bodyDrag += ctrlDeltaDragPos.Evaluate(conditions.mach, AoA) * pitchInput;
             }
             magnitude += bodyDrag * conditions.pseudoReDragMult;
