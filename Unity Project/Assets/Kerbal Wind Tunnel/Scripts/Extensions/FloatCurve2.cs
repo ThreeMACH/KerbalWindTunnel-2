@@ -12,9 +12,7 @@ namespace KerbalWindTunnel
         public readonly float[] yKeys;
         private readonly HashSet<float> yKeysSet = new HashSet<float>();
         public readonly Keyframe2[,] values;
-
-        private readonly Dictionary<(int, int), float[]> coeffCache;
-        private readonly Dictionary<(int, int), int> coeffHashCache;
+        private readonly Coefficients[,] coefficientsCache;
 
         public (int, int) Size { get => (xKeys.Length, yKeys.Length); }
         public int Length { get { return values.Length; } }
@@ -31,8 +29,7 @@ namespace KerbalWindTunnel
             values = new Keyframe2[this.xKeys.Length, this.yKeys.Length];
             Array.Sort(this.xKeys);
             Array.Sort(this.yKeys);
-            coeffCache = new Dictionary<(int, int), float[]>();
-            coeffHashCache = new Dictionary<(int, int), int>();
+            coefficientsCache = new Coefficients[this.xKeys.Length - 1, this.yKeys.Length - 1];
         }
 
         public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys, float[,] values) : this(xKeys, yKeys)
@@ -172,6 +169,12 @@ namespace KerbalWindTunnel
 
         public static FloatCurve2 ComputeCurve(IEnumerable<float> xKeys, IEnumerable<float> yKeys, Func<float, float, float> func, DiffSettings settings = new DiffSettings())
             => ComputeCurve(xKeys.Select(k => (k, false)), yKeys.Select(k => (k, false)), func, settings);
+
+        private ref struct EvalPts
+        {
+            public float v0, v1, v2, v3, v4, v5, v6, v7, v8;
+        }
+
         public static FloatCurve2 ComputeCurve(IEnumerable<(float value, bool continuousDerivative)> xKeys, IEnumerable<(float value, bool continuousDerivative)> yKeys, Func<float, float, float> func, DiffSettings settings = new DiffSettings())
         {
             IList<(float value, bool continuousDerivative)> xKeys_ = xKeys as IList<(float, bool)> ?? xKeys.ToArray();
@@ -195,144 +198,144 @@ namespace KerbalWindTunnel
                     //  3   0   1
                     //  8   4   7
 
-                    Span<float> values = stackalloc float[9];
+                    EvalPts values = new EvalPts();
 
                     // Calculate base value
-                    values[0] = func(xKeys_[i].value, yKeys_[j].value);
+                    values.v0 = func(xKeys_[i].value, yKeys_[j].value);
                     // Calculate X differential values (1 and 3)
                     if (i < lx)
                     {
-                        values[1] = func(xKeys_[i].value + deltaX, yKeys_[j].value);
+                        values.v1 = func(xKeys_[i].value + deltaX, yKeys_[j].value);
                         if (i > 0)
                         {
                             if (xKeys_[i].continuousDerivative)
-                                values[3] = 2 * values[0] - values[1];
+                                values.v3 = 2 * values.v0 - values.v1;
                             else
-                                values[3] = func(xKeys_[i].value - deltaX, yKeys_[j].value);
+                                values.v3 = func(xKeys_[i].value - deltaX, yKeys_[j].value);
                         }
                         else
-                            values[3] = values[0];
+                            values.v3 = values.v0;
                     }
                     else if (i > 0)
                     {
-                        values[3] = func(xKeys_[i].value - deltaX, yKeys_[j].value);
-                        values[1] = values[0];
+                        values.v3 = func(xKeys_[i].value - deltaX, yKeys_[j].value);
+                        values.v1 = values.v0;
                     }
                     else
                     {
-                        values[1] = values[0];
-                        values[3] = values[0];
+                        values.v1 = values.v0;
+                        values.v3 = values.v0;
                     }
                     // Calculate Y differential values (2 and 4)
                     if (j < ly)
                     {
-                        values[2] = func(xKeys_[i].value, yKeys_[j].value + deltaY);
+                        values.v2 = func(xKeys_[i].value, yKeys_[j].value + deltaY);
                         if (j > 0)
                         {
                             if (yKeys_[j].continuousDerivative)
-                                values[4] = 2 * values[0] - values[2];
+                                values.v4 = 2 * values.v0 - values.v2;
                             else
-                                values[4] = func(xKeys_[i].value, yKeys_[j].value - deltaY);
+                                values.v4 = func(xKeys_[i].value, yKeys_[j].value - deltaY);
                         }
                         else
-                            values[4] = values[0];
+                            values.v4 = values.v0;
                     }
                     else if (j > 0)
                     {
-                        values[4] = func(xKeys_[i].value, yKeys_[j].value - deltaY);
-                        values[2] = values[0];
+                        values.v4 = func(xKeys_[i].value, yKeys_[j].value - deltaY);
+                        values.v2 = values.v0;
                     }
                     else
                     {
-                        values[2] = values[0];
-                        values[4] = values[0];
+                        values.v2 = values.v0;
+                        values.v4 = values.v0;
                     }
                     // Calculate combined differential values (5, 6, 7, and 8)
                     if (settings.zeroCrossDiff)
                     {
-                        values[5] = values[0];
-                        values[6] = values[0];
-                        values[7] = values[0];
-                        values[8] = values[0];
+                        values.v5 = values.v0;
+                        values.v6 = values.v0;
+                        values.v7 = values.v0;
+                        values.v8 = values.v0;
                     }
                     else if (i < lx && j < ly)
                     {
-                        values[5] = func(xKeys_[i].value + deltaX, yKeys_[j].value + deltaY);
+                        values.v5 = func(xKeys_[i].value + deltaX, yKeys_[j].value + deltaY);
                         if (i > 0)
                         {
                             if (xKeys_[i].continuousDerivative)
-                                values[6] = 2 * values[2] - values[5];
+                                values.v6 = 2 * values.v2 - values.v5;
                             else
-                                values[6] = func(xKeys_[i].value - deltaX, yKeys_[j].value + deltaY);
+                                values.v6 = func(xKeys_[i].value - deltaX, yKeys_[j].value + deltaY);
                         }
                         else
-                            values[6] = values[0];
+                            values.v6 = values.v0;
                         if (j > 0)
                         {
                             if (yKeys_[j].continuousDerivative)
-                                values[7] = 2 * values[1] - values[5];
+                                values.v7 = 2 * values.v1 - values.v5;
                             else
-                                values[7] = func(xKeys_[i].value + deltaX, yKeys_[j].value - deltaY);
+                                values.v7 = func(xKeys_[i].value + deltaX, yKeys_[j].value - deltaY);
                         }
                         else
-                            values[7] = values[0];
+                            values.v7 = values.v0;
                         if (i > 0 && j > 0)
                         {
                             if (xKeys_[i].continuousDerivative && yKeys_[j].continuousDerivative)
-                                values[8] = 2 * values[0] - values[5];
+                                values.v8 = 2 * values.v0 - values.v5;
                             else if (xKeys_[i].continuousDerivative)
-                                values[8] = 2 * values[4] - values[7];
+                                values.v8 = 2 * values.v4 - values.v7;
                             else if (yKeys_[j].continuousDerivative)
-                                values[8] = 2 * values[2] - values[6];
+                                values.v8 = 2 * values.v2 - values.v6;
                             else
-                                values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                                values.v8 = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
                         }
                         else
-                            values[8] = values[0];
+                            values.v8 = values.v0;
                     }
                     else if (i > 0 && j < ly)   // i >= lx  5 and 7 are not used
                     {
-                        values[5] = values[0];
-                        values[7] = values[0];
-                        values[6] = values[6] = func(xKeys_[i].value - deltaX, yKeys_[j].value + deltaY);
+                        values.v5 = values.v0;
+                        values.v7 = values.v0;
+                        values.v6 = func(xKeys_[i].value - deltaX, yKeys_[j].value + deltaY);
                         if (j > 0)
                         {
                             if (yKeys_[j].continuousDerivative)
-                                values[8] = 2 * values[2] - values[6];
+                                values.v8 = 2 * values.v2 - values.v6;
                             else
-                                values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                                values.v8 = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
                         }
                         else
-                            values[8] = values[0];
+                            values.v8 = values.v0;
                     }
                     else if (i < lx && j > 0)   // j >= ly  5 and 6 are not used
                     {
-                        values[5] = values[0];
-                        values[6] = values[0];
-                        values[7] = func(xKeys_[i].value + deltaX, yKeys_[j].value - deltaY);
+                        values.v5 = values.v0;
+                        values.v6 = values.v0;
+                        values.v7 = func(xKeys_[i].value + deltaX, yKeys_[j].value - deltaY);
                         if (i > 0)
                         {
                             if (xKeys_[i].continuousDerivative)
-                                values[8] = 2 * values[4] - values[7];
+                                values.v8 = 2 * values.v4 - values.v7;
                             else
-                                values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                                values.v8 = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
                         }
                         else
-                            values[8] = values[0];
+                            values.v8 = values.v0;
                     }
                     else if (i > 0 && j > 0)    // i >= lx & j >= ly    5, 6, and 7 are not used
                     {
-                        values[5] = values[0];
-                        values[6] = values[0];
-                        values[7] = values[0];
-                        values[8] = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
+                        values.v5 = values.v0;
+                        values.v6 = values.v0;
+                        values.v7 = values.v0;
+                        values.v8 = func(xKeys_[i].value - deltaX, yKeys_[j].value - deltaY);
                     }
                     else
                     {
-                        values[5] = values[0];
-                        values[6] = values[0];
-                        values[7] = values[0];
-                        values[8] = values[0];
+                        values.v5 = values.v0;
+                        values.v6 = values.v0;
+                        values.v7 = values.v0;
+                        values.v8 = values.v0;
                     }
 
                     // Mapping is as follows:
@@ -341,33 +344,33 @@ namespace KerbalWindTunnel
                     //  8   4   7
 
                     // 'Values' becomes differentials here to save allocations
-                    float values2 = values[2];
-                    float values4 = values[4];
-                    values[1] = (values[1] - values[0]) * invDeltaX;
-                    values[3] = (values[0] - values[3]) * invDeltaX;
-                    values[2] = (values[2] - values[0]) * invDeltaY;
-                    values[4] = (values[0] - values[4]) * invDeltaY;
+                    float values2 = values.v2;
+                    float values4 = values.v4;
+                    values.v1 = (values.v1 - values.v0) * invDeltaX;
+                    values.v3 = (values.v0 - values.v3) * invDeltaX;
+                    values.v2 = (values.v2 - values.v0) * invDeltaY;
+                    values.v4 = (values.v0 - values.v4) * invDeltaY;
                     if (settings.zeroCrossDiff)
                     {
-                        values[5] = 0;
-                        values[6] = 0;
-                        values[7] = 0;
-                        values[8] = 0;
+                        values.v5 = 0;
+                        values.v6 = 0;
+                        values.v7 = 0;
+                        values.v8 = 0;
                     }
                     else
                     {
-                        values[5] = ((values[5] - values2) * invDeltaX - values[1]) * invDeltaY;
-                        values[6] = ((values2 - values[6]) * invDeltaX - values[3]) * invDeltaY;
-                        values[7] = (values[1] - (values[7] - values4) * invDeltaX) * invDeltaY;
-                        values[8] = (values[3] - (values4 - values[8]) * invDeltaX) * invDeltaY;
+                        values.v5 = ((values.v5 - values2) * invDeltaX - values.v1) * invDeltaY;
+                        values.v6 = ((values2 - values.v6) * invDeltaX - values.v3) * invDeltaY;
+                        values.v7 = (values.v1 - (values.v7 - values4) * invDeltaX) * invDeltaY;
+                        values.v8 = (values.v3 - (values4 - values.v8) * invDeltaX) * invDeltaY;
                     }
 
                     curve.values[i, j] = new Keyframe2(
                         xKeys_[i].value, yKeys_[j].value,
-                        values[0],
-                        values[3], values[1],
-                        values[4], values[2],
-                        values[8], values[6], values[7], values[5]);
+                        values.v0,
+                        values.v3, values.v1,
+                        values.v4, values.v2,
+                        values.v8, values.v6, values.v7, values.v5);
                 }
             }
             return curve;
@@ -385,7 +388,80 @@ namespace KerbalWindTunnel
             return (~result) - 1;
         }
 
-        private float[] GetCoeffs(float timeX, float timeY, out float normalizedX, out float normalizedY, out int xSquare, out int ySquare, bool prefer1 = false)
+        private readonly struct Knowns
+        {
+            public readonly float a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p;
+            public Knowns(Keyframe2[,] values, int xSquare, int ySquare, float dx, float dy)
+            {
+                a = values[xSquare, ySquare].value;
+                b = values[xSquare + 1, ySquare].value;
+                c = values[xSquare, ySquare + 1].value;
+                d = values[xSquare + 1, ySquare + 1].value;
+                e = values[xSquare, ySquare].dDx_out * dx;
+                f = values[xSquare + 1, ySquare].dDx_in * dx;
+                g = values[xSquare, ySquare + 1].dDx_out * dx;
+                h = values[xSquare + 1, ySquare + 1].dDx_in * dx;
+                i = values[xSquare, ySquare].dDy_out * dy;
+                j = values[xSquare + 1, ySquare].dDy_out * dy;
+                k = values[xSquare, ySquare + 1].dDy_in * dy;
+                l = values[xSquare + 1, ySquare + 1].dDy_in * dy;
+                m = values[xSquare, ySquare].ddDx_out_Dy_out * dx * dy;
+                n = values[xSquare + 1, ySquare].ddDx_in_Dy_out * dx * dy;
+                o = values[xSquare, ySquare + 1].ddDx_out_Dy_in * dx * dy;
+                p = values[xSquare + 1, ySquare + 1].ddDx_in_Dy_in * dx * dy;
+            }
+            public override int GetHashCode()
+            {
+                HashCode hashCode = new HashCode();
+                hashCode.Add(a);    // 0
+                hashCode.Add(b);    // 1
+                hashCode.Add(c);    // 2
+                hashCode.Add(d);    // 3
+                hashCode.Add(e);    // 4
+                hashCode.Add(f);    // 5
+                hashCode.Add(g);    // 6
+                hashCode.Add(h);    // 7
+                hashCode.Add(i);    // 8
+                hashCode.Add(j);    // 9
+                hashCode.Add(k);    // 10
+                hashCode.Add(l);    // 11
+                hashCode.Add(m);    // 12
+                hashCode.Add(n);    // 13
+                hashCode.Add(o);    // 14
+                hashCode.Add(p);    // 15
+                return hashCode.ToHashCode();
+            }
+        }
+
+        private readonly struct Coefficients
+        {
+            public readonly float a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p;
+            public readonly int knownsHash;
+            public readonly bool isValid = false;
+            public Coefficients(in Knowns knowns)
+            {
+                knownsHash = knowns.GetHashCode();
+                a = 1 * knowns.a;
+                b = 1 * knowns.e;
+                c = -3 * knowns.a + 3 * knowns.b - 2 * knowns.e - 1 * knowns.f;
+                d = 2 * knowns.a - 2 * knowns.b + 1 * knowns.e + 1 * knowns.f;
+                e = 1 * knowns.i;
+                f = 1 * knowns.m;
+                g = -3 * knowns.i + 3 * knowns.j - 2 * knowns.m - 1 * knowns.n;
+                h = 2 * knowns.i - 2 * knowns.j + 1 * knowns.m + 1 * knowns.n;
+                i = -3 * knowns.a + 3 * knowns.c - 2 * knowns.i - 1 * knowns.k;
+                j = -3 * knowns.e + 3 * knowns.g - 2 * knowns.m - 1 * knowns.o;
+                k = 9 * knowns.a - 9 * knowns.b - 9 * knowns.c + 9 * knowns.d + 6 * knowns.e + 3 * knowns.f - 6 * knowns.g - 3 * knowns.h + 6 * knowns.i - 6 * knowns.j + 3 * knowns.k - 3 * knowns.l + 4 * knowns.m + 2 * knowns.n + 2 * knowns.o + 1 * knowns.p;
+                l = -6 * knowns.a + 6 * knowns.b + 6 * knowns.c - 6 * knowns.d - 3 * knowns.e - 3 * knowns.f + 3 * knowns.g + 3 * knowns.h - 4 * knowns.i + 4 * knowns.j - 2 * knowns.k + 2 * knowns.l - 2 * knowns.m - 2 * knowns.n - 1 * knowns.o - 1 * knowns.p;
+                m = 2 * knowns.a - 2 * knowns.c + 1 * knowns.i + 1 * knowns.k;
+                n = 2 * knowns.e - 2 * knowns.g + 1 * knowns.m + 1 * knowns.o;
+                o = -6 * knowns.a + 6 * knowns.b + 6 * knowns.c - 6 * knowns.d - 4 * knowns.e - 2 * knowns.f + 4 * knowns.g + 2 * knowns.h - 3 * knowns.i + 3 * knowns.j - 3 * knowns.k + 3 * knowns.l - 2 * knowns.m - 1 * knowns.n - 2 * knowns.o - 1 * knowns.p;
+                p = 4 * knowns.a - 4 * knowns.b - 4 * knowns.c + 4 * knowns.d + 2 * knowns.e + 2 * knowns.f - 2 * knowns.g - 2 * knowns.h + 2 * knowns.i - 2 * knowns.j + 2 * knowns.k - 2 * knowns.l + 1 * knowns.m + 1 * knowns.n + 1 * knowns.o + 1 * knowns.p;
+                isValid = true;
+            }
+        }
+
+        private ref Coefficients GetCoeffs(float timeX, float timeY, out float normalizedX, out float normalizedY, out int xSquare, out int ySquare, bool prefer1 = false)
         {
             bool exactX, exactY;
             if (timeX <= xKeys[0])
@@ -433,80 +509,35 @@ namespace KerbalWindTunnel
             normalizedX = Mathf.Clamp01((timeX - xKeys[xSquare]) / dx);
             normalizedY = Mathf.Clamp01((timeY - yKeys[ySquare]) / dy);
 
-            ReadOnlySpan<float> knowns = stackalloc float[16] {
-                    values[xSquare,ySquare].value,
-                    values[xSquare + 1,ySquare].value,
-                    values[xSquare,ySquare + 1].value,
-                    values[xSquare + 1,ySquare + 1].value,
-                    values[xSquare,ySquare].dDx_out * dx,
-                    values[xSquare + 1,ySquare].dDx_in * dx,
-                    values[xSquare,ySquare + 1].dDx_out * dx,
-                    values[xSquare + 1,ySquare + 1].dDx_in * dx,
-                    values[xSquare,ySquare].dDy_out * dy,
-                    values[xSquare + 1,ySquare].dDy_out * dy,
-                    values[xSquare,ySquare + 1].dDy_in * dy,
-                    values[xSquare + 1,ySquare + 1].dDy_in * dy,
-                    values[xSquare,ySquare].ddDx_out_Dy_out * dx * dy,
-                    values[xSquare + 1,ySquare].ddDx_in_Dy_out * dx * dy,
-                    values[xSquare,ySquare + 1].ddDx_out_Dy_in * dx * dy,
-                    values[xSquare + 1,ySquare + 1].ddDx_in_Dy_in * dx * dy
-                };
+            Knowns knowns = new Knowns(values, xSquare, ySquare, dx, dy);
+            int knownsHash = knowns.GetHashCode();
 
-            HashCode knownsHashCode = new HashCode();
-            for (int i = 0; i <= 15; i++)
-                knownsHashCode.Add(knowns[i]);
-            int knownsHash = knownsHashCode.ToHashCode();
+            ref Coefficients thisCoeff = ref coefficientsCache[xSquare, ySquare];
 
-            if (!coeffCache.ContainsKey(squareIndex) || coeffHashCache[squareIndex] != knownsHash)
-            {
-                float[] coeffs = new float[16] {
-                        1 * knowns[0],
-                        1 * knowns[4],
-                        -3 * knowns[0] + 3 * knowns[1] - 2 * knowns[4] - 1 * knowns[5],
-                        2 * knowns[0] - 2 * knowns[1] + 1 * knowns[4] + 1 * knowns[5],
-                        1 * knowns[8],
-                        1 * knowns[12],
-                        -3 * knowns[8] + 3 * knowns[9] - 2 * knowns[12] - 1 * knowns[13],
-                        2 * knowns[8] - 2 * knowns[9] + 1 * knowns[12] + 1 * knowns[13],
-                        -3 * knowns[0] + 3 * knowns[2] - 2 * knowns[8] - 1 * knowns[10],
-                        -3 * knowns[4] + 3 * knowns[6] - 2 * knowns[12] - 1 * knowns[14],
-                        9 * knowns[0] - 9 * knowns[1] - 9 * knowns[2] + 9 * knowns[3] + 6 * knowns[4] + 3 * knowns[5] - 6 * knowns[6] - 3 * knowns[7] + 6 * knowns[8] - 6 * knowns[9] + 3 * knowns[10] - 3 * knowns[11] + 4 * knowns[12] + 2 * knowns[13] + 2 * knowns[14] + 1 * knowns[15],
-                        -6 * knowns[0] + 6 * knowns[1] + 6 * knowns[2] - 6 * knowns[3] - 3 * knowns[4] - 3 * knowns[5] + 3 * knowns[6] + 3 * knowns[7] - 4 * knowns[8] + 4 * knowns[9] - 2 * knowns[10] + 2 * knowns[11] - 2 * knowns[12] - 2 * knowns[13] - 1 * knowns[14] - 1 * knowns[15],
-                        2 * knowns[0] - 2 * knowns[2] + 1 * knowns[8] + 1 * knowns[10],
-                        2 * knowns[4] - 2 * knowns[6] + 1 * knowns[12] + 1 * knowns[14],
-                        -6 * knowns[0] + 6 * knowns[1] + 6 * knowns[2] - 6 * knowns[3] - 4 * knowns[4] - 2 * knowns[5] + 4 * knowns[6] + 2 * knowns[7] - 3 * knowns[8] + 3 * knowns[9] - 3 * knowns[10] + 3 * knowns[11] - 2 * knowns[12] - 1 * knowns[13] - 2 * knowns[14] - 1 * knowns[15],
-                        4 * knowns[0] - 4 * knowns[1] - 4 * knowns[2] + 4 * knowns[3] + 2 * knowns[4] + 2 * knowns[5] - 2 * knowns[6] - 2 * knowns[7] + 2 * knowns[8] - 2 * knowns[9] + 2 * knowns[10] - 2 * knowns[11] + 1 * knowns[12] + 1 * knowns[13] + 1 * knowns[14] + 1 * knowns[15]
-                        };
+            if (!thisCoeff.isValid || thisCoeff.knownsHash != knownsHash)
+                coefficientsCache[xSquare, ySquare] = new Coefficients(knowns);
 
-                lock (coeffCache)
-                {
-                    coeffHashCache[squareIndex] = knownsHash;
-                    coeffCache[squareIndex] = coeffs;
-
-                    return coeffs;
-                }
-            }
-            return coeffCache[squareIndex];
+            return ref thisCoeff;
         }
 
         public float Evaluate(float timeX, float timeY)
         {
-            float[] coeffs = GetCoeffs(timeX, timeY, out float x, out float y, out _, out _);
+            ref Coefficients coeffs = ref GetCoeffs(timeX, timeY, out float x, out float y, out _, out _);
 
             float x2 = x * x;
             float x3 = x2 * x;
             float y2 = y * y;
             float y3 = y2 * y;
 
-            return (coeffs[0] + coeffs[1] * x + coeffs[2] * x2 + coeffs[3] * x3) +
-                (coeffs[4] + coeffs[5] * x + coeffs[6] * x2 + coeffs[7] * x3) * y +
-                (coeffs[8] + coeffs[9] * x + coeffs[10] * x2 + coeffs[11] * x3) * y2 +
-                (coeffs[12] + coeffs[13] * x + coeffs[14] * x2 + coeffs[15] * x3) * y3;
+            return (coeffs.a + coeffs.b * x + coeffs.c * x2 + coeffs.d * x3) +
+                (coeffs.e + coeffs.f * x + coeffs.g * x2 + coeffs.h * x3) * y +
+                (coeffs.i + coeffs.j * x + coeffs.k * x2 + coeffs.l * x3) * y2 +
+                (coeffs.m + coeffs.n * x + coeffs.o * x2 + coeffs.p * x3) * y3;
         }
 
         public float EvaluateDerivative(float timeX, float timeY, (int, int) dimension, bool prefer1 = false)
         {
-            float[] coeffs = GetCoeffs(timeX, timeY, out float x, out float y, out int xSquare, out int ySquare, prefer1);
+            ref Coefficients coeffs = ref GetCoeffs(timeX, timeY, out float x, out float y, out int xSquare, out int ySquare, prefer1);
 
             float x2 = x * x;
             float y2 = y * y;
@@ -521,10 +552,10 @@ namespace KerbalWindTunnel
                 else
                 {
                     float y3 = y2 * y;
-                    return ((coeffs[1] + 2 * coeffs[2] * x + 3 * coeffs[3] * x2) +
-                        (coeffs[5] + 2 * coeffs[6] * x + 3 * coeffs[7] * x2) * y +
-                        (coeffs[9] + 2 * coeffs[10] * x + 3 * coeffs[11] * x2) * y2 +
-                        (coeffs[13] + 2 * coeffs[14] * x + 3 * coeffs[15] * x2) * y3) / dX;
+                    return ((coeffs.b + 2 * coeffs.c * x + 3 * coeffs.d * x2) +
+                        (coeffs.f + 2 * coeffs.g * x + 3 * coeffs.h * x2) * y +
+                        (coeffs.j + 2 * coeffs.k * x + 3 * coeffs.l * x2) * y2 +
+                        (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y3) / dX;
                 }
             }
             else if (dimension.Equals((0, 1)))
@@ -534,9 +565,9 @@ namespace KerbalWindTunnel
                 else
                 {
                     float x3 = x2 * x;
-                    return ((coeffs[4] + coeffs[5] * x + coeffs[6] * x2 + coeffs[7] * x3) +
-                        2 * (coeffs[8] + coeffs[9] * x + coeffs[10] * x2 + coeffs[11] * x3) * y +
-                        3 * (coeffs[12] + coeffs[13] * x + coeffs[14] * x2 + coeffs[15] * x3) * y2) / dY;
+                    return ((coeffs.e + coeffs.f * x + coeffs.g * x2 + coeffs.h * x3) +
+                        2 * (coeffs.i + coeffs.j * x + coeffs.k * x2 + coeffs.l * x3) * y +
+                        3 * (coeffs.m + coeffs.n * x + coeffs.o * x2 + coeffs.p * x3) * y2) / dY;
                 }
             }
             else if (dimension.Equals((1, 1)))
@@ -544,9 +575,9 @@ namespace KerbalWindTunnel
                 if ((timeX < xKeys[0] || timeX > xKeys[xKeys.Length - 1]) && (timeY < yKeys[0] || timeY > yKeys[yKeys.Length - 1]))
                     return 0;
                 else
-                    return ((coeffs[5] + 2 * coeffs[6] * x + 3 * coeffs[7] * x2) +
-                        2 * (coeffs[9] + 2 * coeffs[10] * x + 3 * coeffs[11] * x2) * y +
-                        3 * (coeffs[13] + 2 * coeffs[14] * x + 3 * coeffs[15] * x2) * y2) / (dX * dY);
+                    return ((coeffs.f + 2 * coeffs.g * x + 3 * coeffs.h * x2) +
+                        2 * (coeffs.j + 2 * coeffs.k * x + 3 * coeffs.l * x2) * y +
+                        3 * (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y2) / (dX * dY);
             }
             else
                 throw new ArgumentOutOfRangeException("dimension");

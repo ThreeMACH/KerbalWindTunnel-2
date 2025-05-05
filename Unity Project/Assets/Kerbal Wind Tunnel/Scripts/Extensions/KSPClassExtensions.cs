@@ -185,9 +185,9 @@ namespace KerbalWindTunnel.Extensions
         {
             FloatCurve result = new FloatCurve();
             int length = sortedUniqueKeys.Count;
-            Span<float> values = new float[length];
-            Span<float> inTangents = new float[length];
-            Span<float> outTangents = new float[length];
+            float[] values = new float[length];
+            float[] inTangents = new float[length];
+            float[] outTangents = new float[length];
 
             foreach (FloatCurve curve in curves)
             {
