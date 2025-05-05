@@ -530,6 +530,9 @@ namespace KerbalWindTunnel
 
         private void EnvelopeGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
+            if (vessel == null)
+                return;
+
             clickedPosition = envelopeGrapher.GetGraphCoordinate(clickedPosition);
             HighlightSpeed = clickedPosition.x;
             HighlightAltitude = clickedPosition.y;
@@ -550,6 +553,9 @@ namespace KerbalWindTunnel
 
         private void AoaCurveGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
+            if (vessel == null)
+                return;
+
             HighlightAoA = aoaCurveGrapher.GetGraphCoordinate(clickedPosition).x;
             SetAoADetails();
         }
@@ -561,6 +567,9 @@ namespace KerbalWindTunnel
 
         private void VelCurveGrapher_GraphClicked(object _, Vector2 clickedPosition)
         {
+            if (vessel == null)
+                return;
+
             HighlightSpeed = velCurveGrapher.GetGraphCoordinate(clickedPosition).x;
             HighlightAoA = Mathf.Round(Mathf.Rad2Deg * SetVelDetails() * 10) / 10;
 
