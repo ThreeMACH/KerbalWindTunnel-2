@@ -108,7 +108,6 @@ namespace KerbalWindTunnel.VesselCache
             {
                 parts.AddRange(collection.parts.Select(p => new CharacterizedPart(p)));
                 surfaces.AddRange(collection.surfaces.Select(s => new CharacterizedLiftingSurface(s)));
-                // Todo: Treat controls as their own category.
                 foreach (SimulatedControlSurface ctrl in collection.ctrls)
                 {
                     CharacterizedPart ctrlPart = new CharacterizedPart(ctrl.part);

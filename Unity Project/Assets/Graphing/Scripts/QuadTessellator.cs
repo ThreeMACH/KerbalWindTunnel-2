@@ -45,7 +45,7 @@ namespace Graphing.Meshing
 
             for (int i = 0; i < this.indices.Count; i += 4)
             {
-                // Todo: this seems to wind the wrong way... If it works, it works.
+                // This seems to wind the wrong way... But if it works, it works.
                 quads.Add(new Quad(vertices, indices[i], indices[i + 3], indices[i + 2], indices[i + 1]));
             }
 

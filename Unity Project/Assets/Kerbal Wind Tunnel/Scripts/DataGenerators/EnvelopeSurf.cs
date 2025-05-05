@@ -224,7 +224,6 @@ namespace KerbalWindTunnel.DataGenerators
             {
                 int stallpt = EnvelopeLine.CoordLocator.GenerateCoordLocators(EnvelopePoints.SelectToArray(pt => pt.Thrust_excess)).First(0, 0, c => c.value >= 0);
                 float minEconomy = economy[stallpt, 0] / 3;
-                //toModify.ZMax = minEconomy;   // TODO: What was the intent here...
             }
             catch (InvalidOperationException)
             {

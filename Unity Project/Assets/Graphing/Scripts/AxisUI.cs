@@ -538,13 +538,11 @@ namespace Graphing
             attachedGraphDrawers.Add(graphDrawer);
             if (FirstVisibleGraph() == graphDrawer.FirstVisibleInHierarchy)
             {
-                // TODO: do we want to limit to only IColorGraphs? The function works for any IGraph...
                 if (_use == AxisDirection.Color)
                 {
                     IColorGraph firstColorGraph = graphDrawer.FirstColorGraphInHierarchy;
                     if (firstColorGraph != null)
                     {
-                        // TODO: Make Material handling more elegant.
                         AxisMaterial = InstantiateMaterial(firstColorGraph);
                         materialWasInstantiated = true;
                     }

@@ -483,7 +483,8 @@ namespace KerbalWindTunnel.VesselCache
         {
             RotorPartCollection collection = BorrowWithoutAdding(parentCollection?.parentVessel, originPart);
             collection.parentCollection = parentCollection;
-            // The root part doesn't rotate - ish. Todo: Confirm this is true
+            // The root part doesn't rotate - ish. Eventually should confirm that this is true.
+            // I don't think KSP does rotational drag on the hub parts - at least not to any degree that will affect results here.
             // So we add the root part to the parent
             parentCollection.AddPart(originPart);
             // And its children to this collection
