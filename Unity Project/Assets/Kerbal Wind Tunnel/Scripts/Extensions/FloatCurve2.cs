@@ -480,8 +480,8 @@ namespace KerbalWindTunnel
 
                 lock (coeffCache)
                 {
-                    coeffCache[squareIndex] = coeffs;
                     coeffHashCache[squareIndex] = knownsHash;
+                    coeffCache[squareIndex] = coeffs;
 
                     return coeffs;
                 }
