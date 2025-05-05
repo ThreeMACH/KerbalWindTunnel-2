@@ -675,7 +675,7 @@ namespace KerbalWindTunnel
         public CelestialBody CelestialBody { get => body.celestialBody; }
 
 #if DEBUG
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "DEBUG Only")]
+#pragma warning disable CS0162 // Unreachable code detected
         private void CharacterizedTestDump()
         {
             VesselCache.SimulatedVessel simVessel_test = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
@@ -683,24 +683,25 @@ namespace KerbalWindTunnel
 
             AeroPredictor.Conditions conditions = new AeroPredictor.Conditions(CelestialBody, 100, 0);
 
-            Debug.Log("Truth Data");
-            Debug.LogFormat("Angle\tLift_true\tLift_Char\tDrag_true\tDrag_Char");
-            for (int i = -180; i <= 180; i++)
+            switch (6)
             {
-                float lift_true = simVessel_test.GetLiftForceMagnitude(conditions, Mathf.Deg2Rad * i);
-                float lift_char = charVessel.GetLiftForceMagnitude(conditions, Mathf.Deg2Rad * i);
-                float drag_true = simVessel_test.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * i);
-                float drag_char = charVessel.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                case 1:
+                    Debug.LogFormat("Angle\tLift_true\tLift_Char\tDrag_true\tDrag_Char");
+                    for (int i = -180; i <= 180; i++)
+                    {
+                        float lift_true = simVessel_test.GetLiftForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                        float lift_char = charVessel.GetLiftForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                        float drag_true = simVessel_test.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * i);
+                        float drag_char = charVessel.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * i);
 
-                Debug.LogFormat($"{Mathf.Deg2Rad * i}\t{lift_true}\t{lift_char}\t{drag_true}\t{drag_char}");
+                        Debug.LogFormat($"{i}\t{lift_true}\t{lift_char}\t{drag_true}\t{drag_char}");
+                    }
+                    break;
             }
-            Debug.Log("End data");
 
             Debug.Log($"{simVessel_test.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * 5)} == {charVessel.GetDragForceMagnitude(conditions, Mathf.Deg2Rad * 5)}");
-            Debug.Log("Vessel Lift Curve");
-            foreach (var k in charVessel.surfaceLift[0].liftCurve.Curve.keys)
-                Debug.LogFormat($"{k.time}\t{k.value}\t{k.inTangent}\t{k.outTangent}");
         }
+#pragma warning restore CS0162 // Unreachable code detected
 #endif
 
         private void RefreshData()
