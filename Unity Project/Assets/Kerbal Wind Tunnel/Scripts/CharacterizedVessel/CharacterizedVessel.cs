@@ -146,7 +146,7 @@ namespace KerbalWindTunnel.VesselCache
             }
         }
 
-        private void WaitUntilCharacterized()
+        public void WaitUntilCharacterized()
         {
             if (taskHandle == null)
                 Characterize();
@@ -445,7 +445,7 @@ namespace KerbalWindTunnel.VesselCache
             return magnitude;
         }
 
-        private void WaitUntilAoACharacterized()
+        public void WaitUntilAoACharacterized()
         {
             if (maxAoATaskHandle == null)
                 Characterize();
