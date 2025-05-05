@@ -126,6 +126,14 @@ namespace KerbalWindTunnel.Extensions
 
         public static Comparer<Keyframe> keyframeTimeComparer = Comparer<Keyframe>.Create((k1, k2) => k1.time.CompareTo(k2.time));
 
+        public static bool IsAlwaysZero(this FloatCurve curve)
+        {
+            foreach(Keyframe keyframe in curve.Curve.keys)
+                if (keyframe.value != 0 || keyframe.outTangent != 0 || keyframe.inTangent != 0)
+                    return false;
+            return true;
+        }
+
         public static float EvaluateThreadSafe(this FloatCurve curve, float time)
         {
             lock (curve)
