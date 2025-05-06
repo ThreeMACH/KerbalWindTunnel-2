@@ -5,8 +5,9 @@ using UnityEngine;
 
 namespace KerbalWindTunnel
 {
-    public class FloatCurve2
+    public class FloatCurve2 : IDisposable
     {
+        public System.Threading.ReaderWriterLockSlim ReadWriteLock { get; } = new System.Threading.ReaderWriterLockSlim();
         public readonly float[] xKeys;
         private readonly HashSet<float> xKeysSet = new HashSet<float>();
         public readonly float[] yKeys;
@@ -463,22 +464,19 @@ namespace KerbalWindTunnel
 
         private ref Coefficients GetCoeffs(float timeX, float timeY, out float normalizedX, out float normalizedY, out int xSquare, out int ySquare, bool prefer1 = false)
         {
-            bool exactX, exactY;
             if (timeX <= xKeys[0])
             {
                 xSquare = 0;
                 timeX = xKeys[0];
-                exactX = true;
             }
             else if (timeX >= xKeys[xKeys.Length - 1])
             {
                 xSquare = xKeys.Length - 2;
                 timeX = xKeys[xKeys.Length - 1];
-                exactX = true;
             }
             else
             {
-                xSquare = FindIndex(xKeys, timeX, out exactX);
+                xSquare = FindIndex(xKeys, timeX, out bool exactX);
                 if (prefer1 && exactX)
                     xSquare -= 1;
             }
@@ -487,22 +485,18 @@ namespace KerbalWindTunnel
             {
                 ySquare = 0;
                 timeY = yKeys[0];
-                exactY = true;
             }
             else if (timeY >= yKeys[yKeys.Length - 1])
             {
                 ySquare = yKeys.Length - 2;
                 timeY = yKeys[yKeys.Length - 1];
-                exactY = true;
             }
             else
             {
-                ySquare = FindIndex(yKeys, timeY, out exactY);
+                ySquare = FindIndex(yKeys, timeY, out bool exactY);
                 if (prefer1 && exactY)
                     ySquare -= 1;
             }
-
-            (int, int) squareIndex = (xSquare, ySquare);
 
             float dx = (xKeys[xSquare + 1] - xKeys[xSquare]);
             float dy = (yKeys[ySquare + 1] - yKeys[ySquare]);
@@ -522,65 +516,81 @@ namespace KerbalWindTunnel
 
         public float Evaluate(float timeX, float timeY)
         {
-            ref Coefficients coeffs = ref GetCoeffs(timeX, timeY, out float x, out float y, out _, out _);
+            ReadWriteLock.EnterReadLock();
+            try
+            {
+                ref Coefficients coeffs = ref GetCoeffs(timeX, timeY, out float x, out float y, out _, out _);
 
-            float x2 = x * x;
-            float x3 = x2 * x;
-            float y2 = y * y;
-            float y3 = y2 * y;
+                float x2 = x * x;
+                float x3 = x2 * x;
+                float y2 = y * y;
+                float y3 = y2 * y;
 
-            return (coeffs.a + coeffs.b * x + coeffs.c * x2 + coeffs.d * x3) +
-                (coeffs.e + coeffs.f * x + coeffs.g * x2 + coeffs.h * x3) * y +
-                (coeffs.i + coeffs.j * x + coeffs.k * x2 + coeffs.l * x3) * y2 +
-                (coeffs.m + coeffs.n * x + coeffs.o * x2 + coeffs.p * x3) * y3;
+                return (coeffs.a + coeffs.b * x + coeffs.c * x2 + coeffs.d * x3) +
+                    (coeffs.e + coeffs.f * x + coeffs.g * x2 + coeffs.h * x3) * y +
+                    (coeffs.i + coeffs.j * x + coeffs.k * x2 + coeffs.l * x3) * y2 +
+                    (coeffs.m + coeffs.n * x + coeffs.o * x2 + coeffs.p * x3) * y3;
+            }
+            finally
+            {
+                ReadWriteLock.ExitReadLock();
+            }
         }
 
         public float EvaluateDerivative(float timeX, float timeY, (int, int) dimension, bool prefer1 = false)
         {
-            ref Coefficients coeffs = ref GetCoeffs(timeX, timeY, out float x, out float y, out int xSquare, out int ySquare, prefer1);
-
-            float x2 = x * x;
-            float y2 = y * y;
-
-            float dX = xKeys[xSquare + 1] - xKeys[xSquare];
-            float dY = yKeys[ySquare + 1] - yKeys[ySquare];
-
-            if (dimension.Equals((1, 0)))
+            ReadWriteLock.EnterReadLock();
+            try
             {
-                if (timeX < xKeys[0] || timeX > xKeys[xKeys.Length - 1])
-                    return 0;
-                else
+                ref Coefficients coeffs = ref GetCoeffs(timeX, timeY, out float x, out float y, out int xSquare, out int ySquare, prefer1);
+
+                float x2 = x * x;
+                float y2 = y * y;
+
+                float dX = xKeys[xSquare + 1] - xKeys[xSquare];
+                float dY = yKeys[ySquare + 1] - yKeys[ySquare];
+
+                if (dimension.Equals((1, 0)))
                 {
-                    float y3 = y2 * y;
-                    return ((coeffs.b + 2 * coeffs.c * x + 3 * coeffs.d * x2) +
-                        (coeffs.f + 2 * coeffs.g * x + 3 * coeffs.h * x2) * y +
-                        (coeffs.j + 2 * coeffs.k * x + 3 * coeffs.l * x2) * y2 +
-                        (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y3) / dX;
+                    if (timeX < xKeys[0] || timeX > xKeys[xKeys.Length - 1])
+                        return 0;
+                    else
+                    {
+                        float y3 = y2 * y;
+                        return ((coeffs.b + 2 * coeffs.c * x + 3 * coeffs.d * x2) +
+                            (coeffs.f + 2 * coeffs.g * x + 3 * coeffs.h * x2) * y +
+                            (coeffs.j + 2 * coeffs.k * x + 3 * coeffs.l * x2) * y2 +
+                            (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y3) / dX;
+                    }
                 }
-            }
-            else if (dimension.Equals((0, 1)))
-            {
-                if (timeY < yKeys[0] || timeY > yKeys[yKeys.Length - 1])
-                    return 0;
-                else
+                else if (dimension.Equals((0, 1)))
                 {
-                    float x3 = x2 * x;
-                    return ((coeffs.e + coeffs.f * x + coeffs.g * x2 + coeffs.h * x3) +
-                        2 * (coeffs.i + coeffs.j * x + coeffs.k * x2 + coeffs.l * x3) * y +
-                        3 * (coeffs.m + coeffs.n * x + coeffs.o * x2 + coeffs.p * x3) * y2) / dY;
+                    if (timeY < yKeys[0] || timeY > yKeys[yKeys.Length - 1])
+                        return 0;
+                    else
+                    {
+                        float x3 = x2 * x;
+                        return ((coeffs.e + coeffs.f * x + coeffs.g * x2 + coeffs.h * x3) +
+                            2 * (coeffs.i + coeffs.j * x + coeffs.k * x2 + coeffs.l * x3) * y +
+                            3 * (coeffs.m + coeffs.n * x + coeffs.o * x2 + coeffs.p * x3) * y2) / dY;
+                    }
                 }
-            }
-            else if (dimension.Equals((1, 1)))
-            {
-                if ((timeX < xKeys[0] || timeX > xKeys[xKeys.Length - 1]) && (timeY < yKeys[0] || timeY > yKeys[yKeys.Length - 1]))
-                    return 0;
+                else if (dimension.Equals((1, 1)))
+                {
+                    if ((timeX < xKeys[0] || timeX > xKeys[xKeys.Length - 1]) && (timeY < yKeys[0] || timeY > yKeys[yKeys.Length - 1]))
+                        return 0;
+                    else
+                        return ((coeffs.f + 2 * coeffs.g * x + 3 * coeffs.h * x2) +
+                            2 * (coeffs.j + 2 * coeffs.k * x + 3 * coeffs.l * x2) * y +
+                            3 * (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y2) / (dX * dY);
+                }
                 else
-                    return ((coeffs.f + 2 * coeffs.g * x + 3 * coeffs.h * x2) +
-                        2 * (coeffs.j + 2 * coeffs.k * x + 3 * coeffs.l * x2) * y +
-                        3 * (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y2) / (dX * dY);
+                    throw new ArgumentOutOfRangeException("dimension");
             }
-            else
-                throw new ArgumentOutOfRangeException("dimension");
+            finally
+            {
+                ReadWriteLock.ExitReadLock();
+            }
         }
 
         public static FloatCurve2 Superposition(IEnumerable<FloatCurve2> curves)
@@ -783,6 +793,9 @@ namespace KerbalWindTunnel
             }
             return new FloatCurve2(xKeys, yKeys, values, dDx_in, dDx_out, dDy_in, dDy_out, ddDx_in_Dy_in, ddDx_in_Dy_out, ddDx_out_Dy_in, ddDx_out_Dy_out);
         }
+
+        public void Dispose()
+            => ReadWriteLock.Dispose();
 
         public struct Keyframe2
         {
