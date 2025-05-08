@@ -6,79 +6,88 @@ namespace KerbalWindTunnel.DataGenerators
 {
     public readonly struct EnvelopePoint
     {
+        private static readonly Unity.Profiling.ProfilerMarker ctorMarker = new Unity.Profiling.ProfilerMarker("EnvelopePoint..ctor");
+        
         public readonly float AoA_level;
-        public readonly float Thrust_excess;
-        public readonly float Accel_excess;
-        public readonly float Lift_max;
         public readonly float AoA_max;
-        public readonly float Thrust_available;
-        public readonly float altitude;
-        public readonly float speed;
-        public readonly float LDRatio;
-        public readonly Vector3 force;
-        public readonly Vector3 aeroforce;
-        public readonly float mach;
-        public readonly float dynamicPressure;
-        public readonly float dLift;
         public readonly float drag;
+        public readonly float lift;
+        public readonly float lift_max;
+        public readonly float LDRatio;
+        public readonly float dLift;
+
+        public readonly float thrust_available;
+        public readonly float thrust_required;
+
         public readonly float pitchInput;
-        public readonly float fuelBurnRate;
         //public readonly float stabilityRange;
         //public readonly float stabilityScore;
         //public readonly float stabilityDerivative;
-        public readonly bool completed;
+
+        public readonly float fuelBurnRate;
+
+        public readonly float altitude;
+        public readonly float speed;
+        public readonly float mach;
+        public readonly float dynamicPressure;
+
+        private readonly float mass;
+        private readonly float wingArea;
+
+        public float Thrust_Excess { get => thrust_available - thrust_required; }
+        public float Accel_Excess { get => Thrust_Excess / (mass * WindTunnelWindow.gAccel); }
+        public float SpecificEnergy { get => altitude * WindTunnelWindow.gAccel + speed * speed * 0.5f; }
+        public float Power_Required { get => thrust_required * speed * speed; }
+        public float Power_Available { get => thrust_available * speed * speed; }
+        public float LiftCoefficient { get => lift / (dynamicPressure * wingArea); }
+        public float DragCoefficient { get => drag / (dynamicPressure * wingArea); }
 
         public EnvelopePoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed, float AoA_guess = float.NaN, float maxA_guess = float.NaN, float pitchI_guess = float.NaN)
         {
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.BeginSample("EnvelopePoint..ctor");
-#endif
+            ctorMarker.Begin();
             this.altitude = altitude;
             this.speed = speed;
+            mass = vessel.Mass;
+            wingArea = vessel.Area;
             AeroPredictor.Conditions conditions = new AeroPredictor.Conditions(body, speed, altitude);
             float gravParameter, radius;
             gravParameter = (float)body.gravParameter;
             radius = (float)body.Radius;
-            this.mach = conditions.mach;
-            this.dynamicPressure = 0.0005f * conditions.atmDensity * speed * speed;
-            float weight = (vessel.Mass * gravParameter / ((radius + altitude) * (radius + altitude))) - (vessel.Mass * speed * speed / (radius + altitude));
-            //AoA_max = vessel.GetMaxAoA(conditions, out Lift_max, maxA_guess);
-            AoA_level = vessel.FindLevelAoA(conditions, weight, guess: AoA_guess);
-            Vector3 thrustForce = vessel.GetThrustForce(conditions, AoA_level);
+            float r = radius + altitude;
+            mach = conditions.mach;
+            dynamicPressure = 0.0005f * conditions.atmDensity * speed * speed;
+            float weight = mass * (gravParameter / (r * r) - speed * speed / r);
+
+            AoA_max = vessel.FindMaxAoA(conditions, out lift_max, maxA_guess);
+
+            KeyAoAData keyAoAs = vessel.SolveLevelFlight(conditions, weight, null, new KeyAoAData() { maxLift = AoA_max, levelFlight = AoA_guess });
+
+            AoA_level = keyAoAs.levelFlight;
+
+            Vector2 thrustForce = vessel.GetThrustForce2D(conditions, AoA_level);
             fuelBurnRate = vessel.GetFuelBurnRate(conditions, AoA_level);
-            if (float.IsNaN(maxA_guess))
-            {
-                AoA_max = vessel.FindMaxAoA(conditions, out Lift_max, maxA_guess);
-                //Lift_max = AeroPredictor.GetLiftForceMagnitude(vessel.GetAeroForce(conditions, AoA_max, 1) + thrustForce, AoA_max);
-            }
-            else
-            {
-                AoA_max = maxA_guess;
-                Lift_max = AeroPredictor.GetLiftForceComponent(vessel.GetLiftForce(conditions, AoA_max, 1) + (vessel.ThrustIsConstantWithAoA ? AeroPredictor.ToVesselFrame(thrustForce, AoA_max) : vessel.GetThrustForce(conditions, AoA_max)), AoA_max);
-            }
 
             if (AoA_level < AoA_max)
                 pitchInput = vessel.FindStablePitchInput(conditions, AoA_level, guess: pitchI_guess);
             else
                 pitchInput = 1;
 
-            if (speed < 5 && Math.Abs(altitude) < 10)
-                AoA_level = 0;
+            thrust_available = AeroPredictor.GetUsefulThrustMagnitude(thrustForce);
 
-            Thrust_available = AeroPredictor.GetUsefulThrustMagnitude(thrustForce);
-
-            //vessel.GetAeroCombined(conditions, AoA_level, pitchInput, out force, out Vector3 torque);
-            force = vessel.GetAeroForce(conditions, AoA_level, pitchInput);
-            aeroforce = AeroPredictor.ToFlightFrame(force, AoA_level); //vessel.GetLiftForce(body, speed, altitude, AoA_level, mach, atmDensity);
+            Vector3 force = vessel.GetAeroForce(conditions, AoA_level, pitchInput);
+            Vector3 aeroforce = AeroPredictor.ToFlightFrame(force, AoA_level);
             drag = -aeroforce.z;
-            float lift = aeroforce.y;
-            Thrust_excess = -drag - AeroPredictor.GetDragForceComponent(thrustForce, AoA_level);
-            if (weight > Lift_max)// AoA_level >= AoA_max)
+            Vector2 flightFrameThrust = AeroPredictor.ToFlightFrame(thrustForce, AoA_level);
+            thrust_required = drag;
+            if (keyAoAs.levelFlightResidual > 0)
             {
-                Thrust_excess = Lift_max - weight;
-                AoA_level = AoA_max;
+                if (thrust_available > 0 && flightFrameThrust.y != 0)
+                    thrust_required += keyAoAs.levelFlightResidual / flightFrameThrust.y * thrust_available;
+                else
+                    thrust_required += keyAoAs.levelFlightResidual;
             }
-            Accel_excess = Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel;
+
+            lift = aeroforce.y;
             LDRatio = Math.Abs(lift / drag);
             if (vessel is ILiftAoADerivativePredictor derivativePredictor)
                     dLift = derivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA_level, pitchInput) * Mathf.Deg2Rad; // Deg2Rad = 1/Rad2Deg
@@ -88,12 +97,7 @@ namespace KerbalWindTunnel.DataGenerators
             //stabilityDerivative = (vessel.GetAeroTorque(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput).x - torque.x)
             //    / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
             //GetStabilityValues(vessel, conditions, AoA_level, out stabilityRange, out stabilityScore);
-
-            completed = true;
-
-#if ENABLE_PROFILER
-            UnityEngine.Profiling.Profiler.EndSample();
-#endif
+            ctorMarker.End();
         }
 
         private static void GetStabilityValues(AeroPredictor vessel, AeroPredictor.Conditions conditions, float AoA_centre, out float stabilityRange, out float stabilityScore)
@@ -161,8 +165,8 @@ namespace KerbalWindTunnel.DataGenerators
                     "Excess Thrust:\t{3:N0}kN\n" + "Excess Acceleration:\t{4:N2}g\n" + "Max Lift Force:\t{5:N0}kN\n" +
                     "Max Lift AoA:\t{6:N2}°\n" + "Lift/Drag Ratio:\t{8:N2}\n" + "Available Thrust:\t{7:N0}kN",
                     altitude, speed, AoA_level * Mathf.Rad2Deg,
-                    Thrust_excess, Accel_excess, Lift_max,
-                    AoA_max * Mathf.Rad2Deg, Thrust_available, LDRatio,
+                    Thrust_Excess, Accel_Excess, lift_max,
+                    AoA_max * Mathf.Rad2Deg, thrust_available, LDRatio,
                     mach);
         }
     }

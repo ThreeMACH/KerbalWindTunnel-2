@@ -201,12 +201,12 @@ namespace KerbalWindTunnel.DataGenerators
                 ((SurfGraph)graphables["Max Lift"]).StringFormat = "N0";
             }
 
-            ((SurfGraph)graphables["Excess Thrust"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_excess), left, right, bottom, top);
-            ((SurfGraph)graphables["Excess Acceleration"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Accel_excess), left, right, bottom, top);
-            ((SurfGraph)graphables["Thrust Available"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_available), left, right, bottom, top);
+            ((SurfGraph)graphables["Excess Thrust"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_Excess), left, right, bottom, top);
+            ((SurfGraph)graphables["Excess Acceleration"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Accel_Excess), left, right, bottom, top);
+            ((SurfGraph)graphables["Thrust Available"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.thrust_available), left, right, bottom, top);
             ((SurfGraph)graphables["Level AoA"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.AoA_level * Mathf.Rad2Deg), left, right, bottom, top);
             ((SurfGraph)graphables["Max Lift AoA"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.AoA_max * Mathf.Rad2Deg), left, right, bottom, top);
-            ((SurfGraph)graphables["Max Lift"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Lift_max * scale(pt)), left, right, bottom, top);
+            ((SurfGraph)graphables["Max Lift"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.lift_max * scale(pt)), left, right, bottom, top);
             ((SurfGraph)graphables["Lift/Drag Ratio"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.LDRatio), left, right, bottom, top);
             ((SurfGraph)graphables["Drag"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.drag * scale(pt)), left, right, bottom, top);
             ((SurfGraph)graphables["Lift Slope"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.dLift / pt.dynamicPressure * invArea), left, right, bottom, top);
@@ -222,14 +222,14 @@ namespace KerbalWindTunnel.DataGenerators
 
             try
             {
-                int stallpt = EnvelopeLine.CoordLocator.GenerateCoordLocators(EnvelopePoints.SelectToArray(pt => pt.Thrust_excess)).First(0, 0, c => c.value >= 0);
+                int stallpt = EnvelopeLine.CoordLocator.GenerateCoordLocators(EnvelopePoints.SelectToArray(pt => pt.Thrust_Excess)).First(0, 0, c => c.value >= 0);
                 float minEconomy = economy[stallpt, 0] / 3;
             }
             catch (InvalidOperationException)
             {
                 Debug.LogError("The vessel cannot maintain flight at ground level. Fuel Economy graph will be weird.");
             }
-            ((OutlineMask)graphables["Envelope Mask"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_excess), left, right, bottom, top);
+            ((OutlineMask)graphables["Envelope Mask"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_Excess), left, right, bottom, top);
         }
 
         public void CalculateOptimalLines(CancellationToken cancellationToken)
@@ -268,7 +268,7 @@ namespace KerbalWindTunnel.DataGenerators
 
                 for (int v = speedLength; v >= 0 && v * speedBounds.step + speedBounds.lower >= Vmin; v--)
                 {
-                    if (data[v, h].Thrust_excess >= 0)
+                    if (data[v, h].Thrust_Excess >= 0)
                     {
                         altIndex = h;
                         result = (speedBounds.step * v + speedBounds.lower, altitudeBounds.step * h + altitudeBounds.lower);

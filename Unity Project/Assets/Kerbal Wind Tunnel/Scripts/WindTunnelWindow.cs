@@ -581,7 +581,7 @@ namespace KerbalWindTunnel
         }
         private float SetVelDetails()
         {
-            VelCurve.VelPoint pointDetails = new VelCurve.VelPoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed);
+            EnvelopePoint pointDetails = new EnvelopePoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed);
             velCurveInfo.Text = pointDetails.ToString();
             return pointDetails.AoA_level;
         }

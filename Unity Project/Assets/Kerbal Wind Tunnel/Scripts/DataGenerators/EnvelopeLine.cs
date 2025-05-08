@@ -14,7 +14,7 @@ namespace KerbalWindTunnel.DataGenerators
     {
         public static void CalculateOptimalLines((float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, EnvelopePoint[,] dataArray, CancellationToken cancellationToken, GraphableCollection graphables)
         {
-            float[,] accel = dataArray.SelectToArray(pt => pt.Accel_excess * WindTunnelWindow.gAccel);
+            float[,] accel = dataArray.SelectToArray(pt => pt.Accel_Excess * WindTunnelWindow.gAccel);
             float[,] burnRate = dataArray.SelectToArray(pt => pt.fuelBurnRate);
             float timeToClimb(PathSolverCoords current, PathSolverCoords last)
             {

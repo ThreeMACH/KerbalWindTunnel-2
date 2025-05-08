@@ -6,16 +6,15 @@ using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
 using Graphing;
-using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
 namespace KerbalWindTunnel.DataGenerators
 {
     public class VelCurve
     {
         public readonly GraphableCollection graphables = new GraphableCollection();
-        public VelPoint[] VelPoints { get; private set; }
+        public EnvelopePoint[] VelPoints { get; private set; }
         private float wingArea;
-        private static readonly ConcurrentDictionary<(int altitude, int velocity), VelPoint> cache = new ConcurrentDictionary<(int, int), VelPoint>();
+        private static readonly ConcurrentDictionary<(int altitude, int velocity), EnvelopePoint> cache = new ConcurrentDictionary<(int, int), EnvelopePoint>();
 
         public VelCurve()
         {
@@ -68,7 +67,7 @@ namespace KerbalWindTunnel.DataGenerators
             float wingArea = aeroPredictorToClone.Area;
 
             // Fill in the data in a parallel loop.
-            VelPoint[] results = new VelPoint[keys.Count];
+            EnvelopePoint[] results = new EnvelopePoint[keys.Count];
             try
             {
                 Parallel.For<AeroPredictor>(0, keys.Count, new ParallelOptions() { CancellationToken = cancellationToken },
@@ -78,7 +77,7 @@ namespace KerbalWindTunnel.DataGenerators
                         int velocity = keysList[index];
                         if (!cache.TryGetValue((altitude_, velocity), out results[index]))
                         {
-                            VelPoint data = new VelPoint(predictor, body, altitude_, velocity);
+                            EnvelopePoint data = new EnvelopePoint(predictor, body, altitude_, velocity);
                             results[index] = data;
                             cache[(altitude_, velocity)] = data;
                         }
@@ -134,92 +133,35 @@ namespace KerbalWindTunnel.DataGenerators
 
         public void UpdateGraphs()
         {
-            Func<VelPoint, float> scale = (pt) => 1;
+            Func<EnvelopePoint, float> scale = (pt) => 1;
             if (WindTunnelSettings.UseCoefficients)
                 scale = (pt) => 1 / pt.dynamicPressure * wingArea;
             ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_level * Mathf.Rad2Deg)).ToArray());
             ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_level * Mathf.Rad2Deg)).ToArray());
             ((LineGraph)graphables["Max Lift AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_max * Mathf.Rad2Deg)).ToArray());
-            ((LineGraph)graphables["Thrust Available"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Thrust_available)).ToArray());
+            ((LineGraph)graphables["Thrust Available"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.thrust_available)).ToArray());
             ((LineGraph)graphables["Lift/Drag Ratio"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.LDRatio)).ToArray());
             ((LineGraph)graphables["Drag"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.drag * scale(p))).ToArray());
             ((LineGraph)graphables["Lift Slope"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.dLift / p.dynamicPressure * wingArea)).ToArray());
-            ((LineGraph)graphables["Excess Thrust"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Thrust_excess)).ToArray());
+            ((LineGraph)graphables["Excess Thrust"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Thrust_Excess)).ToArray());
             ((LineGraph)graphables["Pitch Input"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.pitchInput)).ToArray());
-            ((LineGraph)graphables["Max Lift"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Lift_max * scale(p))).ToArray());
-            ((LineGraph)graphables["Excess Acceleration"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Accel_excess)).ToArray());
+            ((LineGraph)graphables["Max Lift"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.lift_max * scale(p))).ToArray());
+            ((LineGraph)graphables["Excess Acceleration"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Accel_Excess)).ToArray());
         }
-        private static Vector2 ValuesFunc(VelPoint point, Func<VelPoint, float> func)
+        private static Vector2 ValuesFunc(EnvelopePoint point, Func<EnvelopePoint, float> func)
             => new Vector2(point.speed, func(point));
-
-        public readonly struct VelPoint
-        {
-            public readonly float AoA_level;
-            public readonly float AoA_max;
-            public readonly float Thrust_available;
-            public readonly float Thrust_excess;
-            public readonly float Accel_excess;
-            public readonly float drag;
-            public readonly float altitude;
-            public readonly float speed;
-            public readonly float LDRatio;
-            public readonly float mach;
-            public readonly float dynamicPressure;
-            public readonly float dLift;
-            public readonly float pitchInput;
-            public readonly float Lift_max;
-
-            public VelPoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed)
-            {
-                this.altitude = altitude;
-                this.speed = speed;
-                AeroPredictor.Conditions conditions = new AeroPredictor.Conditions(body, speed, altitude);
-                float gravParameter, radius;
-                gravParameter = (float)body.gravParameter;
-                radius = (float)body.Radius;
-                this.mach = conditions.mach;
-                this.dynamicPressure = 0.0005f * conditions.atmDensity * speed * speed;
-                float weight = (vessel.Mass * gravParameter / ((radius + altitude) * (radius + altitude))) - (vessel.Mass * speed * speed / (radius + altitude));
-                AoA_max = vessel.FindMaxAoA(conditions, out Lift_max);
-                AoA_level = vessel.FindLevelAoA(conditions, weight);
-                Vector3 thrustForce = vessel.GetThrustForce(conditions, AoA_level);
-                pitchInput = vessel.FindStablePitchInput(conditions, AoA_level);
-                Thrust_available = AeroPredictor.GetUsefulThrustMagnitude(thrustForce);
-                Vector3 force = vessel.GetAeroForce(conditions, AoA_level, pitchInput);
-                drag = AeroPredictor.GetDragForceComponent(force, AoA_level);
-                Thrust_excess = -drag - AeroPredictor.GetDragForceComponent(thrustForce, AoA_level);
-                Accel_excess = Thrust_excess / vessel.Mass / WindTunnelWindow.gAccel;
-                LDRatio = Math.Abs(AeroPredictor.GetLiftForceComponent(force, AoA_level) / drag);
-                if (vessel is ILiftAoADerivativePredictor derivativePredictor)
-                    dLift = derivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA_level, pitchInput) * Mathf.Deg2Rad; // Deg2Rad = 1/Rad2Deg
-                else
-                    dLift = (vessel.GetLiftForceMagnitude(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput) -
-                        vessel.GetLiftForceMagnitude(conditions, AoA_level, pitchInput)) / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
-            }
-
-            public override string ToString()
-            {
-                return String.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{7:N2}\n" + "Level Flight AoA:\t{2:N2}°\n" +
-                        "Excess Thrust:\t{3:N0}kN\n" +
-                        "Max Lift AoA:\t{4:N2}°\n" + "Lift/Drag Ratio:\t{6:N0}\n" + "Available Thrust:\t{5:N0}kN",
-                        altitude, speed, AoA_level * Mathf.Rad2Deg,
-                        Thrust_excess,
-                        AoA_max * Mathf.Rad2Deg, Thrust_available, LDRatio,
-                        mach);
-            }
-        }
 
         public readonly struct ResultsType
         {
-            public readonly VelPoint[] data;
+            public readonly EnvelopePoint[] data;
             public readonly float wingArea;
-            public ResultsType(VelPoint[] data, float wingArea)
+            public ResultsType(EnvelopePoint[] data, float wingArea)
             {
                 this.data = data;
                 this.wingArea = wingArea;
             }
-            public static implicit operator (VelPoint[], float)(ResultsType obj) => (obj.data, obj.wingArea);
-            public static implicit operator ResultsType((VelPoint[] data, float wingArea) obj) => new ResultsType(obj.data, obj.wingArea);
+            public static implicit operator (EnvelopePoint[], float)(ResultsType obj) => (obj.data, obj.wingArea);
+            public static implicit operator ResultsType((EnvelopePoint[] data, float wingArea) obj) => new ResultsType(obj.data, obj.wingArea);
         }
     }
 }

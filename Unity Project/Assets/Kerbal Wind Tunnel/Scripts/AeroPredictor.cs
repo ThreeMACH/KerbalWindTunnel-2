@@ -116,21 +116,25 @@ namespace KerbalWindTunnel
         public abstract float GetFuelBurnRate(Conditions conditions, float AoA);
 
         public static Vector3 ToFlightFrame(Vector3 force, float AoA)
-        {
-            return Quaternion.AngleAxis((AoA * Mathf.Rad2Deg), Vector3.left) * force;
-        }
+            => Quaternion.AngleAxis((AoA * Mathf.Rad2Deg), Vector3.left) * force;
+        public static Vector2 ToFlightFrame(Vector2 force, float AoA)
+            => Quaternion.AngleAxis(AoA * Mathf.Rad2Deg, Vector3.forward) * force;
         public static Vector3 ToVesselFrame(Vector3 force, float AoA)
-        {
-            return Quaternion.AngleAxis((-AoA * Mathf.Rad2Deg), Vector3.left) * force;
-        }
+            => Quaternion.AngleAxis((-AoA * Mathf.Rad2Deg), Vector3.left) * force;
+        public static Vector2 ToVesselFrame(Vector2 force, float AoA)
+            => Quaternion.AngleAxis(-AoA * Mathf.Rad2Deg, Vector3.forward) * force;
 
         public static float GetUsefulThrustMagnitude(Vector3 thrustVector)
         {
-            Vector2 usefulThrust = new Vector2(Math.Max(thrustVector.z, 0), Math.Max(thrustVector.y, 0));
-            if (usefulThrust.x == thrustVector.z && usefulThrust.y == thrustVector.y)
-                return usefulThrust.magnitude;
-            Vector2 antiThrust = new Vector2(Math.Min(thrustVector.z, 0), Math.Min(thrustVector.y, 0));
-            return usefulThrust.magnitude - antiThrust.magnitude;
+            if (thrustVector.z > 0)
+                return thrustVector.magnitude;
+            return thrustVector.magnitude - thrustVector.z;
+        }
+        public static float GetUsefulThrustMagnitude(Vector2 thrustVector)
+        {
+            if (thrustVector.x > 0)
+                return thrustVector.magnitude;
+            return thrustVector.magnitude - thrustVector.x;
         }
 
         public static Vector3 InflowVect(float AoA)
