@@ -10,6 +10,9 @@ namespace KerbalWindTunnel.VesselCache
         const float defaultAoATolerance = 0.05f * Mathf.Deg2Rad;
         const float defaultAoAOptTolerance = 0.1f * Mathf.Deg2Rad;
         const float defaultInputTolerance = 0.01f;
+        const float levelGuessRange = 5 * Mathf.Deg2Rad;
+
+        private static readonly int[] levelFlightStepdownValues = new int[] { -5, -10, -20, -40, -90 };
 
         static readonly Unity.Profiling.ProfilerMarker s_findMax = new Unity.Profiling.ProfilerMarker("AeroOptimizer.FindMaxAoA");
         static readonly Unity.Profiling.ProfilerMarker s_findMin = new Unity.Profiling.ProfilerMarker("AeroOptimizer.FindMinAoA");
@@ -201,6 +204,128 @@ namespace KerbalWindTunnel.VesselCache
             SequentialBrentSearch(solver, (Mathf.Clamp01(guess - 0.3f), -1), (Mathf.Clamp01(guess + 0.3f), 1));
             succeeded = solver.Status == BrentSearchStatus.Success;
             return solver;
+        }
+
+        public struct KeyAoAData
+        {
+            public float zeroLift = float.NaN;
+            public float maxLift = float.NaN;
+            public float maxLiftForce = float.NaN;
+            public float levelFlight = float.NaN;
+            public float levelFlightResidual = 0;
+            public KeyAoAData() { }
+        }
+
+        public static KeyAoAData SolveLevelFlight(this AeroPredictor predictor, Conditions conditions, float weight, KeyAoAData? knowns, KeyAoAData? guess = null)
+        {
+            // 1. If we have a guess, it's probably within +/- 5 degrees
+            // If it's not, the guess is bad and we'll search from scratch
+
+            // 2. Zero degrees is probably a good starting lower bound, and maxLift is a probably good upper bound.
+            // This requires knowing maxLift.
+
+            // 3. If that does not bracket the root, there are two scenarios:
+            // A. There is a positive incidence on either wings or engines and the root is below zero.
+            // B. There is a negative incidence on the engines and/or the root is above maxLift.
+            // We can know the difference based on the sign of the objective function at any point in the bracket:
+            // + and it's A, - and it's B.
+
+            // In the case of A. The zero lift angle can't be far, so step down in increments.
+            // In the case of B:
+            //      If thrust is constant with AoA and T > W, we know there's probably a root at or below the angle at which Ty = W.
+            //      Otherwise, find the maxima of the level flight objective function on (maxLift, 90)
+            //      I refuse to condone anything that needs greater than 90 AoA for level flight. If that's you, fix your design.
+            //      If this is positive, this is the upper bound.
+            //      If this is negative, level flight is not possible and this is the value.
+            const float defaultLowerBound = -5 * Mathf.Deg2Rad;
+            KeyAoAData knowns_ = knowns ?? new KeyAoAData();
+
+            Func<double, double> levelObjFunc = predictor.LevelFlightObjectiveFunc(conditions, weight);
+            if (!float.IsNaN(knowns_.levelFlight))
+            {
+                knowns_.levelFlightResidual = -(float)levelObjFunc(knowns_.levelFlight);
+                return knowns_;
+            }
+            BrentSearch rootFinder = new BrentSearch(levelObjFunc, 0, 35, defaultAoATolerance);
+
+            // 1. Use a good guess, if we have it.
+            float levelGuess = guess?.levelFlight ?? float.NaN;
+            if (!float.IsNaN(levelGuess))
+            {
+                rootFinder.LowerBound = levelGuess - levelGuessRange;
+                rootFinder.UpperBound = levelGuess + levelGuessRange;
+                if (rootFinder.FindRoot())
+                {
+                    knowns_.levelFlight = (float)rootFinder.Solution;
+                    return knowns_;
+                }
+            }
+
+            // 2. Use a reasonable bracket.
+            if (float.IsNaN(knowns_.maxLift))
+                knowns_.maxLift = predictor.FindMaxAoA(conditions, out knowns_.maxLiftForce, guess?.maxLift ?? float.NaN);
+            rootFinder.LowerBound = defaultLowerBound;
+            rootFinder.UpperBound = knowns_.maxLift;
+            if (rootFinder.FindRoot())
+            {
+                knowns_.levelFlight = (float)rootFinder.Solution;
+                return knowns_;
+            }
+
+            // 3. The root was not bracketed.
+            if (Math.Sign(rootFinder.Value) > 0)
+            {
+                // A. The root must exist and is below zero degrees. Step down by reasonable increments.
+                for (int i = 0; i < levelFlightStepdownValues.Length; i++)
+                {
+                    rootFinder.UpperBound = rootFinder.LowerBound;
+                    rootFinder.LowerBound = levelFlightStepdownValues[i] * Mathf.Deg2Rad;
+                    if (rootFinder.FindRoot())
+                        break;
+                }
+                knowns_.levelFlight = (float)rootFinder.Solution;
+                return knowns_;
+            }
+            // B. The root is above AoA max or does not exist.
+            rootFinder.LowerBound = knowns_.maxLift;
+            float thrustIncidence = 0;
+            // Check if there's a root within (aoaMax, aoa => Ty >= W) when T >= W
+            if (predictor.ThrustIsConstantWithAoA)
+            {
+                Vector3 thrust = predictor.GetThrustForce2D(conditions);
+                float thrustMag = thrust.magnitude;
+                thrustIncidence = Mathf.Atan2(thrust.y, thrust.x);
+                if (thrustMag > weight)
+                {
+                    rootFinder.UpperBound = Math.Sign(thrust.x) * Math.Asin(weight / thrustMag) - thrustIncidence;
+                    if (rootFinder.UpperBound > rootFinder.LowerBound && rootFinder.FindRoot())
+                    {
+                        knowns_.levelFlight = (float)rootFinder.Solution;
+                        return knowns_;
+                    }
+                    rootFinder.LowerBound = Math.Max(rootFinder.LowerBound, rootFinder.UpperBound);
+                }
+            }
+            // Checking if the root exists by finding the maxima.
+            // Unless the lift curve shape is exceptionally weird the lift function should be monotonic, so maximizing will converge.
+            rootFinder.UpperBound = 90 * Mathf.Deg2Rad;
+            if (Math.Sign(thrustIncidence) < 0)
+                rootFinder.UpperBound -= thrustIncidence;   // Only if the engines have a negative thrust angle can the upper bound be greater than 90.
+            rootFinder.Tolerance = defaultAoAOptTolerance;
+            rootFinder.Maximize();
+
+            if (rootFinder.Value < 0)
+            {
+                // The root does not exist.
+                knowns_.levelFlight = (float)rootFinder.Solution;
+                knowns_.levelFlightResidual = -(float)rootFinder.Value;
+                return knowns_;
+            }
+            // The root does exist.
+            rootFinder.UpperBound = rootFinder.Solution;
+            rootFinder.FindRoot();
+            knowns_.levelFlight = (float)rootFinder.Solution;
+            return knowns_;
         }
 
         public interface ILiftAoADerivativePredictor
