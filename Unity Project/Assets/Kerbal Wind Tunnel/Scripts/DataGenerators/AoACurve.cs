@@ -170,6 +170,9 @@ namespace KerbalWindTunnel.DataGenerators
 
         public void UpdateGraphs()
         {
+            if (AoAPoints == null)
+                return;
+
             AverageLiftSlope = AoAPoints.Select(pt => pt.dLift / pt.dynamicPressure).Where(v => !float.IsNaN(v) && !float.IsInfinity(v)).Average();
 
             foreach (GraphDefinition graphDefinition in graphDefinitions)

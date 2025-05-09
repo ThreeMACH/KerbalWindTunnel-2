@@ -230,6 +230,8 @@ namespace KerbalWindTunnel.DataGenerators
 
         public void UpdateGraphs()
         {
+            if (EnvelopePoints == null)
+                return;
             foreach (GraphDefinition graph in graphDefinitions.Where(g => g.Enabled))
             {
                 if (graph is SurfGraphDefinition surfDefinition)

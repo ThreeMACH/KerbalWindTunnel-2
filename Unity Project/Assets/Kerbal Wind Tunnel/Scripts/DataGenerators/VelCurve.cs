@@ -168,6 +168,8 @@ namespace KerbalWindTunnel.DataGenerators
 
         public void UpdateGraphs()
         {
+            if (VelPoints == null)
+                return;
             foreach (LineGraphDefinition lineGraphDefinition in graphDefinitions)
             {
                 lineGraphDefinition.UpdateGraph(VelPoints);
