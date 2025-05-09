@@ -841,17 +841,13 @@ namespace KerbalWindTunnel
         {
             if (aoaCollection == null)
                 return;
-            bool wet = ShowAoAGraphsWet;
-            bool dry = ShowAoAGraphsDry;
-            foreach (var graph in aoaCollection)
+
+            foreach (var graph in aoaCollection.Flatten())
             {
-                if (graph is GraphableCollection collection)
-                {
-                    if (collection.Count < 2)
-                        continue;
-                    collection[0].Visible = wet;
-                    collection[1].Visible = dry;
-                }
+                if (graph.Name.EndsWith("_wet"))
+                    graph.Visible = _showAoAGraphsWet;
+                else if (graph.Name.EndsWith("_dry"))
+                    graph.Visible = _showAoAGraphsDry;
             }
         }
 
