@@ -112,7 +112,7 @@ namespace Graphing
         {
             get
             {
-                return FirstVisibleGraph(this)?.XUnit ?? "";
+                return FirstVisibleGraph(this)?.XUnit ?? graphs.FirstOrDefault()?.XUnit ?? "";
             }
             set
             {
@@ -137,7 +137,7 @@ namespace Graphing
 
             get
             {
-                return FirstVisibleGraph(this)?.YUnit ?? "";
+                return FirstVisibleGraph(this)?.YUnit ?? graphs.FirstOrDefault()?.YUnit ?? "";
             }
             set
             {
@@ -161,7 +161,7 @@ namespace Graphing
         {
             get
             {
-                return FirstVisibleGraph(this)?.XName ?? "";
+                return FirstVisibleGraph(this)?.XName ?? graphs.FirstOrDefault()?.XName ?? "";
             }
             set
             {
@@ -185,15 +185,7 @@ namespace Graphing
         {
             get
             {
-                IGraphable yGraph = graphs.FirstOrDefault(g => g.Visible);
-                if (yGraph == null) return "";
-                if (yGraph is Graphable graph && graph.yName == null)
-                {
-                    string nameSubstring = GetNameSubstring();
-                    if (nameSubstring != "")
-                        return nameSubstring.Trim();
-                }
-                return yGraph.YName;
+                return FirstVisibleGraph(this).YName ?? graphs.FirstOrDefault()?.YName ?? "";
             }
             set
             {
