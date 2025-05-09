@@ -9,46 +9,56 @@ using Graphing;
 
 namespace KerbalWindTunnel.DataGenerators
 {
+    using LineGraphDefinition = LineGraphDefinition<EnvelopePoint>;
     public class VelCurve
     {
         public readonly GraphableCollection graphables = new GraphableCollection();
         public EnvelopePoint[] VelPoints { get; private set; }
-        private float wingArea;
         private static readonly ConcurrentDictionary<(int altitude, int velocity), EnvelopePoint> cache = new ConcurrentDictionary<(int, int), EnvelopePoint>();
+
+        private static Color defaultColor = Color.green;
+        private static Func<EnvelopePoint, Vector2> ToVector(Func<EnvelopePoint, float> func) => (pt) => new Vector2(pt.speed, func(pt));
+        public readonly List<LineGraphDefinition> graphDefinitions = new List<LineGraphDefinition>()
+        {
+            new LineGraphDefinition("aoa_level", ToVector(p => p.AoA_level * Mathf.Rad2Deg)){ DisplayName = "Level AoA", YUnit = "°", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("aoa_max", ToVector(p => p.AoA_max * Mathf.Rad2Deg)) { DisplayName = "Max Lift AoA", YUnit = "°", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("lift_slope_force", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("lift_slope_coeff", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("thrust_available", ToVector(p => p.thrust_available)) { DisplayName = "Thrust Available", YUnit = "kN", StringFormat = "N0", Color = defaultColor },
+            new LineGraphDefinition("drag_force", ToVector(p => p.drag)) { DisplayName = "Drag", YUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("drag_coeff", ToVector(p => p.Coefficient(p.drag))) { DisplayName = "Drag Coefficient", YUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("excess_thrust", ToVector(p => p.Thrust_Excess)){ DisplayName = "Excess Thrust", YUnit="kN", StringFormat="N0", Color = defaultColor },
+            new LineGraphDefinition("lift_max_force", ToVector(p => p.lift_max)) { DisplayName = "Max Lift", YUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("lift_max_coeff", ToVector(p => p.Coefficient(p.lift_max))) { DisplayName = "Max Lift", YUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("accel_excess", ToVector(p => p.Accel_Excess)) { DisplayName = "Excess Acceleration", YUnit = "g", StringFormat = "N2", Color = defaultColor },
+            new LineGraphDefinition("fuel_economy", ToVector(p => p.fuelBurnRate / p.speed * 100 * 1000)) { DisplayName = "Fuel Economy", YUnit = "kg/100 km", StringFormat = "F2", Color = defaultColor, Enabled = false },
+            new LineGraphDefinition("fuel_rate", ToVector(p => p.fuelBurnRate)) { DisplayName = "Fuel Burn Rate", YUnit = "kg/s", StringFormat = "F3", Color = defaultColor, Enabled = false },
+            new LineGraphDefinition("pitch_input", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor, Enabled = false }
+        };
 
         public VelCurve()
         {
-            Vector2[] blank = new Vector2[0];
-            graphables.Add(new LineGraph(blank) { Name = "Level AoA", YUnit = "°", StringFormat = "F2", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Max Lift AoA", YUnit = "°", StringFormat = "F2", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Lift Slope", YUnit = "m^2/°", StringFormat = "F3", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Thrust Available", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Drag", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Excess Thrust", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Max Lift", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Excess Acceleration", YUnit = "g", StringFormat = "N2", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Pitch Input", YUnit = "", StringFormat = "F3", color = Color.green });
-
-            foreach (var graph in graphables)
+            foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                graph.XUnit = "m/s";
-                graph.XName = "Airspeed";
-                graph.Visible = false;
+                graphDefinition.XUnit = "m/s";
+                graphDefinition.XName = "Airspeed";
+                graphDefinition.Visible = false;
             }
+            graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
         }
 
         public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50)
         {
             TaskProgressTracker tracker = new TaskProgressTracker();
-            Task<ResultsType> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, lowerBound, upperBound, segments, tracker), cancellationToken);
+            Task<EnvelopePoint[]> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, lowerBound, upperBound, segments, tracker), cancellationToken);
             tracker.Task = task;
             task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
             task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
             return tracker;
         }
 
-        private static ResultsType CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
+        private static EnvelopePoint[] CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
         {
             // Apply rounding to facilitate caching.
             const int altitudeRound = 10;
@@ -98,20 +108,18 @@ namespace KerbalWindTunnel.DataGenerators
             // Last chance to ditch the results before pushing them to the UI
             cancellationToken.ThrowIfCancellationRequested();
 
-            return (results, wingArea);
+            return results;
         }
-        private void PushResults(Task<ResultsType> data)
+        private void PushResults(Task<EnvelopePoint[]> task)
         {
             lock (this)
             {
-                ResultsType results = data.Result;
-                VelPoints = results.data;
-                wingArea = results.wingArea;
+                VelPoints = task.Result;
                 UpdateGraphs();
             }
             Debug.Log("[KWT] Graphs updated - Velocity");
         }
-        private void RethrowErrors(Task<ResultsType> task)
+        private void RethrowErrors(Task<EnvelopePoint[]> task)
         {
             if (task.Status == TaskStatus.Faulted)
             {
@@ -133,35 +141,10 @@ namespace KerbalWindTunnel.DataGenerators
 
         public void UpdateGraphs()
         {
-            Func<EnvelopePoint, float> scale = (pt) => 1;
-            if (WindTunnelSettings.UseCoefficients)
-                scale = (pt) => 1 / pt.dynamicPressure * wingArea;
-            ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_level * Mathf.Rad2Deg)).ToArray());
-            ((LineGraph)graphables["Level AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_level * Mathf.Rad2Deg)).ToArray());
-            ((LineGraph)graphables["Max Lift AoA"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.AoA_max * Mathf.Rad2Deg)).ToArray());
-            ((LineGraph)graphables["Thrust Available"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.thrust_available)).ToArray());
-            ((LineGraph)graphables["Lift/Drag Ratio"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.LDRatio)).ToArray());
-            ((LineGraph)graphables["Drag"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.drag * scale(p))).ToArray());
-            ((LineGraph)graphables["Lift Slope"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.dLift / p.dynamicPressure * wingArea)).ToArray());
-            ((LineGraph)graphables["Excess Thrust"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Thrust_Excess)).ToArray());
-            ((LineGraph)graphables["Pitch Input"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.pitchInput)).ToArray());
-            ((LineGraph)graphables["Max Lift"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.lift_max * scale(p))).ToArray());
-            ((LineGraph)graphables["Excess Acceleration"]).SetValues(VelPoints.Select(pt => ValuesFunc(pt, p => p.Accel_Excess)).ToArray());
-        }
-        private static Vector2 ValuesFunc(EnvelopePoint point, Func<EnvelopePoint, float> func)
-            => new Vector2(point.speed, func(point));
-
-        public readonly struct ResultsType
-        {
-            public readonly EnvelopePoint[] data;
-            public readonly float wingArea;
-            public ResultsType(EnvelopePoint[] data, float wingArea)
+            foreach (LineGraphDefinition lineGraphDefinition in graphDefinitions)
             {
-                this.data = data;
-                this.wingArea = wingArea;
+                lineGraphDefinition.UpdateGraph(VelPoints);
             }
-            public static implicit operator (EnvelopePoint[], float)(ResultsType obj) => (obj.data, obj.wingArea);
-            public static implicit operator ResultsType((EnvelopePoint[] data, float wingArea) obj) => new ResultsType(obj.data, obj.wingArea);
         }
     }
 }

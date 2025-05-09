@@ -10,55 +10,58 @@ using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
 namespace KerbalWindTunnel.DataGenerators
 {
+    using LineGraphDefinition = LineGraphDefinition<AoACurve.AoAPoint>;
     public class AoACurve
     {
         public readonly GraphableCollection graphables = new GraphableCollection();
         public AoAPoint[] AoAPoints { get; private set; }
-        private float wingArea;
         public float AverageLiftSlope { get; private set; }
         private static readonly ConcurrentDictionary<(int altitude, int velocity, float aoa), AoAPoint> cache = new ConcurrentDictionary<(int, int, float), AoAPoint>();
 
+        private static Color defaultColor = Color.green;
+        private static Color dryColor = Color.yellow;
+        private static Func<AoAPoint, Vector2> ToVector(Func<AoAPoint, float> func) => (pt) => new Vector2(pt.AoA * Mathf.Rad2Deg, func(pt));
+        public List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
+        {
+            new LineGraphDefinition("lift_force", ToVector(p => p.Lift)) { DisplayName = "Lift Force", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("lift_coeff", ToVector(p => p.Coefficient(p.Lift))) { DisplayName = "Lift Coefficient", YName = "", YUnit = "", StringFormat = "N2", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("drag_force", ToVector(p => p.Drag)) { DisplayName = "Drag Force", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("drag_coeff", ToVector(p => p.Coefficient(p.Lift))) { DisplayName = "Drag Coefficient", YName = "", YUnit = "", StringFormat = "N2", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("lift_slope_force", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("lift_slope_coeff", ToVector(p => p.Coefficient(p.dLift))) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
+            new GroupedGraphDefinition<LineGraphDefinition> ("pitchInput",
+                new LineGraphDefinition("pitchInput_wet", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input (Wet)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
+                new LineGraphDefinition("pitchInput_dry", ToVector(p => p.pitchInput_dry * 100)) { DisplayName = "Pitch Input (Dry)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = dryColor }
+                ) {DisplayName = "Pitch Input", YName = "Pitch Input", YUnit = "%" },
+            new GroupedGraphDefinition<LineGraphDefinition> ("torque",
+                new LineGraphDefinition("torque_wet", ToVector(p => p.torque)) { DisplayName = "Torque (Wet)", YName = "Torque", YUnit = "kNm", StringFormat = "N0", Color = defaultColor },
+                new LineGraphDefinition("torque_dry", ToVector(p => p.torque_dry)) { DisplayName = "Torque (Dry)", YName = "Torque", YUnit = "kNm", StringFormat = "N0", Color = dryColor }
+                ) { DisplayName = "Torque", YName = "Torque", YUnit = "kNm" }
+        };
+
         public AoACurve()
         {
-            Vector2[] blank = new Vector2[0];
-            graphables.Add(new LineGraph(blank) { Name = "Lift", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Drag", YName = "Force", YUnit = "kN", StringFormat = "N0", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Lift/Drag Ratio", YUnit = "", StringFormat = "F2", color = Color.green });
-            graphables.Add(new LineGraph(blank) { Name = "Lift Slope", YUnit = "/°", StringFormat = "F3", color = Color.green });
-            IGraphable[] pitch = new IGraphable[] {
-                new LineGraph(blank) { Name = "Pitch Input (Wet)", YUnit = "", StringFormat = "F2", color = Color.green },
-                new LineGraph(blank) { Name = "Pitch Input (Dry)", YUnit = "", StringFormat = "F2", color = Color.yellow }
-            };
-            //graphables.Add(pitch[0]);
-            //graphables.Add(pitch[1]);
-            graphables.Add(new GraphableCollection(pitch) { Name = "Pitch Input" });
-            IGraphable[] torque = new IGraphable[] {
-                new LineGraph(blank) { Name = "Torque (Wet)", YUnit = "kNm", StringFormat = "N0", color = Color.green },
-                new LineGraph(blank) { Name = "Torque (Dry)", YUnit = "kNm", StringFormat = "N0", color = Color.yellow }
-            };
-            //graphables.Add(torque[0]);
-            //graphables.Add(torque[1]);
-            graphables.Add(new GraphableCollection(torque) { Name = "Torque" });
-
-            foreach (var graph in graphables)
+            foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                graph.XUnit = "°";
-                graph.XName = "Angle of Attack";
-                graph.Visible = false;
+                graphDefinition.XUnit = "°";
+                graphDefinition.XName = "Angle of Attack";
+                graphDefinition.Visible = false;
             }
+            graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
         }
 
         public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float velocity, float lowerBound, float upperBound, int segments = 50)
         {
             TaskProgressTracker tracker = new TaskProgressTracker();
-            Task < ResultsType > task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, velocity, lowerBound, upperBound, segments, tracker), cancellationToken);
+            Task <AoAPoint[]> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, velocity, lowerBound, upperBound, segments, tracker), cancellationToken);
             tracker.Task = task;
             task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
             task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
             return tracker;
         }
 
-        private static ResultsType CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float velocity, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
+        private static AoAPoint[] CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float velocity, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
         {
             // Apply rounding to facilitate caching.
             const int altitudeRound = 10;
@@ -108,20 +111,18 @@ namespace KerbalWindTunnel.DataGenerators
             // Last chance to ditch the results before pushing them to the UI
             cancellationToken.ThrowIfCancellationRequested();
 
-            return (results, wingArea);
+            return results;
         }
-        private void PushResults(Task<ResultsType> data)
+        private void PushResults(Task<AoAPoint[]> task)
         {
             lock (this)
             {
-                ResultsType results = data.Result;
-                AoAPoints = results.data;
-                wingArea = results.wingArea;
+                AoAPoints = task.Result;
                 UpdateGraphs();
             }
             Debug.Log("[KWT] Graphs updated - AoA");
         }
-        private void RethrowErrors(Task<ResultsType> task)
+        private void RethrowErrors(Task<AoAPoint[]> task)
         {
             if (task.Status == TaskStatus.Faulted)
             {
@@ -145,36 +146,15 @@ namespace KerbalWindTunnel.DataGenerators
         {
             AverageLiftSlope = AoAPoints.Select(pt => pt.dLift / pt.dynamicPressure).Where(v => !float.IsNaN(v) && !float.IsInfinity(v)).Average();
 
-            Func<AoAPoint, float> scale = (pt) => 1;
-            float invArea = 1f / wingArea;
-            if (WindTunnelSettings.UseCoefficients)
+            foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                scale = (pt) => 1 / pt.dynamicPressure * invArea;
-                graphables["Lift"].YName = graphables["Drag"].YName = "Coefficient";
-                graphables["Lift"].YUnit = graphables["Drag"].YUnit = "";
-                graphables["Lift"].DisplayName = "Lift Coefficient";
-                graphables["Drag"].DisplayName = "Drag Coefficient";
-                ((LineGraph)graphables["Lift"]).StringFormat = ((LineGraph)graphables["Drag"]).StringFormat = "N2";
+                if (graphDefinition is LineGraphDefinition lineGraph)
+                    lineGraph.UpdateGraph(AoAPoints);
+                else if (graphDefinition is GroupedGraphDefinition<LineGraphDefinition> groupedGraphDefinition)
+                    foreach (var lineGraphChild in groupedGraphDefinition)
+                        lineGraphChild.UpdateGraph(AoAPoints);
             }
-            else
-            {
-                graphables["Lift"].YName = graphables["Drag"].YName = "Force";
-                graphables["Lift"].YUnit = graphables["Drag"].YUnit = "kN";
-                graphables["Lift"].DisplayName = "Lift";
-                graphables["Drag"].DisplayName = "Drag";
-                ((LineGraph)graphables["Lift"]).StringFormat = ((LineGraph)graphables["Drag"]).StringFormat = "N0";
-            }
-            ((LineGraph)graphables["Lift"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.Lift * scale(p))).ToArray());
-            ((LineGraph)graphables["Drag"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.Drag * scale(p))).ToArray());
-            ((LineGraph)graphables["Lift/Drag Ratio"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.LDRatio)).ToArray());
-            ((LineGraph)graphables["Lift Slope"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.dLift / p.dynamicPressure * invArea)).ToArray());
-            ((LineGraph)((GraphableCollection)graphables["Pitch Input"])["Pitch Input (Wet)"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.pitchInput)).ToArray());
-            ((LineGraph)((GraphableCollection)graphables["Pitch Input"])["Pitch Input (Dry)"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.pitchInput_dry)).ToArray());
-            ((LineGraph)((GraphableCollection)graphables["Torque"])["Torque (Wet)"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.torque)).ToArray());
-            ((LineGraph)((GraphableCollection)graphables["Torque"])["Torque (Dry)"]).SetValues(AoAPoints.Select(pt => ValuesFunc(pt, p => p.torque_dry)).ToArray());
         }
-        private static Vector2 ValuesFunc(AoAPoint point, Func<AoAPoint, float> func)
-            => new Vector2(point.AoA * Mathf.Rad2Deg, func(point));
 
         public readonly struct AoAPoint
         {
@@ -192,7 +172,9 @@ namespace KerbalWindTunnel.DataGenerators
             public readonly float torque;
             public readonly float torque_dry;
             public readonly bool completed;
-            private readonly float area;
+            private readonly float wingArea;
+
+            public float Coefficient(float force) => force / (dynamicPressure * wingArea);
 
             public AoAPoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed, float AoA)
             {
@@ -215,7 +197,7 @@ namespace KerbalWindTunnel.DataGenerators
                 else
                     dLift = (vessel.GetLiftForceMagnitude(conditions, AoA + WindTunnelWindow.AoAdelta, pitchInput) - Lift) /
                         (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
-                area = vessel.Area;
+                wingArea = vessel.Area;
                 completed = true;
             }
 
@@ -223,13 +205,13 @@ namespace KerbalWindTunnel.DataGenerators
             {
                 if (WindTunnelSettings.UseCoefficients)
                 {
-                    float coefMod = 1f / dynamicPressure / area;
+                    float coefMod = Coefficient(1);
                     return String.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
                         "Lift Coefficient:\t{3:N2}\n" + "Drag Coefficient:\t{4:N2}\n" + "Lift/Drag Ratio:\t{5:N2}\n" + "Pitch Input:\t{7:F3}\n" + 
                         "Wing Area:\t{8:F2}",
                         altitude, speed, AoA * Mathf.Rad2Deg,
                         Lift * coefMod, Drag * coefMod, LDRatio, mach, pitchInput,
-                        area);
+                        wingArea);
                 }
                 else
                     return String.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
@@ -237,19 +219,6 @@ namespace KerbalWindTunnel.DataGenerators
                             altitude, speed, AoA * Mathf.Rad2Deg,
                             Lift, Drag, LDRatio, mach, pitchInput);
             }
-        }
-
-        public readonly struct ResultsType
-        {
-            public readonly AoAPoint[] data;
-            public readonly float wingArea;
-            public ResultsType(AoAPoint[] data, float wingArea)
-            {
-                this.data = data;
-                this.wingArea = wingArea;
-            }
-            public static implicit operator (AoAPoint[], float)(ResultsType obj) => (obj.data, obj.wingArea);
-            public static implicit operator ResultsType((AoAPoint[] data, float wingArea) obj) => new ResultsType(obj.data, obj.wingArea);
         }
     }
 }

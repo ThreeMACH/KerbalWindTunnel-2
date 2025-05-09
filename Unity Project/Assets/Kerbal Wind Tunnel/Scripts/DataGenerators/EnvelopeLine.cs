@@ -12,7 +12,7 @@ namespace KerbalWindTunnel.DataGenerators
 {
     public static class EnvelopeLine
     {
-        public static void CalculateOptimalLines((float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, EnvelopePoint[,] dataArray, CancellationToken cancellationToken, GraphableCollection graphables)
+        public static void CalculateOptimalLines((float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, EnvelopePoint[,] dataArray, CancellationToken cancellationToken, MetaLineGraphDefinition<AscentPathPoint> fuelPath, MetaLineGraphDefinition<AscentPathPoint> timePath)
         {
             float[,] accel = dataArray.SelectToArray(pt => pt.Accel_Excess * WindTunnelWindow.gAccel);
             float[,] burnRate = dataArray.SelectToArray(pt => pt.fuelBurnRate);
@@ -28,17 +28,14 @@ namespace KerbalWindTunnel.DataGenerators
                 return timeToClimb(current, last) * dF;
             }
 
-            Task.Run(() => ProcessOptimalLine("Fuel-Optimal Path", exitCoords, initialCoords, speedBounds, altitudeBounds, fuelToClimb, f => f > 0, accel, timeToClimb, cancellationToken, graphables));
-            Task.Run(() => ProcessOptimalLine("Time-Optimal Path", exitCoords, initialCoords, speedBounds, altitudeBounds, timeToClimb, f => f > 0, accel, timeToClimb, cancellationToken, graphables));
+            Task.Run(() => ProcessOptimalLine(fuelPath, exitCoords, initialCoords, speedBounds, altitudeBounds, fuelToClimb, f => f > 0, accel, timeToClimb, cancellationToken));
+            Task.Run(() => ProcessOptimalLine(timePath, exitCoords, initialCoords, speedBounds, altitudeBounds, timeToClimb, f => f > 0, accel, timeToClimb, cancellationToken));
         }
 
-        private static void ProcessOptimalLine(string graphName, (float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, CostIncreaseFunction costIncreaseFunc, Predicate<float> neighborPredicate, float[,] predicateData, CostIncreaseFunction timeDifferenceFunc, CancellationToken cancellationToken, GraphableCollection graphables)
+        private static void ProcessOptimalLine(MetaLineGraphDefinition<AscentPathPoint> graphDef, (float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, CostIncreaseFunction costIncreaseFunc, Predicate<float> neighborPredicate, float[,] predicateData, CostIncreaseFunction timeDifferenceFunc, CancellationToken cancellationToken)
         {
             List<AscentPathPoint> results = GetOptimalPath(exitCoords, initialCoords, speedBounds, altitudeBounds, costIncreaseFunc, neighborPredicate, predicateData, timeDifferenceFunc, cancellationToken);
-            if (timeDifferenceFunc != costIncreaseFunc)
-                ((MetaLineGraph)graphables[graphName]).SetValues(results.Select(pt => new Vector2(pt.speed, pt.altitude)).ToArray(), new float[][] { results.Select(pt => pt.climbAngle * Mathf.Rad2Deg).ToArray(), results.Select(pt => pt.climbRate).ToArray(), results.Select(pt => pt.cost).ToArray(), results.Select(pt => pt.time).ToArray() });
-            else
-                ((MetaLineGraph)graphables[graphName]).SetValues(results.Select(pt => new Vector2(pt.speed, pt.altitude)).ToArray(), new float[][] { results.Select(pt => pt.climbAngle * Mathf.Rad2Deg).ToArray(), results.Select(pt => pt.climbRate).ToArray(), results.Select(pt => pt.cost).ToArray() });
+            graphDef.UpdateGraph(results);
             //this.GetOptimalPath(vessel, conditions, 1410, 17700, 0, 0, fuelToClimb, f => f > 0, excessP).Select(pt => new Vector2(pt.speed, pt.altitude)).ToArray());
             //((LineGraph)graphables["Time-Optimal Path"]).SetValues(
             //this.GetOptimalPath(vessel, conditions, 1410, 17700, 0, 0, timeToClimb, f => f > 0, excessP).Select(pt => new Vector2(pt.speed, pt.altitude)).ToArray());

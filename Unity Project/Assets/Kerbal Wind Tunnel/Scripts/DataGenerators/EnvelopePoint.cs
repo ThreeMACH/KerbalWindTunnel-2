@@ -39,8 +39,8 @@ namespace KerbalWindTunnel.DataGenerators
         public float SpecificEnergy { get => altitude * WindTunnelWindow.gAccel + speed * speed * 0.5f; }
         public float Power_Required { get => thrust_required * speed * speed; }
         public float Power_Available { get => thrust_available * speed * speed; }
-        public float LiftCoefficient { get => lift / (dynamicPressure * wingArea); }
-        public float DragCoefficient { get => drag / (dynamicPressure * wingArea); }
+
+        public float Coefficient(float force) => force / (dynamicPressure * wingArea);
 
         public EnvelopePoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed, float AoA_guess = float.NaN, float maxA_guess = float.NaN, float pitchI_guess = float.NaN)
         {

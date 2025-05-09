@@ -6,53 +6,72 @@ using UnityEngine;
 using Graphing;
 using KerbalWindTunnel.Extensions;
 using System.Collections.Concurrent;
+using System.Collections.Generic;
 
 namespace KerbalWindTunnel.DataGenerators
 {
+    using SurfGraphDefinition = SurfGraphDefinition<EnvelopePoint>;
     public class EnvelopeSurf
     {
         private static readonly (float speed, float altitude) ascentOrigin = (10, 0);
         public readonly GraphableCollection graphables = new GraphableCollection3();
         public EnvelopePoint[,] EnvelopePoints { get; private set; } = null;
         private float left, right, bottom, top;
-        private float wingArea;
         private static readonly ConcurrentDictionary<SurfCoords, EnvelopePoint> cache = new ConcurrentDictionary<SurfCoords, EnvelopePoint>();
 
         public static (int x, int y)[] resolution = { (10, 10), (40, 120), (80, 180), (160, 360) };
 
+        private const string xName = "Speed", xUnit = "m/s", yName = "Altitude", yUnit = "m";
+
+        public readonly List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
+        {
+            new SurfGraphDefinition("excess_thrust", p => p.Thrust_Excess){ DisplayName="Excess Thrust", ZUnit="kN", StringFormat="N0", CMin = 0 },
+            new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad){ DisplayName = "Level AoA", ZUnit = "°", StringFormat = "F2" },
+            new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2" },
+            new SurfGraphDefinition("thrust_available", p => p.thrust_available) { DisplayName = "Thrust Available", ZUnit = "kN", StringFormat = "N0", CMin = 0 },
+            new SurfGraphDefinition("aoa_max", p => p.AoA_max * Mathf.Deg2Rad) { DisplayName = "Max Lift AoA", ZUnit = "°", StringFormat = "F2" },
+            new SurfGraphDefinition("lift_max_force", p => p.lift_max) { DisplayName = "Max Lift", ZUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("lift_max_coeff", p => p.Coefficient(p.lift_max)) { DisplayName = "Max Lift", ZUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("fuel_economy", p => p.fuelBurnRate / p.speed * 100 * 1000) { DisplayName = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2" },
+            new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3" },
+            new SurfGraphDefinition("drag_force", p => p.drag) { DisplayName = "Drag", ZUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("drag_coeff", p => p.Coefficient(p.drag)) { DisplayName = "Drag Coefficient", ZUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("lift_slope_force", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("lift_slope_coeff", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "Pitch Input", ZUnit = "%", StringFormat = "N0" },
+            new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0 },
+            new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) {DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 }
+        };
+        // TODO: Specific excess power
+        //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Derivative", ZUnit = "kNm/deg", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
+        //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
+        //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Score", ZUnit = "kNm-deg", StringFormat = "F1", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
+        private readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", p => new Vector2(p.speed, p.altitude),
+                new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Deg2Rad, p => p.climbRate, p => p.cost, p => p.time },
+                new string[] { "Climb Angle", "Climb Rate", "Fuel Used", "Time" },
+                new string[] { "N1", "N0", "N3", "N1" },
+                new string[] { "°", "m/s", "units", "s" })
+        { DisplayName = "Fuel-Optimal Path", StringFormat = "N0", Color = Color.black, LineWidth = 3 };
+        private readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", p => new Vector2(p.speed, p.altitude),
+                new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Deg2Rad, p => p.climbRate, p => p.cost },
+                new string[] { "Climb Angle", "Climb Rate", "Time" },
+                new string[] { "N1", "N0", "N1" },
+                new string[] { "°", "m/s", "s" })
+        { DisplayName = "Time-Optimal Path", StringFormat = "N0", Color = Color.white, LineWidth = 3 };
+
         public EnvelopeSurf()
         {
-            float bottom = 0, top = 0, left = 0, right = 0;
-            float[,] blank = new float[0, 0];
-
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Excess Thrust", ZUnit = "kN", StringFormat = "N0", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark, CMin = 0 });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Level AoA", ZUnit = "°", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Thrust Available", ZUnit = "kN", StringFormat = "N0", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark, CMin = 0 });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Max Lift AoA", ZUnit = "°", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Max Lift", ZUnit = "kN", StringFormat = "N0", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Drag", ZUnit = "kN", StringFormat = "N0", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Lift Slope", ZUnit = "/°", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Pitch Input", ZUnit = "", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark, CMin = 0 });
-            //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Derivative", ZUnit = "kNm/deg", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Score", ZUnit = "kNm-deg", StringFormat = "F1", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-            graphables.Add(new OutlineMask(blank, left, right, bottom, top) { Name = "Envelope Mask", ZUnit = "kN", StringFormat = "N0", color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : 0 });
-            graphables.Add(new MetaLineGraph(new Vector2[0])              { Name = "Fuel-Optimal Path", StringFormat = "N0", color = Color.black, LineWidth = 3, MetaFields = new string[] { "Climb Angle", "Climb Rate", "Fuel Used", "Time" }, MetaStringFormats = new string[] { "N1", "N0", "N3", "N1" }, MetaUnits = new string[] { "°", "m/s", "units", "s" } });
-            graphables.Add(new MetaLineGraph(new Vector2[0])              { Name = "Time-Optimal Path", StringFormat = "N0", color = Color.white, LineWidth = 3, MetaFields = new string[] { "Climb Angle", "Climb Rate", "Time" }, MetaStringFormats = new string[] { "N1", "N0", "N1" }, MetaUnits = new string[] { "°", "m/s", "s" } });
-
-            var e = graphables.GetEnumerator();
-            while (e.MoveNext())
+            graphDefinitions.Add(fuelPath);
+            graphDefinitions.Add(timePath);
+            foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                e.Current.XUnit = "m/s";
-                e.Current.XName = "Speed";
-                e.Current.YUnit = "m";
-                e.Current.YName = "Altitude";
-                e.Current.Visible = false;
+                graphDefinition.XName = xName;
+                graphDefinition.XUnit = xUnit;
+                graphDefinition.YName = yName;
+                graphDefinition.YUnit = yUnit;
             }
+
+            graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
         }
 
         public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude)
@@ -144,7 +163,7 @@ namespace KerbalWindTunnel.DataGenerators
 #endif                
             cancellationToken.ThrowIfCancellationRequested();
             Debug.LogFormat("Wind Tunnel - Data run finished. {0} of {1} ({2:F0}%) retrieved from cache.", cachedCount, results.Length, (float)cachedCount / results.Length * 100);
-            return (results.To2Dimension(speedSegments + 1), (lowerBoundSpeed, upperBoundSpeed), (lowerBoundAltitude, upperBoundAltitude), aeroPredictorToClone.Area);
+            return (results.To2Dimension(speedSegments + 1), (lowerBoundSpeed, upperBoundSpeed), (lowerBoundAltitude, upperBoundAltitude));
         }
         private void PushResults(Task<ResultsType> data)
         {
@@ -156,7 +175,6 @@ namespace KerbalWindTunnel.DataGenerators
                 right = results.speedBounds.right;
                 bottom = results.altitudeBounds.bottom;
                 top = results.altitudeBounds.top;
-                wingArea = results.wingArea;
                 UpdateGraphs();
             }
             Debug.Log("[KWT] Graphs updated - Envelope");
@@ -183,59 +201,17 @@ namespace KerbalWindTunnel.DataGenerators
 
         public void UpdateGraphs()
         {
-            float invArea = 1f / wingArea;
-            Func<EnvelopePoint, float> scale = (pt) => 1f;
-            if (WindTunnelSettings.UseCoefficients)
+            foreach (GraphDefinition graph in graphDefinitions.Where(g => g.Enabled))
             {
-                scale = (pt) => 1f / pt.dynamicPressure * invArea;
-                ((SurfGraph)graphables["Drag"]).ZUnit = "";
-                ((SurfGraph)graphables["Drag"]).StringFormat = "F3";
-                ((SurfGraph)graphables["Max Lift"]).ZUnit = "";
-                ((SurfGraph)graphables["Max Lift"]).StringFormat = "F3";
+                if (graph is SurfGraphDefinition surfDefinition)
+                    surfDefinition.UpdateGraph(left, right, bottom, top, EnvelopePoints);
+                else if (graph is OutlineGraphDefinition<EnvelopePoint> outlineDefinition)
+                    outlineDefinition.UpdateGraph(left, right, bottom, top, EnvelopePoints);
             }
-            else
-            {
-                ((SurfGraph)graphables["Drag"]).ZUnit = "kN";
-                ((SurfGraph)graphables["Drag"]).StringFormat = "N0";
-                ((SurfGraph)graphables["Max Lift"]).ZUnit = "kN";
-                ((SurfGraph)graphables["Max Lift"]).StringFormat = "N0";
-            }
-
-            ((SurfGraph)graphables["Excess Thrust"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_Excess), left, right, bottom, top);
-            ((SurfGraph)graphables["Excess Acceleration"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Accel_Excess), left, right, bottom, top);
-            ((SurfGraph)graphables["Thrust Available"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.thrust_available), left, right, bottom, top);
-            ((SurfGraph)graphables["Level AoA"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.AoA_level * Mathf.Rad2Deg), left, right, bottom, top);
-            ((SurfGraph)graphables["Max Lift AoA"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.AoA_max * Mathf.Rad2Deg), left, right, bottom, top);
-            ((SurfGraph)graphables["Max Lift"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.lift_max * scale(pt)), left, right, bottom, top);
-            ((SurfGraph)graphables["Lift/Drag Ratio"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.LDRatio), left, right, bottom, top);
-            ((SurfGraph)graphables["Drag"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.drag * scale(pt)), left, right, bottom, top);
-            ((SurfGraph)graphables["Lift Slope"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.dLift / pt.dynamicPressure * invArea), left, right, bottom, top);
-            ((SurfGraph)graphables["Pitch Input"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.pitchInput), left, right, bottom, top);
-            ((SurfGraph)graphables["Fuel Burn Rate"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.fuelBurnRate), left, right, bottom, top);
-            //((SurfGraph)graphables["Stability Derivative"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.stabilityDerivative), left, right, bottom, top);
-            //((SurfGraph)graphables["Stability Range"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.stabilityRange), left, right, bottom, top);
-            //((SurfGraph)graphables["Stability Score"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.stabilityScore), left, right, bottom, top);
-
-            float[,] economy = EnvelopePoints.SelectToArray(pt => pt.fuelBurnRate / pt.speed * 1000 * 100);
-            SurfGraph toModify = (SurfGraph)graphables["Fuel Economy"];
-            toModify.SetValues(economy, left, right, bottom, top);
-
-            try
-            {
-                int stallpt = EnvelopeLine.CoordLocator.GenerateCoordLocators(EnvelopePoints.SelectToArray(pt => pt.Thrust_Excess)).First(0, 0, c => c.value >= 0);
-                float minEconomy = economy[stallpt, 0] / 3;
-            }
-            catch (InvalidOperationException)
-            {
-                Debug.LogError("The vessel cannot maintain flight at ground level. Fuel Economy graph will be weird.");
-            }
-            ((OutlineMask)graphables["Envelope Mask"]).SetValues(EnvelopePoints.SelectToArray(pt => pt.Thrust_Excess), left, right, bottom, top);
         }
 
         public void CalculateOptimalLines(CancellationToken cancellationToken)
-        {
-            Task.Run(() => CalculateOptimalLinesTask((EnvelopePoints, (left, right), (bottom, top), wingArea), cancellationToken));
-        }
+            => Task.Run(() => CalculateOptimalLinesTask((EnvelopePoints, (left, right), (bottom, top)), cancellationToken));
 
         private void CalculateOptimalLinesTask(ResultsType results, CancellationToken cancellationToken)
         {
@@ -251,7 +227,7 @@ namespace KerbalWindTunnel.DataGenerators
                 exitCoords = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
                 WindTunnelWindow.Instance.ProvideAscentTarget(exitCoords);
             }
-            EnvelopeLine.CalculateOptimalLines(exitCoords, initialCoords, speedBounds, altitudeBounds, data, cancellationToken, graphables);
+            EnvelopeLine.CalculateOptimalLines(exitCoords, initialCoords, speedBounds, altitudeBounds, data, cancellationToken, fuelPath, timePath);
         }
 
         public static (float speed, float altitude) GetMaxSustainableEnergy(EnvelopePoint[,] data, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds)
@@ -319,19 +295,17 @@ namespace KerbalWindTunnel.DataGenerators
             public readonly EnvelopePoint[,] data;
             public readonly (float left, float right) speedBounds;
             public readonly (float bottom, float top) altitudeBounds;
-            public readonly float wingArea;
-            public ResultsType(EnvelopePoint[,] data, (float, float) speedBounds, (float, float) altitudeBounds, float wingArea)
+            public ResultsType(EnvelopePoint[,] data, (float, float) speedBounds, (float, float) altitudeBounds)
             {
                 this.data = data;
                 this.speedBounds = speedBounds;
                 this.altitudeBounds = altitudeBounds;
-                this.wingArea = wingArea;
             }
 
-            public static implicit operator (EnvelopePoint[,], (float, float), (float, float), float)(ResultsType obj) =>
-                (obj.data, obj.speedBounds, obj.altitudeBounds, obj.wingArea);
-            public static implicit operator ResultsType((EnvelopePoint[,] data, (float, float) speedBounds, (float, float) altitudeBounds, float wingArea) obj) =>
-                new ResultsType(obj.data, obj.speedBounds, obj.altitudeBounds, obj.wingArea);
+            public static implicit operator (EnvelopePoint[,], (float, float), (float, float))(ResultsType obj) =>
+                (obj.data, obj.speedBounds, obj.altitudeBounds);
+            public static implicit operator ResultsType((EnvelopePoint[,] data, (float, float) speedBounds, (float, float) altitudeBounds) obj) =>
+                new ResultsType(obj.data, obj.speedBounds, obj.altitudeBounds);
         }
     }
 }

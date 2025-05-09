@@ -69,6 +69,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\EnvelopeLine.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\EnvelopePoint.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\EnvelopeSurf.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\GraphFactory.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\VelCurve.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\DataGenerators\TaskProgressTracker.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\Extensions\DelegateFactory.cs" />
