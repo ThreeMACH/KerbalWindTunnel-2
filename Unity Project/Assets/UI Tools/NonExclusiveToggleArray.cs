@@ -32,6 +32,14 @@ namespace UI_Tools
             }
         }
 
+        public override void Clear()
+        {
+            base.Clear();
+            nonExclusiveItems.Clear();
+            _serialize_allowableToggles = null;
+            _serialize_enforceMutual = null;
+        }
+
         public void Add(string item, UnityEngine.Events.UnityAction<bool> action = null, IEnumerable<int> allowableToggles = null, bool enforceMutual = false)
         {
             Add(item, action, ToggleSelector(allowableToggles)?.ToList(), enforceMutual);
@@ -58,11 +66,11 @@ namespace UI_Tools
                 return;
             SetNonExclusiveToggle(net, allowableToggles, enforceMutual);
         }
-        private void SetNonExclusiveToggle(NonExclusiveToggle nonExclusiveToggle, IEnumerable<int> allowableToggles, bool enforceMutual = false)
+        public void SetNonExclusiveToggle(NonExclusiveToggle nonExclusiveToggle, IEnumerable<int> allowableToggles, bool enforceMutual = false)
         {
             SetNonExclusiveToggle(nonExclusiveToggle, ToggleSelector(allowableToggles).ToList(), enforceMutual);
         }
-        private void SetNonExclusiveToggle(NonExclusiveToggle nonExclusiveToggle, List<Toggle> allowableToggles, bool enforceMutual = false)
+        public static void SetNonExclusiveToggle(NonExclusiveToggle nonExclusiveToggle, List<Toggle> allowableToggles, bool enforceMutual = false)
         {
             nonExclusiveToggle.allowableToggles = allowableToggles;
             nonExclusiveToggle.enforceMutual = enforceMutual;

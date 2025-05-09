@@ -102,24 +102,26 @@ namespace UI_Tools
             if (index >= items.Count)
                 return false;
             ToggleArrayItem itemToDestroy = items[index];
-            if (itemToDestroy == null)
-                return false;
-            GameObject childToDestroy = itemToDestroy.Toggle.gameObject;
+            GameObject childToDestroy = itemToDestroy?.Toggle?.gameObject;
             items.Remove(itemToDestroy);
+            if (childToDestroy == null)
+                return false;
             if (childToDestroy != null)
                 Destroy(childToDestroy);
             return true;
         }
-        public void Clear()
+        public virtual void Clear()
         {
             for (int i = items.Count - 1; i >= 0; i--)
                 RemoveAt(i);
             items.Clear();
+            _serialize_actions = null;
+            _serialize_labels = null;
         }
 
         protected virtual void Awake()
         {
-            foreach (ToggleArrayItem item in items)
+            foreach (ToggleArrayItem item in items.Where(i => i.Toggle == null))
                 SpawnItem(item);
         }
 
@@ -136,7 +138,10 @@ namespace UI_Tools
 
         private void OnChildValueChanged(Toggle toggle)
         {
-            onChildValueChanged?.Invoke(items.FindIndex((t) => t.Toggle == toggle));
+            int index = items.FindIndex((t) => t.Toggle == toggle);
+            if (index < 0)
+                return;
+            onChildValueChanged?.Invoke(index);
         }
 
         public virtual void OnBeforeSerialize()
