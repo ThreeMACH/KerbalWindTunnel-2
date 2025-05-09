@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
+using UI_Tools;
 using UI_Tools.Universal_Text;
 using Graphing;
 using KerbalWindTunnel.DataGenerators;
@@ -46,9 +47,9 @@ namespace KerbalWindTunnel
         [SerializeField]
         private Toggle ascentTimeToggle;
         [SerializeField]
-        private UI_Tools.ToggleArray aoaToggleArray;
+        private UI_Tools.NonExclusiveToggleArray aoaToggleArray;
         [SerializeField]
-        private UI_Tools.ToggleArray velToggleArray;
+        private UI_Tools.NonExclusiveToggleArray velToggleArray;
         [SerializeField]
         private Toggle aoaWetToggle;
         [SerializeField]
@@ -87,9 +88,6 @@ namespace KerbalWindTunnel
         private TaskProgressTracker taskTracker_aoa;
         private TaskProgressTracker taskTracker_surf;
         private System.Threading.CancellationTokenSource cancellationTokenSource = new System.Threading.CancellationTokenSource();
-
-        private static readonly string[] aoaItems = new string[] { "Lift Force", "Drag Force", "Lift/Drag Ratio", "Lift Slope", "Pitch Input", "Pitching Torque" };
-        private static readonly string[] velItems = new string[] { "Level Flight AoA", "Max Lift AoA", "Lift/Drag Ratio", "Lift Slope", "Thrust Available", "Drag Force", "Excess Thrust", "Max Lift", "Excess Acceleration", "Pitch Input" };
 
         private HighlightManager highlightManager;
 
@@ -354,13 +352,13 @@ namespace KerbalWindTunnel
             }
             Instance = this;
 
+            velocityCollection = velData.graphables;
+            aoaCollection = aoaData.graphables;
+            envelopeCollection = envelopeData.graphables;
+
             highlightAltitudeInput.Text = HighlightAltitude.ToString();
             highlightSpeedInput.Text = HighlightSpeed.ToString();
             highlightAoAInput.Text = HighlightAoA.ToString();
-
-            aoaToggleArray.Items[0].IsOn = true;
-            aoaToggleArray.Items[1].IsOn = true;
-            velToggleArray.Items[4].IsOn = true;
 
             highlightManager = gameObject.AddComponent<HighlightManager>();
 
@@ -373,10 +371,11 @@ namespace KerbalWindTunnel
             planetDropdown.Value = homeIndex;
 
             SetEnvelopeOptions(envelopeData.graphDefinitions.Where(g => g.Enabled && g.Graph is SurfGraph).Select(g => g.DisplayName));
-
-            velocityCollection = velData.graphables;
-            aoaCollection = aoaData.graphables;
-            envelopeCollection = envelopeData.graphables;
+            SetToggleOptions(aoaToggleArray, aoaData.graphDefinitions.Where(g => g.Enabled));
+            SetToggleOptions(velToggleArray, velData.graphDefinitions.Where(g => g.Enabled));
+            foreach (Toggle toggle in aoaToggleArray.Items[0].Toggle.GetComponent<NonExclusiveToggle>().allowableToggles)
+                toggle.isOn = true;
+            velToggleArray.Items[0].Toggle.isOn = true;
             envelopeDropdown.Value = 0;
 
             velCurveGrapher.AddGraphToDefaultAxes(velocityCollection);
@@ -479,6 +478,33 @@ namespace KerbalWindTunnel
         {
             envelopeDropdown.ClearOptions();
             envelopeDropdown.AddOptions(optionNames.ToList());
+        }
+
+        public void SetToggleOptions(NonExclusiveToggleArray toggleArray, IEnumerable<GraphDefinition> options)
+        {
+            toggleArray.Clear();
+            foreach (GraphDefinition graphDefinition in options)
+                ((ToggleArray)toggleArray).Add(graphDefinition.DisplayName);
+
+            var optEnumerator = options.GetEnumerator();
+            var toggleEnumerator = toggleArray.Items.GetEnumerator();
+
+            while (optEnumerator.MoveNext() && toggleEnumerator.MoveNext())
+            {
+                NonExclusiveToggle net = toggleEnumerator.Current.Toggle.GetComponent<NonExclusiveToggle>();
+                toggleArray.SetNonExclusiveToggle(net, GetCompatibleGraphs(optEnumerator.Current.YUnit, options));
+            }
+
+            static IEnumerable<int> GetCompatibleGraphs(string unit, IEnumerable<GraphDefinition> options)
+            {
+                int i = -1;
+                foreach (var graphDefinition in options)
+                {
+                    i++;
+                    if (string.Equals(graphDefinition.YUnit, unit))
+                        yield return i;
+                }
+            }
         }
 
         // Called in On End Edit of the ascent target entry box
