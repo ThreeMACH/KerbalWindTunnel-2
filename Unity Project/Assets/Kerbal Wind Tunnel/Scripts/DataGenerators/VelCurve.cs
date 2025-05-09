@@ -20,21 +20,22 @@ namespace KerbalWindTunnel.DataGenerators
         private static Func<EnvelopePoint, Vector2> ToVector(Func<EnvelopePoint, float> func) => (pt) => new Vector2(pt.speed, func(pt));
         public readonly List<LineGraphDefinition> graphDefinitions = new List<LineGraphDefinition>()
         {
-            new LineGraphDefinition("aoa_level", ToVector(p => p.AoA_level * Mathf.Rad2Deg)){ DisplayName = "Level AoA", YUnit = "°", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("aoa_max", ToVector(p => p.AoA_max * Mathf.Rad2Deg)) { DisplayName = "Max Lift AoA", YUnit = "°", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("aoa_level", ToVector(p => p.AoA_level * Mathf.Rad2Deg)){ DisplayName = "Level AoA", YName = "Angle", YUnit = "°", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("aoa_max", ToVector(p => p.AoA_max * Mathf.Rad2Deg)) { DisplayName = "Max Lift AoA", YName = "Angle", YUnit = "°", StringFormat = "F2", Color = defaultColor },
             new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("lift_slope_force", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("lift_slope_force", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "kN/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
             new LineGraphDefinition("lift_slope_coeff", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
-            new LineGraphDefinition("thrust_available", ToVector(p => p.thrust_available)) { DisplayName = "Thrust Available", YUnit = "kN", StringFormat = "N0", Color = defaultColor },
-            new LineGraphDefinition("drag_force", ToVector(p => p.drag)) { DisplayName = "Drag", YUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
-            new LineGraphDefinition("drag_coeff", ToVector(p => p.Coefficient(p.drag))) { DisplayName = "Drag Coefficient", YUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
-            new LineGraphDefinition("excess_thrust", ToVector(p => p.Thrust_Excess)){ DisplayName = "Excess Thrust", YUnit="kN", StringFormat="N0", Color = defaultColor },
-            new LineGraphDefinition("lift_max_force", ToVector(p => p.lift_max)) { DisplayName = "Max Lift", YUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
-            new LineGraphDefinition("lift_max_coeff", ToVector(p => p.Coefficient(p.lift_max))) { DisplayName = "Max Lift", YUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
-            new LineGraphDefinition("accel_excess", ToVector(p => p.Accel_Excess)) { DisplayName = "Excess Acceleration", YUnit = "g", StringFormat = "N2", Color = defaultColor },
+            new LineGraphDefinition("thrust_available", ToVector(p => p.thrust_available)) { DisplayName = "Thrust Available", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor },
+            new LineGraphDefinition("thrust_required", ToVector(p => p.thrust_required)) { DisplayName = "Thrust Required", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor },
+            new LineGraphDefinition("excess_thrust", ToVector(p => p.Thrust_Excess)){ DisplayName = "Excess Thrust", YName = "Force", YUnit = "kN", StringFormat="N0", Color = defaultColor },
+            new LineGraphDefinition("liftMax_force", ToVector(p => p.lift_max)) { DisplayName = "Max Lift", YName = "Force", YUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("liftMax_coeff", ToVector(p => p.Coefficient(p.lift_max))) { DisplayName = "Max Lift", YName = "Coefficient", YUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("drag_force", ToVector(p => p.drag)) { DisplayName = "Drag", YName = "Force", YUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients, Color = defaultColor },
+            new LineGraphDefinition("drag_coeff", ToVector(p => p.Coefficient(p.drag))) { DisplayName = "Drag Coefficient", YName = "Coefficient", YUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients, Color = defaultColor },
             new LineGraphDefinition("fuel_economy", ToVector(p => p.fuelBurnRate / p.speed * 100 * 1000)) { DisplayName = "Fuel Economy", YUnit = "kg/100 km", StringFormat = "F2", Color = defaultColor, Enabled = false },
             new LineGraphDefinition("fuel_rate", ToVector(p => p.fuelBurnRate)) { DisplayName = "Fuel Burn Rate", YUnit = "kg/s", StringFormat = "F3", Color = defaultColor, Enabled = false },
-            new LineGraphDefinition("pitch_input", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor, Enabled = false }
+            new LineGraphDefinition("pitch_input", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor }
+            //new LineGraphDefinition("accel_excess", ToVector(p => p.Accel_Excess)) { DisplayName = "Excess Acceleration", YUnit = "g", StringFormat = "N2", Color = defaultColor }
         };
 
         public VelCurve()

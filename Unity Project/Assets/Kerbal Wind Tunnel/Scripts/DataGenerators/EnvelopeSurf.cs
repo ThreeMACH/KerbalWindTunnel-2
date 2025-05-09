@@ -31,7 +31,7 @@ namespace KerbalWindTunnel.DataGenerators
             // TODO: Angle of climb
             new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad) { DisplayName = "Level AoA", ZUnit = "°", StringFormat = "F2" },
             new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2" },
-            new SurfGraphDefinition("lift_slope_force", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("lift_slope_force", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "kN/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients },
             new SurfGraphDefinition("lift_slope_coeff", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
             new SurfGraphDefinition("drag_force", p => p.drag) { DisplayName = "Drag", ZUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients },
             new SurfGraphDefinition("drag_coeff", p => p.Coefficient(p.drag)) { DisplayName = "Drag Coefficient", ZUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },

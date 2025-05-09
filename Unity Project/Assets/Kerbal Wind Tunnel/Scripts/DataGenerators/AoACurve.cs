@@ -24,11 +24,11 @@ namespace KerbalWindTunnel.DataGenerators
         public List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
         {
             new LineGraphDefinition("lift_force", ToVector(p => p.Lift)) { DisplayName = "Lift Force", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
-            new LineGraphDefinition("lift_coeff", ToVector(p => p.Coefficient(p.Lift))) { DisplayName = "Lift Coefficient", YName = "", YUnit = "", StringFormat = "N2", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("lift_coeff", ToVector(p => p.Coefficient(p.Lift))) { DisplayName = "Lift Coefficient", YName = "Coefficient", YUnit = "", StringFormat = "N2", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
             new LineGraphDefinition("drag_force", ToVector(p => p.Drag)) { DisplayName = "Drag Force", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
-            new LineGraphDefinition("drag_coeff", ToVector(p => p.Coefficient(p.Lift))) { DisplayName = "Drag Coefficient", YName = "", YUnit = "", StringFormat = "N2", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("drag_coeff", ToVector(p => p.Coefficient(p.Lift))) { DisplayName = "Drag Coefficient", YName = "Coefficient", YUnit = "", StringFormat = "N2", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
             new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("lift_slope_force", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
+            new LineGraphDefinition("lift_slope_force", ToVector(p => p.dLift)) { DisplayName = "Lift Slope", YUnit = "kN/°", StringFormat = "F3", Color = defaultColor, Enabled = !WindTunnelSettings.UseCoefficients },
             new LineGraphDefinition("lift_slope_coeff", ToVector(p => p.Coefficient(p.dLift))) { DisplayName = "Lift Slope", YUnit = "/°", StringFormat = "F3", Color = defaultColor, Enabled = WindTunnelSettings.UseCoefficients },
             new GroupedGraphDefinition<LineGraphDefinition> ("pitchInput",
                 new LineGraphDefinition("pitchInput_wet", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input (Wet)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
