@@ -11,7 +11,7 @@ using KSP.Localization;
 
 namespace KerbalWindTunnel
 {
-    public partial class WindTunnelWindow : MonoBehaviour
+    public class WindTunnelWindow : MonoBehaviour
     {
 #pragma warning disable IDE0044 // Add readonly modifier
         [SerializeField]
@@ -75,6 +75,7 @@ namespace KerbalWindTunnel
         [SerializeField]
         private Toggle rollUpToggle;
 #pragma warning restore IDE0044 // Add readonly modifier
+        private PopupDialog settingsDialog;
 
         private GraphableCollection envelopeCollection;
         private GraphableCollection aoaCollection;
@@ -373,7 +374,7 @@ namespace KerbalWindTunnel
             SetEnvelopeOptions(envelopeData.graphDefinitions.Where(g => g.Enabled && g.Graph is SurfGraph).Select(g => g.DisplayName));
             SetToggleOptions(aoaToggleArray, aoaData.graphDefinitions.Where(g => g.Enabled));
             SetToggleOptions(velToggleArray, velData.graphDefinitions.Where(g => g.Enabled));
-            foreach (Toggle toggle in aoaToggleArray.Items[0].Toggle.GetComponent<NonExclusiveToggle>().allowableToggles)
+            foreach (Toggle toggle in aoaToggleArray.Items[0].Toggle.GetComponent<NonExclusiveToggle>().allowableToggles.Take(2))
                 toggle.isOn = true;
             velToggleArray.Items[0].Toggle.isOn = true;
             envelopeDropdown.Value = 0;
@@ -486,6 +487,11 @@ namespace KerbalWindTunnel
             foreach (GraphDefinition graphDefinition in options)
                 ((ToggleArray)toggleArray).Add(graphDefinition.DisplayName);
 
+            UpdateToggleCompatibility(toggleArray, options);
+        }
+
+        public void UpdateToggleCompatibility(NonExclusiveToggleArray toggleArray, IEnumerable<GraphDefinition> options)
+        {
             var optEnumerator = options.GetEnumerator();
             var toggleEnumerator = toggleArray.Items.GetEnumerator();
 
@@ -881,11 +887,33 @@ namespace KerbalWindTunnel
         public void ToggleSettingsWindow()
         {
             if (settingsDialog == null)
-                settingsDialog = SpawnDialog();
+                settingsDialog = WindTunnelSettings.SpawnDialog(UpdateFromSettings, true);
             else
             {
                 settingsDialog.Dismiss();
                 settingsDialog = null;
+            }
+        }
+
+        private void UpdateFromSettings()
+        {
+            if (WindTunnelSettings.UseCharacterized != vessel is VesselCache.CharacterizedVessel)
+                RefreshData();
+            else
+            {
+                envelopeData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+                velData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+                aoaData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+
+                UpdateToggleCompatibility(velToggleArray, velData.graphDefinitions);
+                UpdateToggleCompatibility(aoaToggleArray, aoaData.graphDefinitions);
+
+                envelopeData.UpdateGraphs();
+                velData.UpdateGraphs();
+                aoaData.UpdateGraphs();
+
+                envelopeData.envelope.Visible = WindTunnelSettings.ShowEnvelopeMaskAlways
+                        || (WindTunnelSettings.ShowEnvelopeMask && !envelopeCollection[envelopeDropdown.Value].Name.EndsWith("_excess"));
             }
         }
 
