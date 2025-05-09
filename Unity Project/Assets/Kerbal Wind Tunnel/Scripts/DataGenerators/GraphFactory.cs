@@ -35,7 +35,7 @@ namespace KerbalWindTunnel.DataGenerators
         public Gradient ColorScheme { get => ((Graphable)graph).ColorScheme; set => ((Graphable)graph).ColorScheme = value; }
         public Color Color { get => ((Graphable)graph).color; set => ((Graphable)graph).color = value; }
 
-        public readonly Func<TData, TPoint> mappingFunc;
+        public Func<TData, TPoint> mappingFunc;
         public new TGraph Graph { get => (TGraph)graph; }
         public GraphDefinition(string name, Func<TData, TPoint> mappingFunc)
             : base(name)
@@ -106,7 +106,7 @@ namespace KerbalWindTunnel.DataGenerators
         public bool LineOnly { get => ((OutlineMask)graph).LineOnly; set => ((OutlineMask)graph).LineOnly = value; }
         public Func<Vector3, float> MaskCriteria { get => ((OutlineMask)graph).MaskCriteria; set => ((OutlineMask)graph).MaskCriteria = value; }
 
-        public OutlineGraphDefinition(string name, Func<T, float> mappingFunc, Func<Vector3, float> maskCriteria = null, bool lineOnly = true)
+        public OutlineGraphDefinition(string name, Func<T, float> mappingFunc)
             : base(name, mappingFunc)
             => graph = new OutlineMask(blank, 0, 0, 0, 0) { Name = name };
 

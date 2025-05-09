@@ -31,18 +31,15 @@ namespace KerbalWindTunnel.DataGenerators
             // TODO: Angle of climb
             new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad) { DisplayName = "Level AoA", ZUnit = "°", StringFormat = "F2" },
             new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2" },
-            new SurfGraphDefinition("lift_slope_force", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "kN/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients },
-            new SurfGraphDefinition("lift_slope_coeff", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
-            new SurfGraphDefinition("drag_force", p => p.drag) { DisplayName = "Drag", ZUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients },
-            new SurfGraphDefinition("drag_coeff", p => p.Coefficient(p.drag)) { DisplayName = "Drag Coefficient", ZUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "Lift Slope", StringFormat = "F3" },
+            new SurfGraphDefinition("drag_coefSwap", null) { DisplayName = "Drag" },
             new SurfGraphDefinition("aoa_max", p => p.AoA_max * Mathf.Deg2Rad) { DisplayName = "Max Lift AoA", ZUnit = "°", StringFormat = "F2" },
-            new SurfGraphDefinition("lift_max_force", p => p.lift_max) { DisplayName = "Max Lift", ZUnit = "kN", StringFormat = "N0", Enabled = !WindTunnelSettings.UseCoefficients },
-            new SurfGraphDefinition("lift_max_coeff", p => p.Coefficient(p.lift_max)) { DisplayName = "Max Lift", ZUnit = "", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
+            new SurfGraphDefinition("liftMax_coefSwap", null) { DisplayName = "Max Lift" },
             new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "Pitch Input", ZUnit = "%", StringFormat = "N0" },
             // TODO: Static margin
             new SurfGraphDefinition("fuel_economy", p => p.fuelBurnRate / p.speed * 100 * 1000) { DisplayName = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2" },
-            new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3" }
-            //new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0 }
+            new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3" },
+            new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0, Enabled = false }
         };
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Derivative", ZUnit = "kNm/deg", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
@@ -61,8 +58,37 @@ namespace KerbalWindTunnel.DataGenerators
                 new string[] { "°", "m/s", "s" })
         { DisplayName = "Time-Optimal Path", StringFormat = "N0", Color = Color.white, LineWidth = 3 };
 
+        public void SetCoefficientMode(bool useCoefficients)
+        {
+            foreach (GraphDefinition graphDef in graphDefinitions.Where(g => g.name.EndsWith("_coefSwap")))
+            {
+                if (graphDef is SurfGraphDefinition surfDef)
+                {
+                    switch (graphDef.name.Substring(0, graphDef.name.IndexOf("_coefSwap")))
+                    {
+                        case "liftMax":
+                            surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.lift_max) : p => p.lift_max;
+                            break;
+                        case "drag":
+                            surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.drag) : p => p.drag;
+                            break;
+                        case "lift_slope":
+                            surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.dLift) : p => p.dLift;
+                            surfDef.ZUnit = useCoefficients ? "/°" : "kN/°";
+                            continue;
+                        default:
+                            continue;
+                    }
+                    surfDef.ZName = useCoefficients ? "Coefficient" : "Force";
+                    surfDef.ZUnit = useCoefficients ? "" : "kN";
+                    surfDef.StringFormat = useCoefficients ? "N0" : "F2";
+                }
+            }
+        }
+
         public EnvelopeSurf()
         {
+            SetCoefficientMode(WindTunnelSettings.UseCoefficients);
             graphDefinitions.Add(envelope);
             graphDefinitions.Add(fuelPath);
             graphDefinitions.Add(timePath);
