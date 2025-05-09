@@ -897,6 +897,7 @@ namespace KerbalWindTunnel
 
         private void UpdateFromSettings()
         {
+            settingsDialog = null;
             if (WindTunnelSettings.UseCharacterized != vessel is VesselCache.CharacterizedVessel)
                 RefreshData();
             else
