@@ -88,7 +88,6 @@ namespace KerbalWindTunnel
         private TaskProgressTracker taskTracker_surf;
         private System.Threading.CancellationTokenSource cancellationTokenSource = new System.Threading.CancellationTokenSource();
 
-        private static readonly string[] envelopeItems = new string[] { "Excess Thrust", "Level Flight AoA", "Lift/Drag Ratio", "Thrust Available", "Max Lift AoA", "Max Lift Force", "Fuel Economy", "Fuel Burn Rate", "Drag Force", "Lift Slope", "Pitch Input", "Excess Acceleration" };
         private static readonly string[] aoaItems = new string[] { "Lift Force", "Drag Force", "Lift/Drag Ratio", "Lift Slope", "Pitch Input", "Pitching Torque" };
         private static readonly string[] velItems = new string[] { "Level Flight AoA", "Max Lift AoA", "Lift/Drag Ratio", "Lift Slope", "Thrust Available", "Drag Force", "Excess Thrust", "Max Lift", "Excess Acceleration", "Pitch Input" };
 
@@ -116,15 +115,13 @@ namespace KerbalWindTunnel
                     envelopeCollection.SetVisibility(false);
 
                     envelopeCollection[value].Visible = true;
-                    if (envelopeCollection.HasGraphNamed("Fuel-Optimal Path"))
-                        envelopeCollection["Fuel-Optimal Path"].Visible = ShowFuelOptimalPath;
-                    if (envelopeCollection.HasGraphNamed("Time-Optimal Path"))
-                        envelopeCollection["Time-Optimal Path"].Visible = ShowTimeOptimalPath;
-                    if (envelopeCollection.HasGraphNamed("Envelope Mask"))
-                        envelopeCollection["Envelope Mask"].Visible = WindTunnelSettings.ShowEnvelopeMask;
-                    // TODO: Make use of WindTunnelSettings.ShowEnvelopeMaskAlways
+                    envelopeData.fuelPath.Visible = ShowFuelOptimalPath;
+                    envelopeData.timePath.Visible = ShowTimeOptimalPath;
+                    envelopeData.envelope.Visible = WindTunnelSettings.ShowEnvelopeMaskAlways
+                        || (WindTunnelSettings.ShowEnvelopeMask && !envelopeCollection[value].Name.EndsWith("_excess"));
                 }
-                envelopeDropdown.Value = value;
+                if (envelopeDropdown.Value != value)
+                    envelopeDropdown.Value = value;
             }
         }
 
@@ -167,9 +164,9 @@ namespace KerbalWindTunnel
                 if (_showFuelOptimalPath == value)
                     return;
                 _showFuelOptimalPath = value;
-                if (envelopeCollection?["Fuel-Optimal Path"] != null)
-                    envelopeCollection["Fuel-Optimal Path"].Visible = value;
-                ascentFuelToggle.isOn = value;
+                envelopeData.fuelPath.Visible = ShowFuelOptimalPath;
+                if (ascentFuelToggle.isOn != value)
+                    ascentFuelToggle.isOn = value;
             }
         }
         private bool _showFuelOptimalPath = true;
@@ -183,9 +180,9 @@ namespace KerbalWindTunnel
                 if (_showTimeOptimalPath == value)
                     return;
                 _showTimeOptimalPath = value;
-                if (envelopeCollection?["Time-Optimal Path"] != null)
-                    envelopeCollection["Time-Optimal Path"].Visible = value;
-                ascentTimeToggle.isOn = value;
+                envelopeData.timePath.Visible = ShowTimeOptimalPath;
+                if (ascentTimeToggle.isOn != value)
+                    ascentTimeToggle.isOn = value;
             }
         }
         private bool _showTimeOptimalPath = true;
@@ -375,7 +372,7 @@ namespace KerbalWindTunnel
             body = planets[homeIndex];
             planetDropdown.Value = homeIndex;
 
-            SetEnvelopeOptions(envelopeItems);
+            SetEnvelopeOptions(envelopeData.graphDefinitions.Where(g => g.Enabled && g.Graph is SurfGraph).Select(g => g.DisplayName));
 
             velocityCollection = velData.graphables;
             aoaCollection = aoaData.graphables;

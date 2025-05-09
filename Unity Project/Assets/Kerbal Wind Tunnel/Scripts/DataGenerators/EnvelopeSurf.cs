@@ -25,7 +25,7 @@ namespace KerbalWindTunnel.DataGenerators
 
         public readonly List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
         {
-            new SurfGraphDefinition("excess_thrust", p => p.Thrust_Excess){ DisplayName="Excess Thrust", ZUnit="kN", StringFormat="N0", CMin = 0 },
+            new SurfGraphDefinition("thrust_excess", p => p.Thrust_Excess){ DisplayName="Excess Thrust", ZUnit="kN", StringFormat="N0", CMin = 0 },
             new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad){ DisplayName = "Level AoA", ZUnit = "°", StringFormat = "F2" },
             new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2" },
             new SurfGraphDefinition("thrust_available", p => p.thrust_available) { DisplayName = "Thrust Available", ZUnit = "kN", StringFormat = "N0", CMin = 0 },
@@ -39,20 +39,20 @@ namespace KerbalWindTunnel.DataGenerators
             new SurfGraphDefinition("lift_slope_force", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = !WindTunnelSettings.UseCoefficients },
             new SurfGraphDefinition("lift_slope_coeff", p => p.dLift) { DisplayName = "Lift Slope", ZUnit = "/°", StringFormat = "F3", Enabled = WindTunnelSettings.UseCoefficients },
             new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "Pitch Input", ZUnit = "%", StringFormat = "N0" },
-            new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0 },
-            new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) {DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 }
+            new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0 }
         };
         // TODO: Specific excess power
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Derivative", ZUnit = "kNm/deg", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Score", ZUnit = "kNm-deg", StringFormat = "F1", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-        private readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", p => new Vector2(p.speed, p.altitude),
+        public readonly OutlineGraphDefinition<EnvelopePoint> envelope = new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) { DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 };
+        public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", p => new Vector2(p.speed, p.altitude),
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Deg2Rad, p => p.climbRate, p => p.cost, p => p.time },
                 new string[] { "Climb Angle", "Climb Rate", "Fuel Used", "Time" },
                 new string[] { "N1", "N0", "N3", "N1" },
                 new string[] { "°", "m/s", "units", "s" })
         { DisplayName = "Fuel-Optimal Path", StringFormat = "N0", Color = Color.black, LineWidth = 3 };
-        private readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", p => new Vector2(p.speed, p.altitude),
+        public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", p => new Vector2(p.speed, p.altitude),
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Deg2Rad, p => p.climbRate, p => p.cost },
                 new string[] { "Climb Angle", "Climb Rate", "Time" },
                 new string[] { "N1", "N0", "N1" },
@@ -61,6 +61,7 @@ namespace KerbalWindTunnel.DataGenerators
 
         public EnvelopeSurf()
         {
+            graphDefinitions.Add(envelope);
             graphDefinitions.Add(fuelPath);
             graphDefinitions.Add(timePath);
             foreach (GraphDefinition graphDefinition in graphDefinitions)
