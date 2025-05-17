@@ -132,7 +132,7 @@ namespace KerbalWindTunnel.DataGenerators
                             if (costIsTime)
                                 neighbor.time = neighbor.cost;
                             else
-                                neighbor.time = current.cost + timeFunc(neighbor, current);
+                                neighbor.time = current.time + timeFunc(neighbor, current);
                             neighbor.Previous = current;
                             if (queue.Contains(neighbor))
                                 queue.UpdatePriority(neighbor, neighbor.cost);
@@ -147,7 +147,7 @@ namespace KerbalWindTunnel.DataGenerators
                         if (costIsTime)
                             neighbor.time = neighbor.cost;
                         else
-                            neighbor.time = current.cost + timeFunc(neighbor, current);
+                            neighbor.time = current.time + timeFunc(neighbor, current);
                         neighbor.Previous = current;
                         queue.Enqueue(neighbor, neighbor.cost);
                     }
