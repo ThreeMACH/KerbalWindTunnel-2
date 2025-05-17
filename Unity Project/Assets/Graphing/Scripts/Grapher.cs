@@ -68,7 +68,7 @@ namespace Graphing
             { typeof(GraphableCollection3), typeof(GraphDrawerCollection) }
         };
 
-        private System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool active)> activatorQueue = new System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool visible)>();
+        private readonly System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool active)> activatorQueue = new System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool visible)>();
 
         /// <summary>Provides the primary vertical axis, creating one if one does not exist.</summary>
         /// <returns>The vertical axis designated as primary.</returns>
@@ -367,7 +367,10 @@ namespace Graphing
         {
             if (!typeLookup.TryGetValue(graph.GetType(), out Type graphDrawerType))
                 graphDrawerType = TypeFallback(graph.GetType());
-            GraphDrawer drawer = (GraphDrawer)new GameObject(graph.Name).AddComponent(graphDrawerType);
+            string objName = graph.Name;
+            if (string.IsNullOrEmpty(objName))
+                objName = graph.GetType().Name;
+            GraphDrawer drawer = (GraphDrawer)new GameObject(objName).AddComponent(graphDrawerType);
             drawer.Initialize();
             if (drawer is GraphDrawer.ISingleMaterialUser singleMatUser)
             {
