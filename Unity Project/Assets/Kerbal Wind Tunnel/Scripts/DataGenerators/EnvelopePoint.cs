@@ -32,26 +32,26 @@ namespace KerbalWindTunnel.DataGenerators
         public readonly float mach;
         public readonly float dynamicPressure;
 
-        private readonly float mass;
-        private readonly float wingArea;
+        private readonly float invMass;
+        private readonly float invWingArea;
 
         public float Thrust_Excess { get => thrust_available - thrust_required; }
-        public float Accel_Excess { get => Thrust_Excess / (mass * WindTunnelWindow.gAccel); }
-        public float EnergyHeight { get => altitude + speed * speed * 0.5f / WindTunnelWindow.gAccel; }
+        public float Accel_Excess { get => Thrust_Excess * invMass * WindTunnelWindow.invGAccel; }
+        public float EnergyHeight { get => altitude + speed * speed * 0.5f * WindTunnelWindow.invGAccel; }
         public float Power_Required { get => thrust_required * speed; }
         public float Power_Available { get => thrust_available * speed; }
         public float Power_Excess { get => Thrust_Excess * speed; }
 
-        public float Coefficient(float force) => force / (dynamicPressure * wingArea);
-        public float Specific(float value) => value / (mass * WindTunnelWindow.gAccel);
+        public float Coefficient(float force) => force * invWingArea / dynamicPressure;
+        public float Specific(float value) => value * invMass * WindTunnelWindow.invGAccel;
 
         public EnvelopePoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed, float AoA_guess = float.NaN, float maxA_guess = float.NaN, float pitchI_guess = float.NaN)
         {
             ctorMarker.Begin();
             this.altitude = altitude;
-            mass = vessel.Mass;
-            wingArea = vessel.Area;
             this.speed = speed = Math.Max(speed, minSpeed);
+            invMass = 1 / vessel.Mass;
+            invWingArea = 1 / vessel.Area;
             AeroPredictor.Conditions conditions = new AeroPredictor.Conditions(body, speed, altitude);
             float gravParameter, radius;
             gravParameter = (float)body.gravParameter;
@@ -59,7 +59,7 @@ namespace KerbalWindTunnel.DataGenerators
             float r = radius + altitude;
             mach = conditions.mach;
             dynamicPressure = 0.0005f * conditions.atmDensity * speed * speed;
-            float weight = mass * (gravParameter / (r * r) - speed * speed / r);
+            float weight = vessel.Mass * (gravParameter / (r * r) - speed * speed / r);
 
             AoA_max = vessel.FindMaxAoA(conditions, out lift_max, maxA_guess);
 

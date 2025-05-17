@@ -364,7 +364,7 @@ namespace KerbalWindTunnel
             highlightManager = gameObject.AddComponent<HighlightManager>();
 
             InitializePlanetList();
-            gAccel = (float)(PhysicsGlobals.GravitationalAcceleration * Planetarium.fetch.Home.GeeASL);
+            invGAccel = 1 / (float)(PhysicsGlobals.GravitationalAcceleration * Planetarium.fetch.Home.GeeASL);
             int homeIndex = planets.FindIndex(x => x.celestialBody == Planetarium.fetch.CurrentMainBody);
             if (homeIndex < 0)
                 homeIndex = 0;
@@ -698,7 +698,7 @@ namespace KerbalWindTunnel
         }
 
         #region Reliant on KSP API
-        public static float gAccel;// = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
+        public static float invGAccel;// = (float)(Planetarium.fetch.Home.gravParameter / (Planetarium.fetch.Home.Radius * Planetarium.fetch.Home.Radius));
         public const float AoAdelta = 0.1f * Mathf.Deg2Rad;
         private CBItem body;// = Planetarium.fetch.CurrentMainBody;
         public CelestialBody CelestialBody { get => body.celestialBody; }
