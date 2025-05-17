@@ -289,7 +289,7 @@ namespace KerbalWindTunnel.DataGenerators
             }
             public IEnumerable<(int xi, int yi)> GetNeighbors(EnvelopePoint[,] data)
             {
-#if !UNITY_EDITOR
+#if OUTSIDE_UNITY
                 static
 #endif
                 bool Positive(EnvelopePoint val) => val.Thrust_Excess > 0;

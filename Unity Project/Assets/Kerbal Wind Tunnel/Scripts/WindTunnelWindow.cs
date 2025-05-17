@@ -501,7 +501,7 @@ namespace KerbalWindTunnel
                 toggleArray.SetNonExclusiveToggle(net, GetCompatibleGraphs(optEnumerator.Current.YUnit, options));
             }
 
-#if !UNITY_EDITOR
+#if OUTSIDE_UNITY
             static
 #endif
             IEnumerable<int> GetCompatibleGraphs(string unit, IEnumerable<GraphDefinition> definitions)

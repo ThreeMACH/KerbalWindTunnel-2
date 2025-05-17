@@ -208,7 +208,7 @@ namespace KerbalWindTunnel.VesselCache
 
         public struct KeyAoAData
         {
-#if !UNITY_EDITOR
+#if OUTSIDE_UNITY
             public float zeroLift = float.NaN;
             public float maxLift = float.NaN;
             public float maxLiftForce = float.NaN;

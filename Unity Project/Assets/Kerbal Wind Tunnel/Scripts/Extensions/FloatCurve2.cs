@@ -438,7 +438,7 @@ namespace KerbalWindTunnel
         {
             public readonly float a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p;
             public readonly int knownsHash;
-#if !UNITY_EDITOR
+#if OUTSIDE_UNITY
             public readonly bool isValid = false;
 #else
             public readonly bool isValid;
