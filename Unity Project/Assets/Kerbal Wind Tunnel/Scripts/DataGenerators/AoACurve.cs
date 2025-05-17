@@ -13,7 +13,7 @@ namespace KerbalWindTunnel.DataGenerators
     using LineGraphDefinition = LineGraphDefinition<AoACurve.AoAPoint>;
     public class AoACurve
     {
-        public readonly GraphableCollection graphables = new GraphableCollection();
+        public readonly GraphableCollection graphables = new GraphableCollection() { Name = "AoACollection" };
         public AoAPoint[] AoAPoints { get; private set; }
         public float AverageLiftSlope { get; private set; }
         private static readonly ConcurrentDictionary<(int altitude, int velocity, float aoa), AoAPoint> cache = new ConcurrentDictionary<(int, int, float), AoAPoint>();
