@@ -208,6 +208,7 @@ namespace Graphing
             switch (axis)
             {
                 case AxisUI.AxisDirection.Horizontal:
+                    origin = -origin;
                     break;
                 case AxisUI.AxisDirection.Vertical:
                     position = ref transformPosition.y;
