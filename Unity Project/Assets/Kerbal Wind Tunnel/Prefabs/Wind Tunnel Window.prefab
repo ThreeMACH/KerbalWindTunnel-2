@@ -7301,6 +7301,7 @@ MonoBehaviour:
   velCurveGrapher: {fileID: 7379570590150389148}
   selectOnGraphToggle: {fileID: 2114494118215666319}
   rollUpToggle: {fileID: 8936178595734661862}
+  autoSetAscentTarget: 1
 --- !u!114 &8936178595798775996
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -15622,7 +15623,7 @@ PrefabInstance:
     - target: {fileID: 4696857235748942640, guid: 45b6041274b15dc419c4dc6e4063f848,
         type: 3}
       propertyPath: _use
-      value: 3
+      value: 12
       objectReference: {fileID: 0}
     - target: {fileID: 4696857235748942640, guid: 45b6041274b15dc419c4dc6e4063f848,
         type: 3}

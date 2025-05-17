@@ -42,8 +42,15 @@ namespace Graphing
             get
             {
                 var axes = GetComponentsInChildren<AxisUI>();
-                return axes.FirstOrDefault(a => a.Use == AxisUI.AxisDirection.Color) ??
-                    axes.FirstOrDefault(a => a.Use == AxisUI.AxisDirection.Depth);
+                return axes.FirstOrDefault(a => (a.Use & AxisUI.AxisDirection.Color) > 0);
+            }
+        }
+        public AxisUI PrimaryDepthAxis
+        {
+            get
+            {
+                var axes = GetComponentsInChildren<AxisUI>();
+                return axes.FirstOrDefault(a => (a.Use & AxisUI.AxisDirection.Depth) > 0);
             }
         }
 
@@ -80,10 +87,10 @@ namespace Graphing
         /// <summary>Provides a color axis, creating one if one does not exist.</summary>
         /// <param name="side">The side on which to create an axis if one is to be created.</param>
         /// <returns>The color axis.</returns>
-        public AxisUI ProvideColorAxis(AxisSide side = AxisSide.Bottom, bool returnNullInsteadOfCreate = false)
+        public AxisUI ProvideColorAxis(AxisSide side = AxisSide.Bottom, bool returnNullInsteadOfCreate = false, bool requiresDepth = false)
         {
-            AxisUI axis = GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisUI.AxisDirection.Color);
-            return axis ?? (returnNullInsteadOfCreate ? null : AddAxis(side, AxisUI.AxisDirection.Color));
+            AxisUI axis = GetComponentsInChildren<AxisUI>().FirstOrDefault(a => requiresDepth ? (a.Use & AxisUI.AxisDirection.ColorWithDepth) > 0 : (a.Use & AxisUI.AxisDirection.Color) > 0);
+            return axis ?? (returnNullInsteadOfCreate ? null : AddAxis(side, requiresDepth ? AxisUI.AxisDirection.ColorWithDepth : AxisUI.AxisDirection.Color));
         }
 
         /// <summary>Adds a graph to this <see cref="Grapher"/>.</summary>
@@ -99,7 +106,7 @@ namespace Graphing
             graphs.Add(graph);
             GraphDrawer drawer = Instantiate(_graphDrawerPrefab, graphingSystem).GetComponent<GraphDrawer>();
             drawer.SetGraph(graph, this);
-            if (graph is IGraphable3 graphable3 && !GetComponentsInChildren<AxisUI>().Any(a => a.Use == AxisUI.AxisDirection.Depth || a.Use == AxisUI.AxisDirection.Color))
+            if (graph is IGraphable3 graphable3 && !GetComponentsInChildren<AxisUI>().Any(a => (a.Use & AxisUI.AxisDirection.Depth) > 0))
             {
                 drawer.SetOriginAndScale(AxisUI.AxisDirection.Depth, 0, 1 / (graphable3.ZMax - graphable3.ZMin));
             }
@@ -121,11 +128,12 @@ namespace Graphing
         /// <summary>Adds a graph to this <see cref="Grapher"/>, associating it with the default axes.</summary>
         /// <param name="graph">The graph to be added.</param>
         /// <returns>The <see cref="GraphDrawer"/> object associated with this graph.</returns>
-        public GraphDrawer AddGraphToDefaultAxes(IGraphable graph, bool createColorAxisForCollections = false)
+        public GraphDrawer AddGraphToDefaultAxes(IGraphable graph, bool createColorAxisForCollections = false, bool requireDepthForCollections = false)
             => AddGraph(graph,
                 ProvidePrimaryHorizontalAxis(),
                 ProvidePrimaryVerticalAxis(),
-                ProvideColorAxis(returnNullInsteadOfCreate: !(graph is IColorGraph || (createColorAxisForCollections && graph is GraphableCollection)))
+                ProvideColorAxis(returnNullInsteadOfCreate: !(graph is IColorGraph || (createColorAxisForCollections && graph is GraphableCollection)),
+                    requiresDepth: graph is IGraphable3 || (requireDepthForCollections && graph is GraphableCollection))
                 );
         public bool RemoveGraph(IGraphable graph)
         {
@@ -201,7 +209,7 @@ namespace Graphing
         /// <summary>Gets all <see cref="AxisUI"/> objects of a given direction.</summary>
         /// <param name="use">The direction of the axes objects to return.</param>
         /// <returns>A collection of all child axes that have the given direction.</returns>
-        public IEnumerable<AxisUI> GetAxes(AxisUI.AxisDirection use) => GetComponentsInChildren<AxisUI>().Where(a => a.Use == use);
+        public IEnumerable<AxisUI> GetAxes(AxisUI.AxisDirection use) => GetComponentsInChildren<AxisUI>().Where(a => (a.Use & use) == use);
         public AxisUI[] GetAxes(AxisSide side)
         {
             Transform axisGroup = GetAxisTransform(side);
@@ -243,22 +251,25 @@ namespace Graphing
         /// <param name="oldMax">The old maximum.</param>
         protected void AxisBoundsChangedHandler(object axis, Axis.AxisBoundsEventArgs eventArgs)
         {
+            if (!CrosshairController.IsHeld)
+                return;
+
             float oldMax = eventArgs.oldMax;
             float oldMin = eventArgs.oldMin;
             float max = eventArgs.max;
             float min = eventArgs.min;
 
-            AxisUI.AxisDirection use = ((AxisUI)axis).Use;
             // Only one axis with the selected use, let's adjust the crosshairs.
-            if ((use == AxisUI.AxisDirection.Horizontal || use == AxisUI.AxisDirection.Vertical) && !GetComponentsInChildren<AxisUI>().Where(a => a != (AxisUI)axis).Any(a => a.Use == use))
-            {
-                if (!CrosshairController.IsHeld)
-                    return;
-                Vector2 normalizedPosition = CrosshairController.NormalizedPosition;
-                normalizedPosition[(int)use] = Mathf.Clamp01((normalizedPosition[(int)use] * (oldMax - oldMin) + oldMin - min) / (max - min));
-                CrosshairController.SetCrosshairPosition(normalizedPosition);
-                OnGraphClicked(this, normalizedPosition);
-            }
+            Vector2 normalizedPosition = CrosshairController.NormalizedPosition;
+            AxisUI axisObj = (AxisUI)axis;
+            if (axisObj == PrimaryHorizontalAxis)
+                normalizedPosition.x = Mathf.Clamp01((normalizedPosition.x * (oldMax - oldMin) + oldMin - min) / (max - min));
+            else if (axisObj == PrimaryVerticalAxis)
+                normalizedPosition.y = Mathf.Clamp01((normalizedPosition.y * (oldMax - oldMin) + oldMin - min) / (max - min));
+            else
+                return;
+            CrosshairController.SetCrosshairPosition(normalizedPosition);
+            OnGraphClicked(this, normalizedPosition);
         }
 
         protected bool wasClicked;

@@ -392,17 +392,35 @@ namespace Graphing
         {
             if (transform.parent.GetComponent<GraphDrawer>() != null)
                 return;
+            axis = axis & (AxisUI.AxisDirection.Horizontal | AxisUI.AxisDirection.Vertical | AxisUI.AxisDirection.Depth);
             if (axis == AxisUI.AxisDirection.Depth && ignoreZScalePos)
                 return;
-            if (axis < AxisUI.AxisDirection.Horizontal || axis > AxisUI.AxisDirection.Depth)
-                throw new ArgumentOutOfRangeException("axis", "Axis argument must be 0, 1, or 2.");
+            if (axis == AxisUI.AxisDirection.Undefined)
+                throw new ArgumentOutOfRangeException("axis", "Axis argument must be a physical dimension.");
             if (float.IsNaN(scale) || float.IsInfinity(scale))
                 scale = 0;
 
             Vector3 transformPosition = ((RectTransform)transform).anchoredPosition3D;
             Vector3 transformScale = transform.localScale;
-            transformPosition[(int)axis] = -origin * scale;
-            transformScale[(int)axis] = scale;
+
+            ref float position = ref transformPosition.x;
+            ref float localScale = ref transformScale.x;
+            switch (axis)
+            {
+                case AxisUI.AxisDirection.Horizontal:
+                    break;
+                case AxisUI.AxisDirection.Vertical:
+                    position = ref transformPosition.y;
+                    localScale = ref transformScale.y;
+                    break;
+                case AxisUI.AxisDirection.Depth:
+                    position = ref transformPosition.z;
+                    localScale = ref transformScale.z;
+                    break;
+            }
+
+            position = -origin * scale;
+            localScale = scale;
             if (axis == AxisUI.AxisDirection.Depth && graph is IGraphable3 && !(graph is GraphableCollection))
                 transformPosition.z += grapher.ZOffset2D;
 

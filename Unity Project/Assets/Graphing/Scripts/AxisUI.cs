@@ -70,6 +70,7 @@ namespace Graphing
                             graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(VisiblePredicate).Where(DepthPredicate));
                         return graphDrawers;
                     case AxisDirection.Color:
+                    case AxisDirection.ColorWithDepth:
                         graphDrawers = graphDrawers.Where(ColorPredicate);
                         foreach (GraphDrawer drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d.Graph is GraphableCollection && !ColorPredicate(d)))
                             graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(VisiblePredicate).Where(ColorPredicate));
@@ -204,6 +205,7 @@ namespace Graphing
                         axis.horizontal = false;
                         break;
                     case AxisDirection.Color:
+                    case AxisDirection.ColorWithDepth:
                         boundSelector = (CMinSelector, CMaxSelector);
                         axis.horizontal = true;
                         break;
@@ -216,11 +218,12 @@ namespace Graphing
 
         public enum AxisDirection
         {
-            Undefined = -1,
-            Horizontal = 0,
-            Vertical = 1,
-            Depth = 2,
-            Color = 3,
+            Undefined = 0,
+            Horizontal = 1,
+            Vertical = 2,
+            Depth = 4,
+            Color = 8,
+            ColorWithDepth = Depth | Color
         }
 
         public Material AxisMaterial
@@ -418,7 +421,7 @@ namespace Graphing
             {
                 SetOriginsAndScales();
 
-                if (_use == AxisDirection.Color && axisMaterial != null)
+                if ((_use & AxisDirection.Color) > 0 && axisMaterial != null)
                     axisMaterial.SetRange(Min, Max);
 
                 GenerateTicksAndLabels();
@@ -430,11 +433,8 @@ namespace Graphing
 
         private void SetOriginsAndScales()
         {
-            AxisDirection realUse = _use;
-            if (_use == AxisDirection.Color && GetComponentInParent<Grapher>()?.GetComponentsInChildren<AxisUI>().FirstOrDefault(a => a.Use == AxisDirection.Depth) == null)
-                realUse = AxisDirection.Depth;
             foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
-                graphDrawer.SetOriginAndScale(realUse, Min, 1 / (Max - Min));
+                graphDrawer.SetOriginAndScale(_use, Min, 1 / (Max - Min));
         }
 
         private void GenerateTicksAndLabels()
@@ -497,7 +497,7 @@ namespace Graphing
             RecalculateBounds();
             SetOriginsAndScales();
             
-            if (_use == AxisDirection.Color && axisMaterial != null)
+            if ((_use & AxisDirection.Color) > 0 && axisMaterial != null)
                 axisMaterial.SetRange(Min, Max);
         }
 
@@ -538,7 +538,7 @@ namespace Graphing
             attachedGraphDrawers.Add(graphDrawer);
             if (FirstVisibleGraph() == graphDrawer.FirstVisibleInHierarchy)
             {
-                if (_use == AxisDirection.Color)
+                if ((_use & AxisDirection.Color) > 0)
                 {
                     IColorGraph firstColorGraph = graphDrawer.FirstColorGraphInHierarchy;
                     if (firstColorGraph != null)
@@ -552,7 +552,7 @@ namespace Graphing
             else if (autoSetMin ||  AutoSetMax)
                 RecalculateBounds();
 
-            if (_use == AxisDirection.Color)
+            if ((_use & AxisDirection.Color) > 0)
             {
                 graphDrawer.SurfGraphMaterial = AxisMaterial;
             }
@@ -603,9 +603,11 @@ namespace Graphing
 
             if (eventArgs is ValuesChangedEventArgs valuesChangedEventArgs && valuesChangedEventArgs.BoundsChanged)
             {
-                // If the sender is not an IGraphable3 and Use >= Depth, its bounds won't apply
-                // If the sender is not an IColorGraph and Use >= Color, its bounds won't apply
-                if ((Use >= AxisDirection.Depth && !(sender is Graphable3)) && (Use >= AxisDirection.Color && !(sender is IColorGraph)))
+                // If the sender is not an IGraphable3 and Use == Depth, its bounds won't apply
+                // If the sender is not an IColorGraph and Use == Color, its bounds won't apply
+                if ((Use == AxisDirection.Depth && !(sender is IGraphable3)) ||
+                    (Use == AxisDirection.Color && !(sender is IColorGraph)) ||
+                    (Use == AxisDirection.ColorWithDepth && !(sender is IColorGraph) && !(sender is IGraphable3)))
                     return;
                 // Set axis bounds for all axes driven by this drawer.
                 if (AutoSetMin || AutoSetMax)
@@ -644,7 +646,7 @@ namespace Graphing
 
             if (eventArgs is BoundsChangedEventArgs boundsChangedEventArgs)
             {
-                if (boundsChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && boundsChangedEventArgs.Axis == AxisDirection.Depth))
+                if ((boundsChangedEventArgs.Axis & Use) == AxisDirection.Undefined)
                     return;
                 // Set axis bounds for all axes driven by this drawer.
                 if (AutoSetMin || AutoSetMax)
@@ -658,7 +660,7 @@ namespace Graphing
             if (eventArgs is AxisNameChangedEventArgs axisNameChangedEventArgs)
             {
                 // Set axis label for all axes driven by drawer.
-                if (axisNameChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && axisNameChangedEventArgs.Axis == AxisDirection.Depth))
+                if ((axisNameChangedEventArgs.Axis & Use) == AxisDirection.Undefined)
                     return;
                 Label = axisNameChangedEventArgs.AxisName;
                 return;
@@ -666,7 +668,7 @@ namespace Graphing
             if (eventArgs is AxisUnitChangedEventArgs axisUnitChangedEventArgs)
             {
                 // Set axis units for all axes driven by drawer.
-                if (axisUnitChangedEventArgs.Axis != Use && !(Use == AxisDirection.Color && axisUnitChangedEventArgs.Axis == AxisDirection.Depth))
+                if ((axisUnitChangedEventArgs.Axis & Use) == AxisDirection.Undefined)
                     return;
                 Unit = axisUnitChangedEventArgs.Unit;
                 return;
@@ -722,6 +724,7 @@ namespace Graphing
                     }
                     return;
                 case AxisDirection.Color:
+                case AxisDirection.ColorWithDepth:
                     if (graph is IColorGraph colorGraph)
                     {
                         Label = colorGraph.CName;
@@ -1040,7 +1043,7 @@ namespace Graphing
         {
             axis.AutoRoundMin = autoRoundMin;
             axis.AutoRoundMax = autoRoundMax;
-            axis.horizontal = _use == AxisDirection.Horizontal || _use == AxisDirection.Color;
+            axis.horizontal = _use == AxisDirection.Horizontal || _use == AxisDirection.Color || _use == AxisDirection.ColorWithDepth;
             axis.SetBounds(min, max);
         }
 
