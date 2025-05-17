@@ -208,12 +208,20 @@ namespace KerbalWindTunnel.VesselCache
 
         public struct KeyAoAData
         {
+#if !UNITY_EDITOR
             public float zeroLift = float.NaN;
             public float maxLift = float.NaN;
             public float maxLiftForce = float.NaN;
             public float levelFlight = float.NaN;
             public float levelFlightResidual = 0;
             public KeyAoAData() { }
+#else
+            public float zeroLift;
+            public float maxLift;
+            public float maxLiftForce;
+            public float levelFlight;
+            public float levelFlightResidual;
+#endif
         }
 
         public static KeyAoAData SolveLevelFlight(this AeroPredictor predictor, Conditions conditions, float weight, KeyAoAData? knowns, KeyAoAData? guess = null)

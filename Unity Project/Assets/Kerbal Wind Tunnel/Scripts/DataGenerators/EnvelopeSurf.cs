@@ -66,6 +66,7 @@ namespace KerbalWindTunnel.DataGenerators
                 {
                     switch (graphDef.name.Substring(0, graphDef.name.IndexOf("_coefSwap")))
                     {
+#if !UNITY_EDITOR
                         case "liftMax":
                             surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.lift_max) : p => p.lift_max;
                             break;
@@ -76,6 +77,7 @@ namespace KerbalWindTunnel.DataGenerators
                             surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.dLift) : p => p.dLift;
                             surfDef.ZUnit = useCoefficients ? "/°" : "kN/°";
                             continue;
+#endif
                         default:
                             continue;
                     }

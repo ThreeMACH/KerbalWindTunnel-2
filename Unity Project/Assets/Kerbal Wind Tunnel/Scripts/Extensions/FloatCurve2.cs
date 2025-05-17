@@ -438,7 +438,11 @@ namespace KerbalWindTunnel
         {
             public readonly float a, b, c, d, e, f, g, h, i, j, k, l, m, n, o, p;
             public readonly int knownsHash;
+#if !UNITY_EDITOR
             public readonly bool isValid = false;
+#else
+            public readonly bool isValid;
+#endif
             public Coefficients(in Knowns knowns)
             {
                 knownsHash = knowns.GetHashCode();
