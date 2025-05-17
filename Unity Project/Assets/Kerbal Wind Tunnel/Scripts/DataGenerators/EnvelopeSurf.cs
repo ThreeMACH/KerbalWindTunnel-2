@@ -37,7 +37,7 @@ namespace KerbalWindTunnel.DataGenerators
             new SurfGraphDefinition("liftMax_coefSwap", null) { DisplayName = "Max Lift" },
             new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "Pitch Input", ZUnit = "%", StringFormat = "N0" },
             // TODO: Static margin
-            new SurfGraphDefinition("fuel_economy", p => p.fuelBurnRate / p.speed * 100 * 1000) { DisplayName = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2" },
+            new SurfGraphDefinition("fuel_economy", p => p.speed >= 40 ? p.fuelBurnRate / p.speed * 100 * 1000 : float.NaN) { DisplayName = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2" },
             new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3" },
             new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0, Enabled = false }
         };
