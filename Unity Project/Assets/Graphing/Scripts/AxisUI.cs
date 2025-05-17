@@ -212,7 +212,6 @@ namespace Graphing
                 }
                 if ((AutoSetMin || AutoSetMax) && GraphDrawersAffectingBounds.Any())
                     RecalculateBounds();
-                LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
             }
         }
 
@@ -417,7 +416,13 @@ namespace Graphing
             {
                 GraphDisplayChangeHandler(displayEvent.sender, displayEvent.eventArgs);
             }
+
+            bool boundsChanged = !boundsChangedEvents.IsEmpty;
             while (boundsChangedEvents.TryDequeue(out var eventArgs))
+            {
+                AxisBoundsChangedEvent?.Invoke(this, eventArgs);
+            }
+            if (boundsChanged)
             {
                 SetOriginsAndScales();
 
@@ -426,8 +431,6 @@ namespace Graphing
 
                 GenerateTicksAndLabels();
                 RedrawTicks();
-
-                AxisBoundsChangedEvent?.Invoke(this, eventArgs);
             }
         }
 
@@ -927,7 +930,6 @@ namespace Graphing
             }
             axisBoundSetters[0]?.UpdatePosition();
             axisBoundSetters[1]?.UpdatePosition();
-            LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
         }
 
 #if UNITY_EDITOR
