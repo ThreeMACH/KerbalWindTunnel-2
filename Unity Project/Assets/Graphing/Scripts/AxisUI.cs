@@ -54,7 +54,7 @@ namespace Graphing
         public static bool VisiblePredicate(GraphDrawer g) => g.Graph.Visible;
 
         private (Func<GraphDrawer, float> min, Func<GraphDrawer, float> max) boundSelector = (XMinSelector, XMaxSelector);
-        private IEnumerable<GraphDrawer> GraphDrawersAffectingBounds    // TODO: No reason to regenerate every time...
+        private IEnumerable<GraphDrawer> GraphDrawersAffectingBounds
         {
             get
             {

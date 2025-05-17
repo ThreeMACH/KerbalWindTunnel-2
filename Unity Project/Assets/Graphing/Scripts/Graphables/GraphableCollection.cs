@@ -75,7 +75,6 @@ namespace Graphing
         /// </summary>
         public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
-        // TODO: Confirm that this is described correctly.
         protected bool autoFitAxes = true;
         /// <summary>
         /// When true, reports the actual bounds of the contained objects rather than their self-reported bounds.

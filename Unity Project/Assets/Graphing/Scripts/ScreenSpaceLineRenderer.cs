@@ -480,7 +480,7 @@ namespace Graphing
             float cosAngle = Mathf.Cos(elbowAngle / numSegments);
             float sinAngle = Mathf.Sin(elbowAngle / numSegments);
 
-            // TODO: There's a duplicate vertex created in this method.
+            // COULDDO: There's a duplicate vertex created in this method.
             yield return Vert.Offset(point, (Vector3)offset);
 
             for (int i = 1; i <= numSegments; i++)

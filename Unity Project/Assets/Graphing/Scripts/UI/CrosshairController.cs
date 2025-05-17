@@ -249,7 +249,7 @@ namespace Graphing.UI
             SetCrosshairPosition(clickedPosition);
             OnClick?.Invoke(this, clickedPosition);
         }
-        // TODO: Could implement dragging to set new axis bounds...
+        // COULDDO: Could implement dragging to set new axis bounds...
         public void OnPointerDown(PointerEventData eventData)
         {
             EventSystem.current.SetSelectedGameObject(gameObject);

@@ -127,7 +127,7 @@ namespace UI_Tools
 
         protected virtual Toggle SpawnItem(ToggleArrayItem item)
         {
-            templateTextField.Text = item.label;    // TODO: Stop editing the prefab.
+            templateTextField.Text = item.label;    // This edits the prefab text, which seems fine.
 
             Toggle child = Instantiate(template, transform).GetComponent<Toggle>();
             child.onValueChanged.AddListener((bool _) => OnChildValueChanged(child));

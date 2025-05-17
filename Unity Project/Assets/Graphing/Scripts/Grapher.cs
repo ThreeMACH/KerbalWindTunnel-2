@@ -492,7 +492,7 @@ namespace Graphing
         /// <param name="eventArgs">The <see cref="EventArgs"/> instance containing the event data.</param>
         public virtual void DisplayNameChangedHandler(IGraphable sender, DisplayNameChangedEventArgs displayNameChangedEventArgs)
         {
-            // TODO: Set up legend or other things requiring the name of this graph.
+            // COULDDO: Set up a legend or other things requiring the name of this graph.
         }
 
         public void QueueActivation(GraphDrawer graphDrawer, bool visible) => activatorQueue.Enqueue((graphDrawer, visible));

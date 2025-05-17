@@ -112,8 +112,8 @@ namespace Graphing
             }
             if (forceRegenerate || redrawReasons.Key == typeof(ColorChangedEventArgs))
             {
-                // TODO: Does the material need to be made unique if these values are different than shared?
-                outlineGraphMaterial.SetColor("_OutlineColor", outlineMask.color);
+                // Calling a method on the OutlineGraphMaterial property inherently makes the material unique.
+                OutlineGraphMaterial.SetColor("_OutlineColor", outlineMask.color);
             }
             if (forceRegenerate || redrawReasons.Key == typeof(LineWidthChangedEventArgs))
                 outlineGraphMaterial.SetFloat("_OutlineThickness", outlineMask.LineWidth);

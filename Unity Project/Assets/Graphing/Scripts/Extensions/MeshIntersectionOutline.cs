@@ -59,7 +59,7 @@ namespace Graphing.Extensions
                 bool predicate1 = root1 < 0;
                 bool predicate2 = root2 < 0;
 
-                // TODO: Special cases where one or more are actually 0
+                // COULDDO: Special cases where one or more are actually 0
 
                 // If all are above or below the filter, the filter doesn't cut through any lines on this triangle.
                 if (predicate0 == predicate1 && predicate0 == predicate2)

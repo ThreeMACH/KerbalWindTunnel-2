@@ -251,7 +251,7 @@ namespace Graphing
         public override void WriteToFile(string directory, string filename, string sheetName = "")
         {
             List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
-            // TODO print each contour.
+            // COULDDO print each contour.
             return;
         }
     }

@@ -74,7 +74,6 @@ namespace Graphing
             int width = texture.width;
             int height = texture.height;
             int[] xPix, yPix;
-            // TODO: Add robustness for NaNs and Infinities.
             if (!Transpose)
             {
                 xPix = _values.Where(NotNaN).Where(NotInf).Select(vect => Mathf.RoundToInt((vect.x - xLeft) / xRange * width)).ToArray();
