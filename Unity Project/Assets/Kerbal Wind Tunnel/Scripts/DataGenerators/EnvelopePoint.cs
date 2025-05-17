@@ -6,6 +6,7 @@ namespace KerbalWindTunnel.DataGenerators
 {
     public readonly struct EnvelopePoint
     {
+        private const float minSpeed = 0.001f;
         private static readonly Unity.Profiling.ProfilerMarker ctorMarker = new Unity.Profiling.ProfilerMarker("EnvelopePoint..ctor");
         
         public readonly float AoA_level;
@@ -48,9 +49,9 @@ namespace KerbalWindTunnel.DataGenerators
         {
             ctorMarker.Begin();
             this.altitude = altitude;
-            this.speed = speed;
             mass = vessel.Mass;
             wingArea = vessel.Area;
+            this.speed = speed = Math.Max(speed, minSpeed);
             AeroPredictor.Conditions conditions = new AeroPredictor.Conditions(body, speed, altitude);
             float gravParameter, radius;
             gravParameter = (float)body.gravParameter;

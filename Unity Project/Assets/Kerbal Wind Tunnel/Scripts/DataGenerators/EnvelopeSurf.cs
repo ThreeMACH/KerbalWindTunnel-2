@@ -13,7 +13,7 @@ namespace KerbalWindTunnel.DataGenerators
     using SurfGraphDefinition = SurfGraphDefinition<EnvelopePoint>;
     public class EnvelopeSurf
     {
-        private static readonly (float speed, float altitude) ascentOrigin = (10, 0);
+        private static readonly (float speed, float altitude) ascentOrigin = (30, 0);
         public readonly GraphableCollection graphables = new GraphableCollection3();
         public EnvelopePoint[,] EnvelopePoints { get; private set; } = null;
         private float left, right, bottom, top;
@@ -46,13 +46,13 @@ namespace KerbalWindTunnel.DataGenerators
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Score", ZUnit = "kNm-deg", StringFormat = "F1", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         public readonly OutlineGraphDefinition<EnvelopePoint> envelope = new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) { DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 };
         public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", p => new Vector2(p.speed, p.altitude),
-                new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Deg2Rad, p => p.climbRate, p => p.cost, p => p.time },
+                new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost, p => p.time },
                 new string[] { "Climb Angle", "Climb Rate", "Fuel Used", "Time" },
                 new string[] { "N1", "N0", "N3", "N1" },
                 new string[] { "°", "m/s", "units", "s" })
         { DisplayName = "Fuel-Optimal Path", StringFormat = "N0", Color = Color.black, LineWidth = 3 };
         public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", p => new Vector2(p.speed, p.altitude),
-                new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Deg2Rad, p => p.climbRate, p => p.cost },
+                new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost },
                 new string[] { "Climb Angle", "Climb Rate", "Time" },
                 new string[] { "N1", "N0", "N1" },
                 new string[] { "°", "m/s", "s" })
