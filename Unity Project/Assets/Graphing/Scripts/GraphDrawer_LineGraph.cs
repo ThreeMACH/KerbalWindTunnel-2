@@ -5,14 +5,31 @@ using UnityEngine;
 
 namespace Graphing
 {
-    public partial class GraphDrawer
+    public class LineGraphDrawer : GraphDrawer, GraphDrawer.ISingleMaterialUser
     {
-        protected void LineGraphSetup()
+        static readonly Unity.Profiling.ProfilerMarker s_lineMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(LineGraph)");
+
+        [SerializeField]
+        protected Material lineVertexMaterial;
+
+        protected ILineGraph lineGraphable;
+
+        public Material LineVertexMaterial => lineVertexMaterial;
+
+        public override int MaterialSet => 3;
+
+        protected override void Setup()
         {
+            lineGraphable = (ILineGraph)graph;
             ScreenSpaceLineRenderer lineRenderer = gameObject.AddComponent<ScreenSpaceLineRenderer>();
             lineRenderer.material = lineVertexMaterial;
             lineRenderer.WhitelistCamera(grapher.GetComponentInChildren<Camera>(true));
         }
+
+        void ISingleMaterialUser.InitializeMaterial(Material material)
+            => InitializeMaterial(material);
+        protected internal void InitializeMaterial(Material material)
+            => lineVertexMaterial = material;
 
         protected void GenerateLineGraph()
         {
@@ -21,14 +38,14 @@ namespace Graphing
             {
                 if (lineGraph.Values == null)
                     return;
-                values = lineGraph.Values.Select(v2 => lineGraph.Transpose ? new Vector3(v2.y, v2.x, 0) : new Vector3(v2.x, v2.y, 0)).Where(NotNaN).ToArray();
+                values = lineGraph.Values.Select(v2 => lineGraph.Transpose ? new Vector3(-v2.y, v2.x, 0) : new Vector3(-v2.x, v2.y, 0)).Where(NotNaN).ToArray();
             }
             else// if (graph is Line3Graph line3Graph)
             {
                 Line3Graph line3Graph = (Line3Graph)graph;
                 if (line3Graph.Values == null)
                     return;
-                values = line3Graph.Values.Select(v3 => line3Graph.Transpose ? new Vector3(v3.y, v3.x, -v3.z) : new Vector3(v3.x, v3.y, -v3.z)).Where(NotNaN).ToArray();
+                values = line3Graph.Values.Select(v3 => line3Graph.Transpose ? new Vector3(-v3.y, v3.x, -v3.z) : new Vector3(-v3.x, v3.y, -v3.z)).Where(NotNaN).ToArray();
             }
             ScreenSpaceLineRenderer lineRenderer = GetComponent<ScreenSpaceLineRenderer>();
             lineRenderer.Points = values;
@@ -36,8 +53,9 @@ namespace Graphing
 
         protected bool NotNaN(Vector3 v) => !(float.IsNaN(v.x) || float.IsNaN(v.y) || float.IsNaN(v.z));
 
-        protected int DrawLineGraph(ILineGraph lineGraphable, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
+        protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
+            s_lineMarker.Begin();
             if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs))
                 GenerateLineGraph();
             ScreenSpaceLineRenderer lineRenderer = GetComponentInChildren<ScreenSpaceLineRenderer>(true);
@@ -68,12 +86,7 @@ namespace Graphing
                     lineRenderer.ElbowSegments = 12;
                 }
             }
-            return pass;
-        }
-
-        protected virtual int DrawOtherLineGraph(ILineGraph lineGraph, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
-        {
-            Debug.LogError("GraphDrawer is not equipped to draw that type of line graph.");
+            s_lineMarker.End();
             return pass;
         }
 

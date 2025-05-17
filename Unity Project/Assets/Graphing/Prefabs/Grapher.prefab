@@ -232,6 +232,10 @@ MonoBehaviour:
   graphingSystem: {fileID: 3201601919658647328}
   _graphDrawerPrefab: {fileID: 836575802344165586, guid: b962d7632943b35419c6ae6ed660904e,
     type: 3}
+  surfGraphMaterial: {fileID: 2100000, guid: 1bc29463764fbee48a6f99eda0ee7279, type: 2}
+  outlineGraphMaterial: {fileID: 2100000, guid: a8b35e25c286e464c9ee8e9698562c60,
+    type: 2}
+  lineVertexMaterial: {fileID: 2100000, guid: 26fde11bfd0ebed4a96e899c1f1a09c6, type: 2}
 --- !u!1 &3201601919478236980
 GameObject:
   m_ObjectHideFlags: 0

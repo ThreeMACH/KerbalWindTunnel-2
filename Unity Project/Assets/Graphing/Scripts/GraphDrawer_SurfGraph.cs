@@ -2,14 +2,53 @@
 using System.Linq;
 using UnityEngine;
 using Graphing.Meshing;
-using System.Collections.Generic;
 
 namespace Graphing
 {
-    public partial class GraphDrawer
+    public class SurfGraphDrawer : MeshGraphDrawer, GraphDrawer.ISurfMaterialUser, GraphDrawer.ISingleMaterialUser
     {
-        protected void SurfGraphSetup()
+        static readonly Unity.Profiling.ProfilerMarker s_surfgraphMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(SurfGraph)");
+
+        [SerializeField]
+        protected Material surfGraphMaterial;
+        [SerializeField]
+        [HideInInspector]
+        private bool surfMaterialIsUnique = false;
+
+        protected SurfGraph surfGraph;
+
+        public override int MaterialSet => 1;
+
+        public Material SurfGraphMaterial
         {
+            get
+            {
+                surfMaterialIsUnique = true;
+                surfGraphMaterial = Instantiate(surfGraphMaterial);
+                return surfGraphMaterial;
+            }
+            set => SetSurfMaterialInternal(value);
+        }
+        public Material SharedSurfGraphMaterial
+        {
+            get => surfGraphMaterial;
+            set => SetSurfMaterialInternal(value);
+        }
+        void ISurfMaterialUser.SetSurfMaterialInternal(Material value) => SetSurfMaterialInternal(value);
+        protected internal virtual void SetSurfMaterialInternal(Material value)
+        {
+            if (surfMaterialIsUnique)
+                Destroy(surfGraphMaterial);
+            surfMaterialIsUnique = false;
+            surfGraphMaterial = value;
+            if (TryGetComponent(out MeshRenderer meshRenderer))
+                meshRenderer.material = value;
+        }
+
+        protected override void Setup()
+        {
+            base.Setup();
+            surfGraph = (SurfGraph)graph;
             if (mesh == null)
                 mesh = new Mesh();
             MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
@@ -21,8 +60,14 @@ namespace Graphing
             transform.localEulerAngles = new Vector3(0, 180, 0);
         }
 
-        protected int DrawSurfGraph(SurfGraph surfGraph, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
+        void ISingleMaterialUser.InitializeMaterial(Material material)
+            => InitializeMaterial(material);
+        protected internal void InitializeMaterial(Material material)
+            => surfGraphMaterial = material;
+
+        protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
+            s_surfgraphMarker.Begin();
             // TODO: Most of this is working, but wrong. E.G. Shouldn't need a new mesh every bounds changed, just shift the mesh position.
             if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs) || redrawReasons.Key == typeof(BoundsChangedEventArgs))
             {
@@ -53,23 +98,15 @@ namespace Graphing
                     pass = 2;
                 }
             }
+            s_surfgraphMarker.End();
             return pass;
         }
 
-        protected IEnumerable<Vector4> GenerateVertexData(IEnumerable<Vector4> quadCoords, IEnumerable<Vector4> quadHeights, Func<Vector3, float> dataFunc)
+        protected override void OnDestroy()
         {
-            IEnumerator<Vector4> quadCoordsEnumerator = quadCoords.GetEnumerator();
-            IEnumerator<Vector4> quadHeightsEnumerator = quadHeights.GetEnumerator();
-            while (quadCoordsEnumerator.MoveNext() && quadHeightsEnumerator.MoveNext())
-            {
-                yield return Vector4Operator(quadCoordsEnumerator.Current, quadHeightsEnumerator.Current);
-            }
-            Vector4 Vector4Operator(Vector4 coords, Vector4 heights)
-                => new Vector4(
-                    dataFunc(new Vector3(coords.x, coords.y, heights.x)),
-                    dataFunc(new Vector3(coords.x + coords.z, coords.y, heights.y)),
-                    dataFunc(new Vector3(coords.x + coords.z, coords.y + coords.w, heights.z)),
-                    dataFunc(new Vector3(coords.x, coords.y + coords.w, heights.w)));
+            base.OnDestroy();
+            if (surfMaterialIsUnique)
+                Destroy(surfGraphMaterial);
         }
     }
 }

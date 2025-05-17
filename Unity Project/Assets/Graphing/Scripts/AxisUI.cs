@@ -66,13 +66,13 @@ namespace Graphing
                         return graphDrawers;
                     case AxisDirection.Depth:
                         graphDrawers = graphDrawers.Where(DepthPredicate);
-                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d.Graph is GraphableCollection && !DepthPredicate(d)))
+                        foreach (GraphDrawerCollection drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d is GraphDrawerCollection && !DepthPredicate(d)).Cast<GraphDrawerCollection>())
                             graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(VisiblePredicate).Where(DepthPredicate));
                         return graphDrawers;
                     case AxisDirection.Color:
                     case AxisDirection.ColorWithDepth:
                         graphDrawers = graphDrawers.Where(ColorPredicate);
-                        foreach (GraphDrawer drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d.Graph is GraphableCollection && !ColorPredicate(d)))
+                        foreach (GraphDrawerCollection drawer in attachedGraphDrawers.Where(VisiblePredicate).Where(d => d is GraphDrawerCollection && !ColorPredicate(d)).Cast<GraphDrawerCollection>())
                             graphDrawers = graphDrawers.Union(drawer.GetFlattenedCollection().Where(VisiblePredicate).Where(ColorPredicate));
                         return graphDrawers;
                     default:
@@ -243,7 +243,7 @@ namespace Graphing
             {
                 if (axisMaterial != null)
                 {
-                    foreach (GraphDrawer grapher in attachedGraphDrawers.Where(g => g.SharedSurfGraphMaterial == axisMaterial))
+                    foreach (GraphDrawer.ISurfMaterialUser grapher in attachedGraphDrawers.Where(gd => gd is GraphDrawer.ISurfMaterialUser).Cast<GraphDrawer.ISurfMaterialUser>().Where(g => g.SharedSurfGraphMaterial == axisMaterial))
                         grapher.SurfGraphMaterial = value;
                     if (materialWasInstantiated)
                         Destroy(axisMaterial);
@@ -552,9 +552,9 @@ namespace Graphing
             else if (autoSetMin ||  AutoSetMax)
                 RecalculateBounds();
 
-            if ((_use & AxisDirection.Color) > 0)
+            if ((_use & AxisDirection.Color) > 0 && graphDrawer is GraphDrawer.ISurfMaterialUser surfUser)
             {
-                graphDrawer.SurfGraphMaterial = AxisMaterial;
+                surfUser.SurfGraphMaterial = AxisMaterial;
             }
 
             SetOriginsAndScales();

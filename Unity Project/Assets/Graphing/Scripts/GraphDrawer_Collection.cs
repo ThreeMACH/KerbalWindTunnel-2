@@ -5,21 +5,104 @@ using UnityEngine;
 
 namespace Graphing
 {
-    public partial class GraphDrawer
+    public class GraphDrawerCollection : GraphDrawer, GraphDrawer.ISurfMaterialUser, GraphDrawer.IOutlineMaterialUser
     {
-        protected List<GraphDrawer> childDrawers;
+        static readonly Unity.Profiling.ProfilerMarker s_collectionMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(Collection)");
 
-        protected virtual int DrawCollection(GraphableCollection collection, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
+        protected GraphableCollection collection;
+
+        [SerializeField]
+        protected Material surfGraphMaterial;
+        [SerializeField]
+        protected Material outlineGraphMaterial;
+        [SerializeField]
+        protected Material lineVertexMaterial;
+        [SerializeField]
+        [HideInInspector]
+        private bool surfMaterialIsUnique = false;
+        [SerializeField]
+        [HideInInspector]
+        private bool outlineMaterialIsUnique = false;
+
+        protected List<GraphDrawer> childDrawers = new List<GraphDrawer>();
+
+        public override int MaterialSet => 4;
+
+        public Material SurfGraphMaterial
         {
+            get
+            {
+                surfMaterialIsUnique = true;
+                surfGraphMaterial = Instantiate(surfGraphMaterial);
+                return surfGraphMaterial;
+            }
+            set => SetSurfMaterialInternal(value);
+        }
+        public Material SharedSurfGraphMaterial
+        {
+            get => surfGraphMaterial;
+            set => SetSurfMaterialInternal(value);
+        }
+        public Material OutlineGraphMaterial
+        {
+            get
+            {
+                outlineMaterialIsUnique = true;
+                outlineGraphMaterial = Instantiate(outlineGraphMaterial);
+                return outlineGraphMaterial;
+            }
+            set => SetOutlineMaterialInternal(value);
+        }
+        public Material SharedOutlineGraphMaterial
+        {
+            get => outlineGraphMaterial;
+            set => SetOutlineMaterialInternal(value);
+        }
+
+        void ISurfMaterialUser.SetSurfMaterialInternal(Material value) => SetSurfMaterialInternal(value);
+        protected internal virtual void SetSurfMaterialInternal(Material value)
+        {
+            if (surfMaterialIsUnique)
+                Destroy(surfGraphMaterial);
+            surfMaterialIsUnique = false;
+            surfGraphMaterial = value;
+            if (childDrawers != null)
+                foreach (ISurfMaterialUser graphDrawer in childDrawers.Where(g => g is ISurfMaterialUser).Cast<ISurfMaterialUser>())
+                    graphDrawer.SetSurfMaterialInternal(value);
+        }
+
+        void IOutlineMaterialUser.SetOutlineMaterialInternal(Material value) => SetOutlineMaterialInternal(value);
+        protected internal virtual void SetOutlineMaterialInternal(Material value)
+        {
+            if (outlineMaterialIsUnique)
+                Destroy(outlineGraphMaterial);
+            outlineMaterialIsUnique = false;
+            outlineGraphMaterial = value;
+            if (childDrawers != null)
+                foreach (IOutlineMaterialUser graphDrawer in childDrawers.Where(g => g is IOutlineMaterialUser).Cast<IOutlineMaterialUser>())
+                    graphDrawer.SetOutlineMaterialInternal(value);
+        }
+
+        protected override void Setup()
+            => collection = (GraphableCollection)graph;
+
+        internal void InitializeMaterials(Material surfGraphMaterial, Material outlineMaterial, Material lineVertexMaterial)
+        {
+            this.surfGraphMaterial = surfGraphMaterial;
+            this.outlineGraphMaterial = outlineMaterial;
+            this.lineVertexMaterial = lineVertexMaterial;
+        }
+
+        protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
+        {
+            s_collectionMarker.Begin();
             if (forceRegenerate)
             {
                 foreach (GraphDrawer child in childDrawers)
                     Destroy(child.gameObject);
                 childDrawers.Clear();
                 foreach (IGraphable graphable in collection.Graphables)
-                {
                     InstantiateChildGraphDrawer(graphable);
-                }
                 return pass;
             }
             if (redrawReasons.Key == typeof(GraphElementAddedEventArgs) ||
@@ -30,44 +113,34 @@ namespace Graphing
                 foreach (EventArgs reason in redrawReasons)
                 {
                     if (reason is GraphElementAddedEventArgs addedEvent)
-                    {
                         InstantiateChildGraphDrawer(addedEvent.Graph);
-                    }
                     else if (reason is GraphElementsAddedEventArgs multiAddEvent)
                     {
                         foreach (IGraphable newGraph in multiAddEvent.Graphs)
-                        {
                             InstantiateChildGraphDrawer(newGraph);
-                        }
                     }
                     else if (reason is GraphElementRemovedEventArgs removedEvent)
-                    {
                         DestroyChildGraphDrawers(removedEvent.Graph);
-                    }
                     else if (reason is GraphElementsRemovedEventArgs multiRemoveEvent)
                     {
                         foreach (IGraphable oldGraph in multiRemoveEvent.Graphs)
-                        {
                             DestroyChildGraphDrawers(oldGraph);
-                        }
                     }
                 }
             }
+            s_collectionMarker.End();
             return pass;
         }
 
         private void InstantiateChildGraphDrawer(IGraphable newGraph)
         {
-            GraphDrawer childDrawer = Instantiate(grapher.GraphDrawerPrefab, transform).GetComponent<GraphDrawer>();
+            GraphDrawer childDrawer = grapher.InstantiateGraphDrawer(newGraph, transform, (surfGraphMaterial, outlineGraphMaterial, lineVertexMaterial));
+            childDrawer.transform.localRotation = Quaternion.identity;
             childDrawers.Add(childDrawer);
-            if (childDrawer.grapher == null)
-                childDrawer.grapher = grapher;
-            childDrawer.SharedSurfGraphMaterial = SharedSurfGraphMaterial;
-            childDrawer.SharedOutlineGraphMaterial = SharedOutlineGraphMaterial;
-            childDrawer.SetGraph(newGraph, grapher);
             if (newGraph is IGraphable3 graphable3 && !(newGraph is GraphableCollection))
                 ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D / transform.localScale.z);
         }
+        
         private void DestroyChildGraphDrawers(IGraphable removedGraph)
         {
             foreach (GraphDrawer child in childDrawers.Where(drawer => drawer.graph == removedGraph))
@@ -75,17 +148,32 @@ namespace Graphing
             childDrawers.RemoveAll(drawer => drawer.graph == removedGraph);
         }
 
+        public override void SetOriginAndScale(AxisUI.AxisDirection axis, float origin, float scale)
+        {
+            transform.localScale = Vector3.one;
+            ((RectTransform)transform).anchoredPosition3D = Vector3.zero;
+            foreach (GraphDrawer graphDrawer in childDrawers)
+                graphDrawer.SetOriginAndScale(axis, origin, scale);
+        }
+
         public IEnumerable<GraphDrawer> GetFlattenedCollection()
         {
             if (Graph is GraphableCollection)
             {
-                IEnumerable<GraphDrawer> collections = childDrawers.Where(d => d.Graph is GraphableCollection);
+                IEnumerable<GraphDrawerCollection> collections = childDrawers.Where(d => d.Graph is GraphableCollection).Cast<GraphDrawerCollection>();
                 IEnumerable<GraphDrawer> flattenedCollection = childDrawers.Where(d => !(d.Graph is GraphableCollection));
-                foreach (GraphDrawer childDrawer in collections)
+                foreach (GraphDrawerCollection childDrawer in collections)
                     flattenedCollection = flattenedCollection.Union(childDrawer.GetFlattenedCollection());
                 return flattenedCollection;
             }
             return Enumerable.Empty<GraphDrawer>();
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (surfMaterialIsUnique)
+                Destroy(surfGraphMaterial);
         }
     }
 }

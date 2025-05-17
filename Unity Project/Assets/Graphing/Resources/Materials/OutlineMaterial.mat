@@ -73,7 +73,7 @@ Material:
     - _Mode: 0
     - _OUTLINE_SOURCE: 0
     - _OcclusionStrength: 1
-    - _OutlineThickness: 4
+    - _OutlineThickness: 1
     - _Parallax: 0.02
     - _SOURCE: 0
     - _SmoothnessTextureChannel: 0

@@ -20,10 +20,13 @@ namespace Graphing
         protected GameObject _axisPrefab;
         [SerializeField]
         protected Transform graphingSystem;
-        [SerializeField]
-        protected GameObject _graphDrawerPrefab;
 
-        public GameObject GraphDrawerPrefab => _graphDrawerPrefab;
+        [SerializeField]
+        public Material surfGraphMaterial;
+        [SerializeField]
+        public Material outlineGraphMaterial;
+        [SerializeField]
+        public Material lineVertexMaterial;
 
         public CrosshairController CrosshairController { get => GetComponentInChildren<CrosshairController>(true); }
 
@@ -53,6 +56,17 @@ namespace Graphing
                 return axes.FirstOrDefault(a => (a.Use & AxisUI.AxisDirection.Depth) > 0);
             }
         }
+
+        public readonly Dictionary<Type, Type> typeLookup = new Dictionary<Type, Type>
+        {
+            { typeof(SurfGraph), typeof(SurfGraphDrawer) },
+            { typeof(OutlineMask), typeof(OutlineGraphDrawer) },
+            { typeof(Line3Graph), typeof(LineGraphDrawer) },
+            { typeof(LineGraph), typeof(LineGraphDrawer) },
+            { typeof(MetaLineGraph), typeof(LineGraphDrawer) },
+            { typeof(GraphableCollection), typeof(GraphDrawerCollection) },
+            { typeof(GraphableCollection3), typeof(GraphDrawerCollection) }
+        };
 
         private System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool active)> activatorQueue = new System.Collections.Concurrent.ConcurrentQueue<(GraphDrawer drawer, bool visible)>();
 
@@ -104,8 +118,8 @@ namespace Graphing
                 return GetComponentsInChildren<GraphDrawer>().First(d => d.Graph == graph);
             }
             graphs.Add(graph);
-            GraphDrawer drawer = Instantiate(_graphDrawerPrefab, graphingSystem).GetComponent<GraphDrawer>();
-            drawer.SetGraph(graph, this);
+            //GraphDrawer drawer = Instantiate(_graphDrawerPrefab, graphingSystem).GetComponent<GraphDrawer>();
+            GraphDrawer drawer = InstantiateGraphDrawer(graph, graphingSystem, (surfGraphMaterial, outlineGraphMaterial, lineVertexMaterial));
             if (graph is IGraphable3 graphable3 && !GetComponentsInChildren<AxisUI>().Any(a => (a.Use & AxisUI.AxisDirection.Depth) > 0))
             {
                 drawer.SetOriginAndScale(AxisUI.AxisDirection.Depth, 0, 1 / (graphable3.ZMax - graphable3.ZMin));
@@ -348,6 +362,48 @@ namespace Graphing
             foreach (AxisUI axis in GetComponentsInChildren<AxisUI>())
                 axis.DetachGraphFromAxis(graph);
         }
+
+        public GraphDrawer InstantiateGraphDrawer(IGraphable graph, Transform transform, (Material surfMaterial, Material outlineMaterial, Material lineVertexMaterial) materialSet)
+        {
+            if (!typeLookup.TryGetValue(graph.GetType(), out Type graphDrawerType))
+                graphDrawerType = TypeFallback(graph.GetType());
+            GraphDrawer drawer = (GraphDrawer)new GameObject(graph.Name).AddComponent(graphDrawerType);
+            drawer.Initialize();
+            if (drawer is GraphDrawer.ISingleMaterialUser singleMatUser)
+            {
+                switch (drawer.MaterialSet)
+                {
+                    case 1:
+                        singleMatUser.InitializeMaterial(materialSet.surfMaterial);
+                        break;
+                    case 2:
+                        singleMatUser.InitializeMaterial(materialSet.outlineMaterial);
+                        break;
+                    case 3:
+                        singleMatUser.InitializeMaterial(materialSet.lineVertexMaterial);
+                        break;
+                }
+            }
+            else if (drawer is GraphDrawerCollection collection)
+                collection.InitializeMaterials(materialSet.surfMaterial, materialSet.outlineMaterial, materialSet.lineVertexMaterial);
+            drawer.transform.SetParent(transform);
+            drawer.transform.localRotation = Quaternion.Euler(0, 180, 0);
+            drawer.SetGraph(graph, this);
+            return drawer;
+        }
+        public virtual Type TypeFallback(Type graphType)
+        {
+            if (typeof(ILineGraph).IsAssignableFrom(graphType))
+                return typeof(LineGraphDrawer);
+            if (typeof(SurfGraph).IsAssignableFrom(graphType))
+                return typeof(SurfGraphDrawer);
+            if (typeof(OutlineMask).IsAssignableFrom(graphType))
+                return typeof(OutlineGraphDrawer);
+            if (typeof(GraphableCollection).IsAssignableFrom(graphType))
+                return typeof(GraphDrawerCollection);
+            return null;
+        }
+
         /// <summary>
         /// Gets the graph coordinates of a point on the graph.
         /// </summary>

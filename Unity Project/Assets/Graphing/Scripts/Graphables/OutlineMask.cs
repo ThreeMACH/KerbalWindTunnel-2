@@ -250,7 +250,7 @@ namespace Graphing
         /// <param name="sheetName">An optional sheet name for within the file.</param>
         public override void WriteToFile(string directory, string filename, string sheetName = "")
         {
-            List<Vector3[]> lines = GraphDrawer.GenerateOutlines(this);
+            List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
             // TODO print each contour.
             return;
         }

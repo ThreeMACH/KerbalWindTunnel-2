@@ -6,92 +6,17 @@ using UnityEngine;
 namespace Graphing
 {
     [RequireComponent(typeof(RectTransform))]
-    public partial class GraphDrawer : MonoBehaviour
+    public abstract class GraphDrawer : MonoBehaviour
     {
-        static readonly Unity.Profiling.ProfilerMarker s_surfgraphMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(SurfGraph)");
-        static readonly Unity.Profiling.ProfilerMarker s_outlineMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(Outline)");
-        static readonly Unity.Profiling.ProfilerMarker s_lineMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(LineGraph)");
-        static readonly Unity.Profiling.ProfilerMarker s_genericMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw");
-
-        [SerializeField]
-        public Material surfGraphMaterial;
-        [SerializeField]
-        public Material outlineGraphMaterial;
-        [SerializeField]
-        protected Material lineVertexMaterial;
+        protected const int layer = 5;
 
         protected Grapher grapher;
-        protected IGraphable graph;
-        protected Mesh mesh;
+        protected internal IGraphable graph;
         protected bool markedForRedraw = false;
         protected readonly List<EventArgs> redrawReasons = new List<EventArgs>();
         protected bool ignoreZScalePos = false;
 
-        [SerializeField]
-        [HideInInspector]
-        private bool surfMaterialIsUnique = false;
-        [SerializeField]
-        [HideInInspector]
-        private bool outlineMaterialIsUnique = false;
-
-        public Material LineVertexMaterial { get => lineVertexMaterial; }
-
-        public Material SurfGraphMaterial
-        {
-            get
-            {
-                surfMaterialIsUnique = true;
-                surfGraphMaterial = Instantiate(surfGraphMaterial);
-                return surfGraphMaterial;
-            }
-            set => SetSurfMaterialInternal(value);
-        }
-        public Material SharedSurfGraphMaterial
-        {
-            get => surfGraphMaterial;
-            set => SetSurfMaterialInternal(value);
-        }
-
-        public Material OutlineGraphMaterial
-        {
-            get
-            {
-                outlineMaterialIsUnique = true;
-                outlineGraphMaterial = Instantiate(outlineGraphMaterial);
-                return outlineGraphMaterial;
-            }
-            set => SetOutlineMaterialInternal(value);
-        }
-        public Material SharedOutlineGraphMaterial
-        {
-            get => outlineGraphMaterial;
-            set => SetOutlineMaterialInternal(value);
-        }
-
-        private void SetSurfMaterialInternal(Material value)
-        {
-            if (surfMaterialIsUnique)
-                Destroy(surfGraphMaterial);
-            surfMaterialIsUnique = false;
-            surfGraphMaterial = value;
-            if (Graph is SurfGraph && TryGetComponent(out MeshRenderer meshRenderer))
-                meshRenderer.material = value;
-            if (childDrawers != null)
-                foreach (GraphDrawer graphDrawer in childDrawers)
-                    graphDrawer.SetSurfMaterialInternal(value);
-        }
-        private void SetOutlineMaterialInternal(Material value)
-        {
-            if (outlineMaterialIsUnique)
-                Destroy(outlineGraphMaterial);
-            outlineMaterialIsUnique = false;
-            outlineGraphMaterial = value;
-            if (Graph is OutlineMask && TryGetComponent(out MeshRenderer meshRenderer))
-                meshRenderer.material = value;
-            if (childDrawers != null)
-                foreach (GraphDrawer graphDrawer in childDrawers)
-                    graphDrawer.SetOutlineMaterialInternal(value);
-        }
+        public virtual int MaterialSet { get => 0; }
 
         public Bounds Bounds
         {
@@ -119,11 +44,7 @@ namespace Graphing
             }
         }
 
-        public IGraphable Graph
-        {
-            get => graph;
-            set => SetGraph(value, grapher);
-        }
+        public IGraphable Graph => graph;
 
         public IGraphable FirstVisibleInHierarchy => GraphableCollection.FirstVisibleGraph(graph);
         public IColorGraph FirstColorGraphInHierarchy => GraphableCollection.FirstColorGraph(graph);
@@ -132,25 +53,9 @@ namespace Graphing
         {
             this.grapher = grapher;
 
-            if (this.graph == graph)
-                return;
-
-            if (this.graph != null)
-            {
-                this.graph.ValuesChanged -= OnValuesChangedHandler;
-                this.graph.DisplayChanged -= OnDisplayChangedHandler;
-            }
-            // Reset this if the new graph does not share the current graph's drawing methods.
-            // ILineGraphs are not necessarily AssignableFrom, but share drawing systems.
-            // Always wipe for a new GraphableCollection.
-            if (this.graph == null ||
-                graph is GraphableCollection ||
-                (!this.graph.GetType().IsAssignableFrom(graph.GetType()) && !(this.graph is ILineGraph && graph is ILineGraph)))
-                ResetGrapher(graph.GetType());
-            else
-                SetupForType(graph.GetType());
-
             this.graph = graph;
+
+            Setup();
 
             lock (redrawReasons)
                 redrawReasons.Clear();
@@ -167,66 +72,7 @@ namespace Graphing
                 gameObject.SetActive(false);
         }
 
-        private void ResetGrapher(Type graphType)
-        {
-            if (childDrawers != null)
-            {
-                foreach (GraphDrawer child in childDrawers)
-                    Destroy(child.gameObject);
-                childDrawers = null;
-            }
-            foreach (Component component in GetComponents<Component>())
-            {
-                if (component == this)
-                    continue;
-                if (component is Transform)
-                    continue;
-                Destroy(component);
-            }
-            transform.localPosition = Vector3.zero;
-            transform.localScale = Vector3.one;
-            transform.localEulerAngles = Vector3.zero;
-            ignoreZScalePos = false;
-            mesh?.Clear();
-            SetupForType(graphType);
-        }
-
-        protected MeshRenderer MeshRendererSetup()
-        {
-            MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
-            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
-            meshRenderer.receiveShadows = false;
-            return meshRenderer;
-        }
-
-        protected virtual void SetupForType(Type graphType)
-        {
-            if (graphType == null)
-                return;
-            if (typeof(ILineGraph).IsAssignableFrom(graphType))
-            {
-                LineGraphSetup();
-                return;
-            }
-            if (typeof(SurfGraph).IsAssignableFrom(graphType))
-            {
-                MeshRendererSetup();
-                SurfGraphSetup();
-                return;
-            }
-            if (typeof(OutlineMask).IsAssignableFrom(graphType))
-            {
-                MeshRendererSetup();
-                OutlineGraphSetup();
-                return;
-            }
-            if (typeof(GraphableCollection).IsAssignableFrom(graphType))
-            {
-                childDrawers = new List<GraphDrawer>();
-                return;
-            }
-            Debug.LogError("GraphDrawer is not equipped to handle that type of graph.");
-        }
+        protected abstract void Setup();
 
         protected virtual void OnDisplayChangedHandler(object sender, IDisplayEventArgs args)
         {
@@ -309,22 +155,8 @@ namespace Graphing
         }
         protected virtual void LateRedraw() => Draw();
 
-        protected virtual void GenerateOtherGraph(IGraphable graphable, IGrouping<Type, EventArgs> redrawReasons, bool forceRegenerate = false)
-            => Debug.LogError("GraphDrawer is not equipped to draw that type of graph.");
-
-        protected virtual void Draw(bool forceRegenerate = false)
+        protected void Draw(bool forceRegenerate = false)
         {
-#if ENABLE_PROFILER
-            if (graph is ILineGraph)
-                s_lineMarker.Begin();
-            else if (graph is SurfGraph)
-                s_surfgraphMarker.Begin();
-            else if (graph is OutlineMask)
-                s_outlineMarker.Begin();
-            else
-                s_genericMarker.Begin();
-#endif
-
             int localFlag = 0;
             lock (redrawReasons)
             {
@@ -342,45 +174,15 @@ namespace Graphing
                         Transpose = (reasonGroup.Last() as TransposeChangedEventArgs).Transpose;
                         continue;
                     }
-                    if (graph is ILineGraph lineGraphable)
-                    {
-                        localFlag = DrawLineGraph(lineGraphable, reasonGroup, localFlag, forceRegenerate);
-                        continue;
-                    }
-                    if (graph is SurfGraph surfGraph)
-                    {
-                        localFlag = DrawSurfGraph(surfGraph, reasonGroup, localFlag, forceRegenerate);
-                        continue;
-                    }
-                    if (graph is OutlineMask outlineMask)
-                    {
-                        localFlag = DrawOutlineGraph(outlineMask, reasonGroup, localFlag, forceRegenerate);
-                        continue;
-                    }
-                    if (graph is GraphableCollection collection)
-                    {
-                        localFlag = DrawCollection(collection, reasonGroup, localFlag, forceRegenerate);
-                        continue;
-                    }
-
-                    GenerateOtherGraph(graph, reasonGroup, forceRegenerate);
+                    localFlag = DrawInternal(reasonGroup, localFlag, forceRegenerate);
                 }
 
                 redrawReasons.Clear();
                 markedForRedraw = false;
             }
-
-#if ENABLE_PROFILER
-            if (graph is ILineGraph)
-                s_lineMarker.End();
-            else if (graph is SurfGraph)
-                s_surfgraphMarker.End();
-            else if (graph is OutlineMask)
-                s_outlineMarker.End();
-            else
-                s_genericMarker.End();
-#endif
         }
+
+        protected abstract int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false);
 
         /// <summary>
         /// Sets the transform position and scale. This should only ever be called on the parent GraphDrawer, and never on its children.
@@ -388,10 +190,8 @@ namespace Graphing
         /// <param name="axis"></param>
         /// <param name="origin"></param>
         /// <param name="scale"></param>
-        public void SetOriginAndScale(AxisUI.AxisDirection axis, float origin, float scale)
+        public virtual void SetOriginAndScale(AxisUI.AxisDirection axis, float origin, float scale)
         {
-            if (transform.parent.GetComponent<GraphDrawer>() != null)
-                return;
             axis = axis & (AxisUI.AxisDirection.Horizontal | AxisUI.AxisDirection.Vertical | AxisUI.AxisDirection.Depth);
             if (axis == AxisUI.AxisDirection.Depth && ignoreZScalePos)
                 return;
@@ -421,8 +221,8 @@ namespace Graphing
 
             position = -origin * scale;
             localScale = scale;
-            if (axis == AxisUI.AxisDirection.Depth && graph is IGraphable3 && !(graph is GraphableCollection))
-                transformPosition.z += grapher.ZOffset2D;
+            if (axis == AxisUI.AxisDirection.Depth && graph is IGraphable3)
+                transformPosition.z -= grapher.ZOffset2D;
 
             ((RectTransform)transform).anchoredPosition3D = transformPosition;
             transform.localScale = transformScale;
@@ -486,12 +286,15 @@ namespace Graphing
                 graph.DisplayChanged -= OnDisplayChangedHandler;
             }
             grapher?.UnregisterGraphDrawer(this);
-            if (mesh != null)
-                Destroy(mesh);
-            if (surfMaterialIsUnique)
-                Destroy(surfGraphMaterial);
-            if (outlineMaterialIsUnique)
-                Destroy(outlineGraphMaterial);
+        }
+
+        internal void Initialize()
+        {
+            gameObject.layer = layer;
+            RectTransform rectTransform = (RectTransform)transform;
+            rectTransform.anchorMin = Vector2.zero;
+            rectTransform.anchorMax = Vector2.zero;
+            rectTransform.pivot = Vector2.zero;
         }
 
         protected static int EventArgsSort(Type eventType)
@@ -533,6 +336,59 @@ namespace Graphing
             if (eventType == typeof(AxisUnitChangedEventArgs))
                 return 14;
             return -1;
+        }
+
+        public interface ISurfMaterialUser
+        {
+            Material SurfGraphMaterial { get; set; }
+            Material SharedSurfGraphMaterial { get; set; }
+            void SetSurfMaterialInternal(Material value);
+        }
+        public interface IOutlineMaterialUser
+        {
+            Material OutlineGraphMaterial { get; set; }
+            Material SharedOutlineGraphMaterial { get; set; }
+            void SetOutlineMaterialInternal(Material value);
+        }
+        public interface ISingleMaterialUser
+        {
+            void InitializeMaterial(Material material);
+        }
+    }
+
+    public abstract class MeshGraphDrawer : GraphDrawer
+    {
+        protected Mesh mesh;
+        protected MeshRenderer MeshRendererSetup()
+        {
+            MeshRenderer meshRenderer = gameObject.AddComponent<MeshRenderer>();
+            meshRenderer.shadowCastingMode = UnityEngine.Rendering.ShadowCastingMode.Off;
+            meshRenderer.receiveShadows = false;
+            return meshRenderer;
+        }
+        protected override void Setup()
+            => MeshRendererSetup();
+
+        protected IEnumerable<Vector4> GenerateVertexData(IEnumerable<Vector4> quadCoords, IEnumerable<Vector4> quadHeights, Func<Vector3, float> dataFunc)
+        {
+            IEnumerator<Vector4> quadCoordsEnumerator = quadCoords.GetEnumerator();
+            IEnumerator<Vector4> quadHeightsEnumerator = quadHeights.GetEnumerator();
+            while (quadCoordsEnumerator.MoveNext() && quadHeightsEnumerator.MoveNext())
+            {
+                yield return Vector4Operator(quadCoordsEnumerator.Current, quadHeightsEnumerator.Current);
+            }
+            Vector4 Vector4Operator(Vector4 coords, Vector4 heights)
+                => new Vector4(
+                    dataFunc(new Vector3(coords.x, coords.y, heights.x)),
+                    dataFunc(new Vector3(coords.x + coords.z, coords.y, heights.y)),
+                    dataFunc(new Vector3(coords.x + coords.z, coords.y + coords.w, heights.z)),
+                    dataFunc(new Vector3(coords.x, coords.y + coords.w, heights.w)));
+        }
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (mesh != null)
+                Destroy(mesh);
         }
     }
 }

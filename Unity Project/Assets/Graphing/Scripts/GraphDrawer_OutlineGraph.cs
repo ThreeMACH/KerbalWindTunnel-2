@@ -7,10 +7,50 @@ using Graphing.Extensions;
 
 namespace Graphing
 {
-    public partial class GraphDrawer
+    public class OutlineGraphDrawer : MeshGraphDrawer, GraphDrawer.IOutlineMaterialUser, GraphDrawer.ISingleMaterialUser
     {
-        protected void OutlineGraphSetup()
+        static readonly Unity.Profiling.ProfilerMarker s_outlineMarker = new Unity.Profiling.ProfilerMarker("GraphDrawer.Draw(Outline)");
+
+        [SerializeField]
+        protected Material outlineGraphMaterial;
+        [SerializeField]
+        [HideInInspector]
+        private bool outlineMaterialIsUnique = false;
+
+        protected OutlineMask outlineMask;
+
+        public override int MaterialSet => 2;
+
+        public Material OutlineGraphMaterial
         {
+            get
+            {
+                outlineMaterialIsUnique = true;
+                outlineGraphMaterial = Instantiate(outlineGraphMaterial);
+                return outlineGraphMaterial;
+            }
+            set => SetOutlineMaterialInternal(value);
+        }
+        public Material SharedOutlineGraphMaterial
+        {
+            get => outlineGraphMaterial;
+            set => SetOutlineMaterialInternal(value);
+        }
+        void IOutlineMaterialUser.SetOutlineMaterialInternal(Material value) => SetOutlineMaterialInternal(value);
+        protected internal virtual void SetOutlineMaterialInternal(Material value)
+        {
+            if (outlineMaterialIsUnique)
+                Destroy(outlineGraphMaterial);
+            outlineMaterialIsUnique = false;
+            outlineGraphMaterial = value;
+            if (TryGetComponent(out MeshRenderer meshRenderer))
+                meshRenderer.material = value;
+        }
+
+        protected override void Setup()
+        {
+            base.Setup();
+            outlineMask = (OutlineMask)graph;
             if (mesh == null)
                 mesh = new Mesh();
             MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
@@ -24,8 +64,15 @@ namespace Graphing
             transform.localEulerAngles = new Vector3(0, 180, 0);
         }
 
-        protected int DrawOutlineGraph(OutlineMask outlineMask, IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
+        void ISingleMaterialUser.InitializeMaterial(Material material) => InitializeMaterial(material);
+        protected internal void InitializeMaterial(Material material)
         {
+            outlineGraphMaterial = material;
+        }
+
+        protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
+        {
+            s_outlineMarker.Begin();
             const float tessTolerance = 1 / 16f;
             // TODO: Most of this is working, but wrong. E.G. Shouldn't need a new mesh every bounds changed, just shift the mesh position.
             if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs) || redrawReasons.Key == typeof(BoundsChangedEventArgs))
@@ -69,9 +116,8 @@ namespace Graphing
                 outlineGraphMaterial.SetColor("_OutlineColor", outlineMask.color);
             }
             if (forceRegenerate || redrawReasons.Key == typeof(LineWidthChangedEventArgs))
-            {
                 outlineGraphMaterial.SetFloat("_OutlineThickness", outlineMask.LineWidth);
-            }
+            s_outlineMarker.End();
             return pass;
         }
 
@@ -117,6 +163,13 @@ namespace Graphing
                 Destroy(mesh);
 
             return lines;
+        }
+
+        protected override void OnDestroy()
+        {
+            base.OnDestroy();
+            if (outlineMaterialIsUnique)
+                Destroy(outlineGraphMaterial);
         }
     }
 }
