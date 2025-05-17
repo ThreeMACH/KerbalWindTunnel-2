@@ -19,7 +19,7 @@ namespace KerbalWindTunnel.DataGenerators
         private float left, right, bottom, top;
         private static readonly ConcurrentDictionary<SurfCoords, EnvelopePoint> cache = new ConcurrentDictionary<SurfCoords, EnvelopePoint>();
 
-        public static (int x, int y)[] resolution = { (10, 10), (40, 120), (80, 180), (160, 360) };
+        public static (int x, int y)[] resolution = { (10, 10), (40, 90), (80, 180), (160, 180) };
 
         private const string xName = "Speed", xUnit = "m/s", yName = "Altitude", yUnit = "m";
 
@@ -112,11 +112,13 @@ namespace KerbalWindTunnel.DataGenerators
             for (int i = 1; i < resolution.Length; i++)
             {
                 TaskProgressTracker tracker = new TaskProgressTracker();
+                int xResolution = resolution[i].x, yResolution = resolution[i].y;
                 // prevTask is the Calculate task.
                 // Its FollowOn is the PushResults task.
                 // We want to wait until after results have been pushed to begin the next batch.
                 // This prevents a potential race condition of pushing results.
-                Task<ResultsType> task = prevTask.FollowOnTaskTracker.Task.ContinueWith((_) => CalculateTask(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, upperBoundSpeed, lowerBoundAltitude, upperBoundAltitude, resolution[i].x, resolution[i].y, tracker), TaskContinuationOptions.OnlyOnRanToCompletion);
+                ResultsType IterationTask(Task _) => CalculateTask(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, upperBoundSpeed, lowerBoundAltitude, upperBoundAltitude, xResolution, yResolution, tracker);
+                Task<ResultsType> task = prevTask.FollowOnTaskTracker.Task.ContinueWith(IterationTask, TaskContinuationOptions.OnlyOnRanToCompletion);
                 tracker.Task = task;
                 prevTask.FollowOnTaskTracker.FollowOnTaskTracker = tracker;
                 prevTask = tracker;
