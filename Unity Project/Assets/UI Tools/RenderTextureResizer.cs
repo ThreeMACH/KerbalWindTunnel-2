@@ -61,7 +61,7 @@ namespace UI_Tools
             if (!enabled)
                 return;
 
-            if (Mathf.Abs(width - graphTex.width) / graphTex.width > 0.1f || Mathf.Abs(height - graphTex.height) / graphTex.height > 0.1f)
+            if (Mathf.Abs(width - graphTex.width) / (float)graphTex.width > 0.1f || Mathf.Abs(height - graphTex.height) / (float)graphTex.height > 0.1f)
                 UpdateTexture(width, height);
         }
 
