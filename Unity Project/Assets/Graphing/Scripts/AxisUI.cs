@@ -930,6 +930,7 @@ namespace Graphing
             }
             axisBoundSetters[0]?.UpdatePosition();
             axisBoundSetters[1]?.UpdatePosition();
+            LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
         }
 
 #if UNITY_EDITOR
