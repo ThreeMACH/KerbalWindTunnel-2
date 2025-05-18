@@ -608,10 +608,12 @@ namespace Graphing
         }
 
         private bool CacheIsValid(Matrix4x4 localToWorldMatrix, Camera camera, MeshCache cache)
-            => ViewProjectionMatrix(camera) * localToWorldMatrix == cache.WVPMatrix;
+            => camera.pixelHeight == cache.pixelHeight &&
+            camera.pixelWidth == cache.pixelWidth &&
+            ViewProjectionMatrix(camera) * localToWorldMatrix == cache.WVPMatrix;
 
         private static Matrix4x4 ViewProjectionMatrix(Camera camera)
-            => camera.projectionMatrix * camera.worldToCameraMatrix;
+            => camera.nonJitteredProjectionMatrix * camera.worldToCameraMatrix;
 
         private struct MeshJob : IJobParallelFor
         {
@@ -713,6 +715,8 @@ namespace Graphing
         private class MeshCache : IDisposable
         {
             public Matrix4x4 WVPMatrix;
+            public int pixelHeight;
+            public int pixelWidth;
             public Mesh mesh;
 
             public MeshCache()
@@ -730,6 +734,8 @@ namespace Graphing
                     return;
                 }
                 WVPMatrix = ViewProjectionMatrix(camera) * localToWorldMatrix;
+                pixelHeight = camera.pixelHeight;
+                pixelWidth = camera.pixelWidth;
             }
 
             public void Dispose()
