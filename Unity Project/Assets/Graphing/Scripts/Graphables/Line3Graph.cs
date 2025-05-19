@@ -212,7 +212,7 @@ namespace Graphing
         public virtual string GetFormattedValueAt(float x, float y, float width, float height, bool withName = false)
         {
             if (_values.Length <= 0) return "";
-            return String.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y, width, height), ZUnit, withName && !String.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
+            return string.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y, width, height), ZUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
         }
 
         /// <summary>
@@ -242,20 +242,9 @@ namespace Graphing
             catch (Exception ex) { Debug.LogErrorFormat("Unable to delete file:{0}", ex.Message); }
 
             string strCsv = "";
-            if (XName != "")
-                strCsv += string.Format("{0} [{1}]", XName, XUnit != "" ? XUnit : "-");
-            else
-                strCsv += string.Format("{0}", XUnit != "" ? XUnit : "-");
-
-            if (YName != "")
-                strCsv += String.Format(",{0} [{1}]", YName, YUnit != "" ? YUnit : "-");
-            else
-                strCsv += String.Format(",{0}", YUnit != "" ? YUnit : "-");
-
-            if (ZName != "")
-                strCsv += String.Format(",{0} [{1}]", ZName, ZUnit != "" ? ZUnit : "-");
-            else
-                strCsv += String.Format(",{0}", ZUnit != "" ? ZUnit : "-");
+            strCsv += FormatNameAndUnit(XName, XUnit);
+            strCsv += FormatNameAndUnit(YName, YUnit);
+            strCsv += FormatNameAndUnit(ZName, ZUnit);
 
             try
             {
@@ -265,7 +254,7 @@ namespace Graphing
 
             for (int i = 0; i < _values.Length; i++)
             {
-                strCsv = String.Format("{0}, {1}, {2:" + StringFormat.Replace("N", "F") + "}", _values[i].x, _values[i].y, _values[i].z);
+                strCsv = string.Format("{0}, {1}, {2:" + StringFormat.Replace("N", "F") + "}", _values[i].x, _values[i].y, _values[i].z);
 
                 try
                 {

@@ -637,9 +637,9 @@ namespace Graphing
                 else
                     graphValue = graphs[i].GetFormattedValueAt(x, y, withName);
                 if (graphValue != "" && returnValue != "")
-                    returnValue += String.Format("\n{0}", graphValue);
+                    returnValue += string.Format("\n{0}", graphValue);
                 else
-                    returnValue += String.Format("{0}", graphValue);
+                    returnValue += string.Format("{0}", graphValue);
             }
             if (withName)
             {
@@ -1076,7 +1076,7 @@ namespace Graphing
                 if (lineGraphs[i] is MetaLineGraph metaLineGraph)
                 {
                     for (int m = 0; m <= metaLineGraph.MetaFieldCount; m++)
-                        strCsv += "," + (m > metaLineGraph.MetaFields.Length || String.IsNullOrEmpty(metaLineGraph.MetaFields[m]) ? "" : metaLineGraph.MetaFields[m]);
+                        strCsv += "," + (m > metaLineGraph.MetaFields.Length || string.IsNullOrEmpty(metaLineGraph.MetaFields[m]) ? "" : metaLineGraph.MetaFields[m]);
                 }
             }
 

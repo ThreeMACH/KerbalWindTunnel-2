@@ -242,6 +242,16 @@ namespace Graphing
         {
             return string.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y), YUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
         }
+
+        protected static string FormatNameAndUnit(string axisName, string unit)
+        {
+            if (string.IsNullOrEmpty(axisName))
+                return $"{unit}";
+            else
+                return $"{axisName} [{(unit != "" ? unit : "-")}]";
+        }
+
+        public static bool VisiblePredicate(IGraphable graph) => graph.Visible;
     }
 
     /// <summary>

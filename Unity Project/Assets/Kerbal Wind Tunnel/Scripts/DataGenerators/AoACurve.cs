@@ -235,7 +235,7 @@ namespace KerbalWindTunnel.DataGenerators
                 if (WindTunnelSettings.UseCoefficients)
                 {
                     float coefMod = Coefficient(1);
-                    return String.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
+                    return string.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
                         "Lift Coefficient:\t{3:N2}\n" + "Drag Coefficient:\t{4:N2}\n" + "Lift/Drag Ratio:\t{5:N2}\n" + "Pitch Input:\t{7:F3}\n" + 
                         "Wing Area:\t{8:F2}",
                         altitude, speed, AoA * Mathf.Rad2Deg,
@@ -243,7 +243,7 @@ namespace KerbalWindTunnel.DataGenerators
                         wingArea);
                 }
                 else
-                    return String.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
+                    return string.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
                             "Lift:\t{3:N0}kN\n" + "Drag:\t{4:N0}kN\n" + "Lift/Drag Ratio:\t{5:N2}\n" + "Pitch Input:\t{7:F3}",
                             altitude, speed, AoA * Mathf.Rad2Deg,
                             Lift, Drag, LDRatio, mach, pitchInput);

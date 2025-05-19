@@ -259,9 +259,9 @@ namespace Graphing
             for (int i = 0; i < metaCount; i++)
             {
                 if (MetaStringFormats.Length > i)
-                    value += String.Format("\n{2}{0:" + (String.IsNullOrEmpty(MetaStringFormats[i]) ? "" : MetaStringFormats[i]) + "}{1}", MetaValueAt(x, y, width, height, i), MetaUnits.Length <= i || String.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i], String.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
+                    value += string.Format("\n{2}{0:" + (string.IsNullOrEmpty(MetaStringFormats[i]) ? "" : MetaStringFormats[i]) + "}{1}", MetaValueAt(x, y, width, height, i), MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i], string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
                 else
-                    value += String.Format("\n{2}{0}{1}", MetaValueAt(x, y, width, height, i).ToString(), MetaUnits.Length <= i || String.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i], String.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
+                    value += string.Format("\n{2}{0}{1}", MetaValueAt(x, y, width, height, i).ToString(), MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i], string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
             }
             return value;
         }
@@ -294,21 +294,14 @@ namespace Graphing
             catch (Exception ex) { Debug.LogFormat("Unable to delete file:{0}", ex.Message); }
 
             string strCsv = "";
-            if (XName != "")
-                strCsv += string.Format("{0} [{1}]", XName, XUnit != "" ? XUnit : "-");
-            else
-                strCsv += string.Format("{0}", XUnit != "" ? XUnit : "-");
-
-            if (YName != "")
-                strCsv += String.Format(",{0} [{1}]", YName, YUnit != "" ? YUnit : "-");
-            else
-                strCsv += String.Format(",{0}", YUnit != "" ? YUnit : "-");
+            strCsv += FormatNameAndUnit(XName, XUnit);
+            strCsv += FormatNameAndUnit(YName, YUnit);
 
             for (int i = 0; i < MetaFields.Length && i < metaCount; i++)
             {
-                string nameStr = String.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i];
-                string unitStr = MetaUnits.Length <= i || String.IsNullOrEmpty(MetaUnits[i]) ? "-" : MetaUnits[i];
-                strCsv += nameStr != "" ? String.Format(",{0} [{1}]", nameStr, unitStr) : String.Format(",{0}", unitStr);
+                string nameStr = string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i];
+                string unitStr = MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "-" : MetaUnits[i];
+                strCsv += nameStr != "" ? string.Format(",{0} [{1}]", nameStr, unitStr) : string.Format(",{0}", unitStr);
             }
 
             try
@@ -319,13 +312,13 @@ namespace Graphing
 
             for (int i = 0; i < _values.Length; i++)
             {
-                strCsv = String.Format("{0}, {1:" + StringFormat.Replace("N", "F") + "}", _values[i].x, _values[i].y);
-                for (int j = 0; j < metaCount; j++)
+                strCsv = string.Format("{0}, {1:" + StringFormat.Replace("N", "F") + "}", _values[i].x, _values[i].y);
+                for (int m = 0; m < metaCount; m++)
                 {
-                    if (MetaStringFormats.Length >= j)
-                        strCsv += "," + metaData[j][i].ToString(MetaStringFormats[j].Replace("N", "F"));
+                    if (MetaStringFormats.Length >= m)
+                        strCsv += "," + metaData[m][i].ToString(MetaStringFormats[m].Replace("N", "F"));
                     else
-                        strCsv += "," + metaData[j][i].ToString();
+                        strCsv += "," + metaData[m][i].ToString();
                 }
 
                 try

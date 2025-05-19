@@ -61,18 +61,18 @@ namespace Graphing
         /// <param name="yTop">The top y bound.</param>
         public SurfGraph(float[,] values, float xLeft, float xRight, float yBottom, float yTop) : this()
         {
-            this._values = values;
-            this.xMin = xLeft;
-            this.xMax = xRight;
-            this.yMin = yBottom;
-            this.yMax = yTop;
+            _values = values;
+            xMin = xLeft;
+            xMax = xRight;
+            yMin = yBottom;
+            yMax = yTop;
             if (_values.GetUpperBound(0) < 0 || _values.GetUpperBound(1) < 0)
             {
                 zMin = zMax = 0;
                 return;
             }
-            this.zMin = values.Min(true);
-            this.zMax = values.Max(true);
+            zMin = values.Min(true);
+            zMax = values.Max(true);
         }
         public SurfGraph(OutlineMask outlineMask) : this((float[,])outlineMask.Values.Clone(), outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax) { }
 
@@ -85,7 +85,7 @@ namespace Graphing
         /// <param name="yBottom">The Y axis lower bound.</param>
         /// <param name="yTop">The Y axis upper bound.</param>
         public override void Draw(ref UnityEngine.Texture2D texture, float xLeft, float xRight, float yBottom, float yTop)
-            => this.Draw(ref texture, xLeft, xRight, yBottom, yTop, ZMin, ZMax);
+            => Draw(ref texture, xLeft, xRight, yBottom, yTop, ZMin, ZMax);
 
         /// <summary>
         /// Draws the object on the specified <see cref="UnityEngine.Texture2D"/>.
@@ -274,18 +274,18 @@ namespace Graphing
         {
             lock (this)
             {
-                this._values = values;
-                this.xMin = xLeft;
-                this.xMax = xRight;
-                this.yMin = yBottom;
-                this.yMax = yTop;
+                _values = values;
+                xMin = xLeft;
+                xMax = xRight;
+                yMin = yBottom;
+                yMax = yTop;
                 if (_values.GetUpperBound(0) < 0 || _values.GetUpperBound(1) < 0)
                 {
                     zMin = zMax = 0;
                     return;
                 }
-                this.zMin = values.Min(true);
-                this.zMax = values.Max(true);
+                zMin = values.Min(true);
+                zMax = values.Max(true);
 
                 OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
             }
@@ -335,13 +335,10 @@ namespace Graphing
             catch (Exception ex) { UnityEngine.Debug.LogFormat("Unable to delete file:{0}", ex.Message); }
 
             string strCsv;
-            if (!String.IsNullOrEmpty(DisplayName))
-                strCsv = String.Format("{0} [{1}]", DisplayName, ZUnit != "" ? ZUnit : "-");
-            else
-                strCsv = String.Format("{0}", ZUnit != "" ? ZUnit : "-");
+            strCsv = FormatNameAndUnit(ZName, ZUnit);
 
             for (int x = 0; x <= width; x++)
-                strCsv += String.Format(",{0}", xStep * x + XMin);
+                strCsv += string.Format(",{0}", xStep * x + XMin);
 
             try
             {

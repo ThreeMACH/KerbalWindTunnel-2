@@ -189,7 +189,7 @@ namespace KerbalWindTunnel.VesselCache
                                 cubes.SetDragWeights();
                                 cubes.SetPartOcclusion();
                                 cubes.AddSurfaceDragDirection(-Vector3.forward, 0, ref p_drag_data);
-                                Debug.LogError(String.Format("Wind Tunnel: Caught NRE on Drag Initialization.  Should be fixed now.  {0}", nre));
+                                Debug.LogError(string.Format("[KWT] Caught NRE on Drag Initialization.  Should be fixed now.  {0}", nre));
                             }
                         }
                     }
