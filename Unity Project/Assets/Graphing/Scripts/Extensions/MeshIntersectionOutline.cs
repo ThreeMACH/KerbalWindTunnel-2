@@ -24,12 +24,12 @@ namespace Graphing.Extensions
                 int inPt1Index = -1, inPt2Index = -1;
 
                 if (inPt1 >= 0 && inPt2 == -1)
-                    throw new ArgumentException("Cannot only supply a singe point.", "inPt2");
+                    throw new ArgumentException("Cannot only supply a singe point.", nameof(inPt2));
 
                 if (inPt1 >= 0 && inPt2 >= 0)
                 {
                     if (inPt1 == inPt2)
-                        throw new ArgumentException("The supplied points are identical.", "inPt1, inPt2");
+                        throw new ArgumentException("The supplied points are identical.", $"{nameof(inPt1)}, {nameof(inPt2)}");
 
                     for (int i = 0; i < 3; i++)
                     {
@@ -39,9 +39,9 @@ namespace Graphing.Extensions
                             inPt2Index = i;
                     }
                     if (inPt1Index < 0)
-                        throw new ArgumentException("The supplied point is not in the supplied triangle.", "inPt1");
+                        throw new ArgumentException("The supplied point is not in the supplied triangle.", nameof(inPt1));
                     if (inPt2Index < 0)
-                        throw new ArgumentException("The supplied point is not in the supplied triangle.", "inPt2");
+                        throw new ArgumentException("The supplied point is not in the supplied triangle.", nameof(inPt2));
 
                     if (inPt1Index > inPt2Index)
                     {

@@ -39,7 +39,7 @@ namespace KerbalWindTunnel
             int yLength = this.yKeys.Length;
 
             if ((values.GetUpperBound(0) + 1 != xLength) || (values.GetUpperBound(1) + 1 != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "values");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(values));
 
             for (int i = xLength - 2; i >= 1; i--)
             {
@@ -123,13 +123,13 @@ namespace KerbalWindTunnel
             int yLength = this.yKeys.Length - 1;
 
             if ((values.GetUpperBound(0) != xLength) || (values.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "values");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(values));
             if ((xPartialTangents.GetUpperBound(0) != xLength) || (xPartialTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xPartialTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xPartialTangents));
             if ((yPartialTangents.GetUpperBound(0) != xLength) || (yPartialTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "yPartialTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(yPartialTangents));
             if ((mixedTangents.GetUpperBound(0) != xLength) || (mixedTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "mixedTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(mixedTangents));
 
             for (int i = xLength; i >= 0; i--)
                 for (int j = yLength; j >= 0; j--)
@@ -142,25 +142,25 @@ namespace KerbalWindTunnel
             int yLength = this.yKeys.Length - 1;
 
             if ((values.GetUpperBound(0) != xLength) || (values.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "values");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(values));
 
             if ((xinTangents.GetUpperBound(0) != xLength) || (xinTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xinTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xinTangents));
             if ((xoutTangents.GetUpperBound(0) != xLength) || (xoutTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xoutTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xoutTangents));
             if ((yinTangents.GetUpperBound(0) != xLength) || (yinTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "yinTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(yinTangents));
             if ((youtTangents.GetUpperBound(0) != xLength) || (youtTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "youtTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(youtTangents));
 
             if ((xinyinTangents.GetUpperBound(0) != xLength) || (xinyinTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xinyinTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xinyinTangents));
             if ((xinyoutTangents.GetUpperBound(0) != xLength) || (xinyoutTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xinyoutTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xinyoutTangents));
             if ((xoutyinTangents.GetUpperBound(0) != xLength) || (xoutyinTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xoutyinTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xoutyinTangents));
             if ((xoutyoutTangents.GetUpperBound(0) != xLength) || (xoutyoutTangents.GetUpperBound(1) != yLength))
-                throw new ArgumentException("Array dimensions do not match provided keys.", "xoutyoutTangents");
+                throw new ArgumentException("Array dimensions do not match provided keys.", nameof(xoutyoutTangents));
 
 
             for (int i = xLength; i >= 0; i--)
@@ -589,7 +589,7 @@ namespace KerbalWindTunnel
                             3 * (coeffs.n + 2 * coeffs.o * x + 3 * coeffs.p * x2) * y2) / (dX * dY);
                 }
                 else
-                    throw new ArgumentOutOfRangeException("dimension");
+                    throw new ArgumentOutOfRangeException(nameof(dimension));
             }
             finally
             {

@@ -131,7 +131,7 @@ namespace KerbalWindTunnel.Extensions
                         return i;
             }
             else
-                throw new ArgumentOutOfRangeException("dimension");
+                throw new ArgumentOutOfRangeException(nameof(dimension));
             throw new InvalidOperationException("No element satisfies the condition in Predicate.");
         }
 
@@ -157,7 +157,7 @@ namespace KerbalWindTunnel.Extensions
                 throw new ArgumentNullException();
             int length = vals.Length;
             if (length % columns != 0)
-                throw new ArgumentException(String.Format("The input data {0} cannot be fit to the supplied number of columns {1}", length, columns));
+                throw new ArgumentException(string.Format("The input data {0} cannot be fit to the supplied number of columns {1}", length, columns));
             T[,] result = new T[columns, length / columns];
 
             for (int i = length - 1; i >= 0; i--)

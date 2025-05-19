@@ -392,9 +392,9 @@ namespace LegacyGraphing.Extensions
             int iMax = values.GetUpperBound(0) + 1;
             int jMax = values.GetUpperBound(1) + 1;
             if (xValues.Length != iMax)
-                throw new ArgumentException("Position locations must have the same number of elements as values.", "xValues");
+                throw new ArgumentException("Position locations must have the same number of elements as values.", nameof(xValues));
             if (yValues.Length != jMax)
-                throw new ArgumentException("Position locations must have the same number of elements as values.", "yValues");
+                throw new ArgumentException("Position locations must have the same number of elements as values.", nameof(yValues));
 
             if (iMax < 1 || jMax < 1)
             {

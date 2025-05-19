@@ -24,7 +24,7 @@ namespace KerbalWindTunnel.Extensions
 
         public void Setup(string lockID, ControlTypes controlTypes = ControlTypes.KEYBOARDINPUT)
         {
-            _lockID = lockID ?? throw new ArgumentNullException("lockID");
+            _lockID = lockID ?? throw new ArgumentNullException(nameof(lockID));
             _controlTypes = controlTypes;
         }
 
@@ -33,7 +33,7 @@ namespace KerbalWindTunnel.Extensions
         public void Lock()
         {
             if (LockID == null)
-                throw new NullReferenceException("lockID is null");
+                throw new NullReferenceException("LockID is null");
             InputLockManager.SetControlLock(_controlTypes, "KerbalWindTunnel");
         }
 

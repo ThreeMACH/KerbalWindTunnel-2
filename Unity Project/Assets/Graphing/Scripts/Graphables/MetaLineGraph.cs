@@ -89,7 +89,7 @@ namespace Graphing
             for (int i = 0; i < metaData.Length; i++)
             {
                 if (metaData[i].Length != length)
-                    throw new ArgumentOutOfRangeException("metaData");
+                    throw new ArgumentOutOfRangeException(nameof(metaData));
             }
             AdjustArrayLengths(metaData.Length);
             this.metaData = metaData;

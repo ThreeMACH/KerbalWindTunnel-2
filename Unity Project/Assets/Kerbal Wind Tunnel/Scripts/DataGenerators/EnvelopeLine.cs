@@ -256,11 +256,11 @@ namespace KerbalWindTunnel.DataGenerators
             public static (int xi, int yi) Nearest(float speed, float altitude, BoundsInfo bounds)
             {
                 if (bounds == null)
-                    throw new ArgumentNullException("bounds");
+                    throw new ArgumentNullException(nameof(bounds));
                 if (speed < bounds.speedLowerBound || speed > bounds.speedUpperBound)
-                    throw new ArgumentOutOfRangeException("speed");
+                    throw new ArgumentOutOfRangeException(nameof(speed));
                 if (altitude < bounds.altitudeLowerBound || altitude > bounds.altitudeUpperBound)
-                    throw new ArgumentOutOfRangeException("altitude");
+                    throw new ArgumentOutOfRangeException(nameof(altitude));
                 return (Mathf.RoundToInt((speed - bounds.speedLowerBound) / bounds.speedStep), Mathf.RoundToInt((altitude - bounds.altitudeLowerBound) / bounds.altitudeStep));
             }
 
