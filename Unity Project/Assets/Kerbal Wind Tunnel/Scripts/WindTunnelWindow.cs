@@ -1,13 +1,14 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using UnityEngine;
-using UnityEngine.UI;
-using UI_Tools;
-using UI_Tools.Universal_Text;
-using Graphing;
+﻿using Graphing;
 using KerbalWindTunnel.DataGenerators;
 using KSP.Localization;
+using Microsoft.SqlServer.Server;
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using UI_Tools;
+using UI_Tools.Universal_Text;
+using UnityEngine;
+using UnityEngine.UI;
 
 namespace KerbalWindTunnel
 {
@@ -342,6 +343,7 @@ namespace KerbalWindTunnel
                 ((LineGraph)collection[2]).SetValues(new float[] { 0, 0.8f, 0.8f, 0.8f, 0.8f, 0.3f }, 0, 1);
                 Debug.Log("Drew placeholder.");
             });
+            envelopeCollection = collection;
             return;
 #endif
             if (!HighLogic.LoadedSceneIsEditor)
@@ -390,20 +392,27 @@ namespace KerbalWindTunnel
         }
 
         // Called when the Export button is clicked
-        // TODO: Set directory
+        // TODO: Modal window to name file and select options.
         public void ExportGraphData()
         {
+#if !OUTSIDE_UNITY
+            Debug.Log("Exporting.");
+            envelopeCollection.WriteToFile(WindTunnel.graphPath, "Test", GraphIO.FileFormat.CSV);
+            Debug.Log("Done.");
+            return;
+#endif
+            GraphIO.FileFormat format = GraphIO.FileFormat.CSV;
             switch (GraphMode)
             {
                 default:
                 case 0:
-                    //envelopeCollection.WriteToFile();
+                    envelopeCollection.WriteToFile(WindTunnel.graphPath, EditorLogic.fetch.ship.shipName, format);
                     break;
                 case 1:
-                    //aoaCollection.WriteToFile();
+                    aoaCollection.WriteToFile(WindTunnel.graphPath, EditorLogic.fetch.ship.shipName, format);
                     break;
                 case 2:
-                    //velocityCollection.WriteToFile();
+                    velocityCollection.WriteToFile(WindTunnel.graphPath, EditorLogic.fetch.ship.shipName, format);
                     break;
             }
         }

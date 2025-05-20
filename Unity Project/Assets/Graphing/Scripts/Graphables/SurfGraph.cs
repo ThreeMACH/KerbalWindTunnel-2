@@ -304,13 +304,7 @@ namespace Graphing
             return base.GetFormattedValueAt(x, y, withName);
         }
 
-        /// <summary>
-        /// Outputs the object's values to file.
-        /// </summary>
-        /// <param name="directory">The directory in which to place the file.</param>
-        /// <param name="filename">The filename for the file.</param>
-        /// <param name="sheetName">An optional sheet name for within the file.</param>
-        public override void WriteToFile(string directory, string filename, string sheetName = "")
+        public override void WriteToFileCSV(string path)
         {
             int height = _values.GetUpperBound(1);
             int width = _values.GetUpperBound(0);
@@ -319,32 +313,7 @@ namespace Graphing
             float xStep = (XMax - XMin) / width;
             float yStep = (YMax - YMin) / height;
 
-            if (!System.IO.Directory.Exists(directory))
-                System.IO.Directory.CreateDirectory(directory);
-
-            if (sheetName == "")
-                sheetName = this.Name.Replace("/", "-").Replace("\\", "-");
-
-            string fullFilePath = string.Format("{0}/{1}{2}.csv", directory, filename, sheetName != "" ? "_" + sheetName : "");
-
-            try
-            {
-                if (System.IO.File.Exists(fullFilePath))
-                    System.IO.File.Delete(fullFilePath);
-            }
-            catch (Exception ex) { UnityEngine.Debug.LogFormat("Unable to delete file:{0}", ex.Message); }
-
             string strCsv;
-            strCsv = FormatNameAndUnit(ZName, ZUnit);
-
-            for (int x = 0; x <= width; x++)
-                strCsv += string.Format(",{0}", xStep * x + XMin);
-
-            try
-            {
-                System.IO.File.AppendAllText(fullFilePath, strCsv + "\r\n");
-            }
-            catch (Exception) { }
 
             for (int y = height; y >= 0; y--)
             {
@@ -354,10 +323,21 @@ namespace Graphing
 
                 try
                 {
-                    System.IO.File.AppendAllText(fullFilePath, strCsv + "\r\n");
+                    System.IO.File.AppendAllText(path, strCsv + "\r\n");
                 }
                 catch (Exception) { }
             }
+
+            strCsv = FormatNameAndUnit(ZName, ZUnit);
+
+            for (int x = 0; x <= width; x++)
+                strCsv += string.Format(",{0}", xStep * x + XMin);
+
+            try
+            {
+                System.IO.File.AppendAllText(path, strCsv + "\r\n");
+            }
+            catch (Exception) { }
         }
     }
 }

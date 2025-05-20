@@ -321,33 +321,15 @@ namespace Graphing
         /// <param name="directory">The directory in which to place the file.</param>
         /// <param name="filename">The filename for the file.</param>
         /// <param name="sheetName">An optional sheet name for within the file.</param>
-        public override void WriteToFile(string directory, string filename, string sheetName = "")
+        public override void WriteToFileCSV(string path)
         {
-            if (_values.Length <= 0)
-                return;
-
-            if (!System.IO.Directory.Exists(directory))
-                System.IO.Directory.CreateDirectory(directory);
-
-            if (sheetName == "")
-                sheetName = this.Name.Replace("/", "-").Replace("\\", "-");
-
-            string fullFilePath = string.Format("{0}/{1}{2}.csv", directory, filename, sheetName != "" ? "_" + sheetName : "");
-
-            try
-            {
-                if (System.IO.File.Exists(fullFilePath))
-                    System.IO.File.Delete(fullFilePath);
-            }
-            catch (Exception ex) { Debug.LogErrorFormat("Unable to delete file:{0}", ex.Message); }
-
             string strCsv = "";
             strCsv += FormatNameAndUnit(XName, XUnit);
             strCsv += FormatNameAndUnit(YName, YUnit);
 
             try
             {
-                System.IO.File.AppendAllText(fullFilePath, strCsv + "\r\n");
+                System.IO.File.AppendAllText(path, strCsv + "\r\n");
             }
             catch (Exception ex) { Debug.LogException(ex); }
 
@@ -357,7 +339,7 @@ namespace Graphing
 
                 try
                 {
-                    System.IO.File.AppendAllText(fullFilePath, strCsv + "\r\n");
+                    System.IO.File.AppendAllText(path, strCsv + "\r\n");
                 }
                 catch (Exception) { }
             }

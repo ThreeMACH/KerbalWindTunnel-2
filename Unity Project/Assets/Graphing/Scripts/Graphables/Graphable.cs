@@ -206,13 +206,7 @@ namespace Graphing
         /// </summary>
         public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
-        /// <summary>
-        /// Outputs the object's values to file.
-        /// </summary>
-        /// <param name="directory">The directory in which to place the file.</param>
-        /// <param name="filename">The filename for the file.</param>
-        /// <param name="sheetName">An optional sheet name for within the file.</param>
-        public abstract void WriteToFile(string directory, string filename, string sheetName = "");
+        public abstract void WriteToFileCSV(string path);
 
         /// <summary>
         /// Invokes the <see cref="ValuesChanged"/> event for this object.

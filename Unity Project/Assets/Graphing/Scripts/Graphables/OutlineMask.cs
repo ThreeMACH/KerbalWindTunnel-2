@@ -248,10 +248,10 @@ namespace Graphing
         /// <param name="directory">The directory in which to place the file.</param>
         /// <param name="filename">The filename for the file.</param>
         /// <param name="sheetName">An optional sheet name for within the file.</param>
-        public override void WriteToFile(string directory, string filename, string sheetName = "")
+        public override void WriteToFileCSV(string path)
         {
-            List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
             // COULDDO print each contour.
+            // List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
             return;
         }
     }

@@ -70,7 +70,7 @@ namespace Graphing
         /// </summary>
         /// <param name="x">The x value of the selected coordinate.</param>
         /// <param name="y">The y value of the selected coordinate.</param>
-        /// <returns></returns>
+        /// <returns>The value at the selected coordinate.</returns>
         float ValueAt(float x, float y);
         /// <summary>
         /// Gets a formatted value from the object given a selected coordinate.
@@ -78,7 +78,7 @@ namespace Graphing
         /// <param name="x">The x value of the selected coordinate.</param>
         /// <param name="y">The y value of the selected coordinate.</param>
         /// <param name="withName">When true, requests the object include its name.</param>
-        /// <returns></returns>
+        /// <returns>A string representing the value.</returns>
         string GetFormattedValueAt(float x, float y, bool withName = false);
         /// <summary>
         /// An event to be triggered when an object's values change.
@@ -89,12 +89,10 @@ namespace Graphing
         /// </summary>
         event EventHandler<IDisplayEventArgs> DisplayChanged;
         /// <summary>
-        /// Outputs the object's values to file.
+        /// Outputs the object's values to a CSV file.
         /// </summary>
-        /// <param name="directory">The directory in which to place the file.</param>
-        /// <param name="filename">The filename for the file.</param>
-        /// <param name="sheetName">An optional sheet name for within the file.</param>
-        void WriteToFile(string directory, string filename, string sheetName = "");
+        /// <param name="path">The path to the file.</param>
+        void WriteToFileCSV(string path);
     }
 
     /// <summary>
@@ -166,7 +164,7 @@ namespace Graphing
         /// <param name="y">The y value of the selected coordinate.</param>
         /// <param name="width">The x domain of the graph.</param>
         /// <param name="height">The y range of the graph.</param>
-        /// <returns></returns>
+        /// <returns>The value at the selected coordinate.</returns>
         float ValueAt(float x, float y, float width, float height);
         /// <summary>
         /// Gets a formatted value from the object given a selected coordinate.
@@ -176,7 +174,7 @@ namespace Graphing
         /// <param name="width">The x domain of the graph.</param>
         /// <param name="height">The y range of the graph.</param>
         /// <param name="withName">When true, requests the object include its name.</param>
-        /// <returns></returns>
+        /// <returns>A string representing the value.</returns>
         string GetFormattedValueAt(float x, float y, float width, float height, bool withName = false);
     }
 

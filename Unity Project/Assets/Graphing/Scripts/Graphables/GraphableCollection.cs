@@ -992,75 +992,53 @@ namespace Graphing
             return Graphables.GetEnumerator();
         }
 
-        /// <summary>
-        /// Outputs the object's values to file.
-        /// </summary>
-        /// <param name="directory">The directory in which to place the file.</param>
-        /// <param name="filename">The filename for the file.</param>
-        /// <param name="sheetName">An optional sheet name for within the file.</param>
-        public void WriteToFile(string directory, string filename, string sheetName = "")
+        public void WriteToFileCSV(string path)
+            => WriteToFileCSV(path, true);
+        public void WriteToFileCSV(string path, bool limitToVisible)
         {
-            if (!System.IO.Directory.Exists(directory))
-                System.IO.Directory.CreateDirectory(directory);
+            IEnumerable<IGraphable> graphsToWrite = Flatten();
+            if (limitToVisible)
+                graphsToWrite = graphsToWrite.Where(Graphable.VisiblePredicate);
 
-            if (graphs.Count > 1 && graphs.All(g => g is LineGraph || !g.Visible))
+            if (CanCombineLineGraphs(graphsToWrite.Where(IsCombinableLineGraph)))
             {
-                LineGraph[] lineGraphs = graphs.Where(g => g.Visible).Cast<LineGraph>().ToArray();
-                UnityEngine.Vector2[] basis = lineGraphs[0].Values;
-                int count = basis.Length;
-
-                bool combinable = true;
-                for (int i = lineGraphs.Length - 1; i >= 1; i--)
-                {
-                    UnityEngine.Vector2[] points = lineGraphs[i].Values;
-                    for (int j = count - 1; i >= 0; i--)
-                    {
-                        if (points[j].x != basis[j].x)
-                        {
-                            combinable = false;
-                            break;
-                        }
-                    }
-                    if (!combinable)
-                        break;
-                }
-
-                if (combinable)
-                {
-                    WriteLineGraphsToCombinedFile(directory, filename, lineGraphs, sheetName);
-                    return;
-                }
+                WriteLineGraphsToCombinedCSV(path, graphsToWrite.Where(IsCombinableLineGraph).Cast<ILineGraph>().ToArray());
+                graphsToWrite = graphsToWrite.Where(g => !IsCombinableLineGraph(g));
+            }
+            else
+            {
+                graphsToWrite = graphs;
+                if (limitToVisible)
+                    graphsToWrite = graphsToWrite.Where(Graphable.VisiblePredicate);
             }
 
-            for (int i = 0; i < graphs.Count; i++)
+            HashSet<string> names = new HashSet<string>();
+            
+            foreach (IGraphable graph in graphsToWrite)
             {
-                if (graphs.Count > 1 && graphs[i].Visible)
-                    graphs[i].WriteToFile(directory, filename, (sheetName != "" ? sheetName + "_" : "") + graphs[i].Name.Replace("/", "-").Replace("\\", "-"));
+                string graphSuffix = GraphIO.StripInvalidFileChars(graph.DisplayName.Replace("/", "-").Replace("\\", "-"));
+                if (string.IsNullOrEmpty(graphSuffix))
+                    graphSuffix = graph.GetType().Name;
+                if (names.Contains(graphSuffix))
+                {
+                    int i = 1;
+                    while (names.Contains(string.Concat(graphSuffix, i.ToString())))
+                        i++;
+                    graphSuffix = string.Concat(graphSuffix, i.ToString());
+                }
+                names.Add(graphSuffix);
+                graph.WriteToFileCSV(path.Insert(path.Length - 4, string.Concat("_", graphSuffix)));
             }
         }
 
         /// <summary>
         /// Outputs a set of compatible <see cref="LineGraph"/> values to a single file.
         /// </summary>
-        /// <param name="directory">The directory in which to place the file.</param>
-        /// <param name="filename">The filename for the file.</param>
-        /// <param name="sheetName">An optional sheet name for within the file.</param>
-        /// <param name="lineGraphs">The collection of <see cref="LineGraph"/>s.</param>
-        protected void WriteLineGraphsToCombinedFile(string directory, string filename, LineGraph[] lineGraphs, string sheetName = "")
+        /// <param name="path">The path of the file.</param>
+        /// <param name="lineGraphs">The collection of <see cref="LineGraph"/>s to write in a combined file.</param>
+        protected void WriteLineGraphsToCombinedCSV(string path, IList<ILineGraph> lineGraphs)
         {
-            if (sheetName == "")
-                sheetName = this.Name.Replace("/", "-").Replace("\\", "-");
-
-            string fullFilePath = string.Format("{0}/{1}{2}.csv", directory, filename, sheetName != "" ? "_" + sheetName : "");
-
-            try
-            {
-                if (System.IO.File.Exists(fullFilePath))
-                    System.IO.File.Delete(fullFilePath);
-            }
-            catch (Exception ex) { UnityEngine.Debug.LogFormat("Unable to delete file:{0}", ex.Message); }
-
-            int count = lineGraphs.Length;
+            int count = lineGraphs.Count;
             string strCsv = "";
             if (lineGraphs[0].XName != "")
                 strCsv += string.Format("{0} [{1}]", lineGraphs[0].XName, lineGraphs[0].XUnit != "" ? lineGraphs[0].XUnit : "-");
@@ -1082,11 +1060,11 @@ namespace Graphing
 
             try
             {
-                System.IO.File.AppendAllText(fullFilePath, strCsv + "\r\n");
+                System.IO.File.AppendAllText(path, strCsv + "\r\n");
             }
             catch (Exception ex) { UnityEngine.Debug.Log(ex.Message); }
 
-            IEnumerator<float> xEnumerator = lineGraphs[0].Values.Select(v => v.x).GetEnumerator();
+            IEnumerator<float> xEnumerator = XValues(lineGraphs[0]).GetEnumerator();
             int j = -1;
             while (xEnumerator.MoveNext())
             {
@@ -1094,7 +1072,9 @@ namespace Graphing
                 strCsv = string.Format("{0}", xEnumerator.Current);
                 for (int i = 0; i < count; i++)
                 {
-                    strCsv += string.Format(",{0:" + lineGraphs[i].StringFormat.Replace("N", "F") + "}", lineGraphs[i].Values[j].y);
+                    strCsv += string.Format(",{0:" + ((Graphable)lineGraphs[i]).StringFormat.Replace("N", "F") + "}", YValue(lineGraphs[i], j));
+                    if (lineGraphs[i] is Line3Graph line3Graph)
+                        strCsv += string.Format(",{0:" + ((Graphable)lineGraphs[i]).StringFormat.Replace("N", "F") + "}", line3Graph.Values[j].z);
                     if (lineGraphs[i] is MetaLineGraph metaLineGraph)
                     {
                         for (int m = 0; m <= metaLineGraph.MetaFieldCount; m++)
@@ -1108,10 +1088,76 @@ namespace Graphing
                 }
                 try
                 {
-                    System.IO.File.AppendAllText(fullFilePath, strCsv + "\r\n");
+                    System.IO.File.AppendAllText(path, strCsv + "\r\n");
                 }
                 catch (Exception) { }
             }
+#if OUTSIDE_UNITY
+            static
+#endif
+            float YValue(ILineGraph iLineGraph, int index)
+            {
+                if (iLineGraph is LineGraph lineGraph)
+                    return lineGraph.Values[index].y;
+                else if (iLineGraph is Line3Graph line3Graph)
+                    return line3Graph.Values[index].y;
+                throw new InvalidCastException();
+            }
+        }
+
+        private static bool IsCombinableLineGraph(IGraphable graph)
+            => graph is LineGraph || graph is Line3Graph;
+        private static IEnumerable<float> XValues(IGraphable graphable)
+        {
+            if (graphable is LineGraph lineGraph)
+                return lineGraph.Values.Select(v => v.x);
+            else if (graphable is Line3Graph line3Graph)
+                return line3Graph.Values.Select(v => v.x);
+            else
+                return null;
+        }
+        private static bool CanCombineLineGraphs(IEnumerable graphs)
+        {
+            bool moreThanOne = false;
+            IEnumerator<float> basis = null;
+            foreach (IGraphable graph in graphs)
+            {
+                if (basis == null)
+                {
+                    IEnumerable<float> basisValues = XValues(graph);
+                    if (basis == null)
+                        return false;
+                    if (basisValues.Any())
+                        basis = basisValues.GetEnumerator();
+                    continue;
+                }
+                IEnumerable<float> values = XValues(graph);
+                // A null value indicates it's not a compatible graph.
+                if (values == null)
+                    return false;
+                // A zero-length value set is ignored.
+                if (!values.Any())
+                    continue;
+                IEnumerator<float> test = values.GetEnumerator();
+
+                while (true)
+                {
+                    bool testNext = test.MoveNext();
+                    bool baseNext = basis.MoveNext();
+                    // Make sure they both expire at the same time.
+                    // I.e. are the same length.
+                    if (testNext != baseNext)
+                        return false;
+                    // Break if a MoveNext was false.
+                    if (!testNext)
+                        break;
+                    // Compare the values.
+                    if (test.Current != basis.Current)
+                        return false;
+                }
+                moreThanOne = true;
+            }
+            return true && moreThanOne;
         }
     }
 

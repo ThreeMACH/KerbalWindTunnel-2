@@ -50,8 +50,7 @@ namespace Graphing
         public static float CMaxSelector(GraphDrawer g) => (g.Graph as IColorGraph)?.CMax ?? (g.Graph as IGraphable3)?.ZMax ?? float.NaN;
         public static bool DepthPredicate(GraphDrawer g) => g.Graph is IGraphable3;
         public static bool ColorPredicate(GraphDrawer g) => g.Graph is IColorGraph;
-        public static bool CollectionPredicate(GraphDrawer g) => g.Graph is GraphableCollection;
-        public static bool VisiblePredicate(GraphDrawer g) => g.Graph.Visible;
+        public static bool VisiblePredicate(GraphDrawer g) => Graphable.VisiblePredicate(g.graph);
 
         private (Func<GraphDrawer, float> min, Func<GraphDrawer, float> max) boundSelector = (XMinSelector, XMaxSelector);
         private IEnumerable<GraphDrawer> GraphDrawersAffectingBounds
