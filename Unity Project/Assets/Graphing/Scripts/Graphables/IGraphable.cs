@@ -93,6 +93,18 @@ namespace Graphing
         /// </summary>
         /// <param name="path">The path to the file.</param>
         void WriteToFileCSV(string path);
+        /// <summary>
+        /// Outputs the object's values to a spreadsheet file.
+        /// </summary>
+        /// <param name="path">The path to the file.</param>
+        /// <param name="worksheet">Optional sheet name (defaults to <see cref="SpreadsheetLight.SLDocument.DefaultFirstSheetName"/></param>
+        void WriteToFileXLS(string path, string worksheet = "");
+        /// <summary>
+        /// Outputs the object's values to a spreadsheet object. This does not perform file IO directly; use <see cref="WriteToFileXLS(string, string)"/> instead.
+        /// </summary>
+        /// <param name="document">The <see cref="SpreadsheetLight.SLDocument"/> object to write to.</param>
+        /// <param name="worksheet">The worksheet to write to.</param>
+        void WriteToSpreadsheet(SpreadsheetLight.SLDocument document, string worksheet);
     }
 
     /// <summary>
@@ -176,6 +188,15 @@ namespace Graphing
         /// <param name="withName">When true, requests the object include its name.</param>
         /// <returns>A string representing the value.</returns>
         string GetFormattedValueAt(float x, float y, float width, float height, bool withName = false);
+
+        /// <summary>
+        /// Intended for internal use. Writes data to the current sheet.
+        /// </summary>
+        /// <param name="file">The spreadsheet file.</param>
+        /// <param name="columnOffset">An offset to column index.</param>
+        /// <param name="includeX">if set to <c>true</c> include the x value column.</param>
+        /// <returns>The number of columns written.</returns>
+        int WriteToSheet(SpreadsheetLight.SLDocument file, int columnOffset, bool includeX);
     }
 
     /// <summary>

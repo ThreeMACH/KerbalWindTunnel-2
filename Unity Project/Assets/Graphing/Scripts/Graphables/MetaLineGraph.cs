@@ -309,5 +309,21 @@ namespace Graphing
                 catch (Exception) { }
             }
         }
+
+        public override int WriteToSheet(SpreadsheetLight.SLDocument file, int columnOffset, bool includeX)
+        {
+            int baseWidth = base.WriteToSheet(file, columnOffset, includeX);
+            if (baseWidth == 0)
+                return 0;
+
+            columnOffset += baseWidth + 1;
+            for (int i = 0; i < Math.Max(MetaFields.Length, MetaUnits.Length); i++)
+                file.SetCellValue(1, i + columnOffset,
+                    FormatNameAndUnit(i < MetaFields.Length ? MetaFields[i] : "", i < MetaUnits.Length ? MetaUnits[i] : ""));
+            for (int m = 0; m < metaCount; m++)
+                for (int i = 0; i < metaData[m].Length; i++)
+                    file.SetCellValue(i + 2, m + columnOffset, metaData[m][i]);
+            return baseWidth + metaCount;
+        }
     }
 }

@@ -208,6 +208,15 @@ namespace Graphing
 
         public abstract void WriteToFileCSV(string path);
 
+        public virtual void WriteToFileXLS(string path, string worksheet)
+        {
+            SpreadsheetLight.SLDocument spreadsheet = new SpreadsheetLight.SLDocument();
+            spreadsheet.RenameWorksheet(SpreadsheetLight.SLDocument.DefaultFirstSheetName, worksheet);
+            WriteToSpreadsheet(spreadsheet, worksheet);
+            spreadsheet.SaveAs(path);
+        }
+        public abstract void WriteToSpreadsheet(SpreadsheetLight.SLDocument file, string worksheet);
+
         /// <summary>
         /// Invokes the <see cref="ValuesChanged"/> event for this object.
         /// </summary>

@@ -254,5 +254,12 @@ namespace Graphing
             // List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
             return;
         }
+
+        public override void WriteToSpreadsheet(SpreadsheetLight.SLDocument file, string worksheet)
+        {
+            // COULDDO print each contour.
+            // List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
+            return;
+        }
     }
 }

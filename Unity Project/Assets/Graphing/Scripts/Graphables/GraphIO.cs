@@ -64,8 +64,9 @@ namespace Graphing
                     if (string.IsNullOrEmpty(sheetName))
                         sheetName = graph.DisplayName;
                     if (string.IsNullOrEmpty(sheetName))
-                        sheetName = "Sheet1";
+                        sheetName = SpreadsheetLight.SLDocument.DefaultFirstSheetName;
                     sheetName = StripInvalidSheetChars(sheetName);
+                    graph.WriteToFileXLS(path, sheetName);
                     break;
                 case FileFormat.PNG:
                 case FileFormat.JPG:
@@ -218,6 +219,18 @@ namespace Graphing
                 if (invalidSheetChars.Contains(chars[i]))
                     sheetName.Remove(i, 1);
             return sheetName;
+        }
+
+        public static void SelectOrAddWorksheet(SpreadsheetLight.SLDocument file, string worksheet)
+        {
+            if (string.IsNullOrEmpty(worksheet))
+            {
+                Debug.LogError("The resulting sheet name was empty");
+                SelectOrAddWorksheet(file, SpreadsheetLight.SLDocument.DefaultFirstSheetName);
+            }
+            if (!file.SelectWorksheet(worksheet))
+                if (!file.AddWorksheet(worksheet))
+                    throw new Exception($"Could not create worksheet \"{worksheet}\".");
         }
     }
 }

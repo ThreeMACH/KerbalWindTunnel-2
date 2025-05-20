@@ -1159,6 +1159,72 @@ namespace Graphing
             }
             return true && moreThanOne;
         }
+
+        public void WriteToSpreadsheet(SpreadsheetLight.SLDocument file, string worksheet)
+            => WriteToSpreadsheet(file, worksheet, true);
+        public void WriteToSpreadsheet(SpreadsheetLight.SLDocument file, string worksheet, bool limitToVisible)
+        {
+            IEnumerable<IGraphable> graphsToWrite = Flatten();
+            if (limitToVisible)
+                graphsToWrite = graphsToWrite.Where(Graphable.VisiblePredicate);
+
+            HashSet<string> names = new HashSet<string>();
+
+            if (CanCombineLineGraphs(graphsToWrite.Where(IsCombinableLineGraph)))
+            {
+                if (string.IsNullOrEmpty(worksheet))
+                {
+                    if (string.IsNullOrEmpty(DisplayName))
+                        worksheet = SpreadsheetLight.SLDocument.DefaultFirstSheetName;
+                    else
+                        worksheet = GraphIO.StripInvalidSheetChars(DisplayName);
+                }
+                WriteLineGraphsToCombinedXLS(file, worksheet, graphsToWrite.Where(IsCombinableLineGraph).Cast<ILineGraph>());
+                names.Add(worksheet);
+
+                graphsToWrite = graphsToWrite.Where(g => !IsCombinableLineGraph(g));
+            }
+            else
+            {
+                graphsToWrite = graphs;
+                if (limitToVisible)
+                    graphsToWrite = graphsToWrite.Where(Graphable.VisiblePredicate);
+            }
+
+            foreach (IGraphable graph in graphsToWrite)
+            {
+                string sheetName = GraphIO.StripInvalidSheetChars(graph.DisplayName.Replace("/", "-").Replace("\\", "-"));
+                if (string.IsNullOrEmpty(sheetName))
+                    sheetName = graph.GetType().Name;
+                if (names.Contains(sheetName))
+                {
+                    int i = 1;
+                    while (names.Contains(string.Concat(sheetName, i.ToString())))
+                        i++;
+                    sheetName = string.Concat(sheetName, i.ToString());
+                }
+                names.Add(sheetName);
+                if (!string.IsNullOrEmpty(worksheet))
+                    sheetName = string.Join("_",worksheet, sheetName);
+                graph.WriteToSpreadsheet(file, sheetName);
+            }
+        }
+
+        protected void WriteLineGraphsToCombinedXLS(SpreadsheetLight.SLDocument file, string worksheet, IEnumerable<ILineGraph> lineGraphs)
+        {
+            GraphIO.SelectOrAddWorksheet(file, worksheet);
+            int columnOffset = 0;
+            foreach (ILineGraph lineGraph in lineGraphs)
+                columnOffset += lineGraph.WriteToSheet(file, columnOffset, columnOffset == 0);
+        }
+
+        public virtual void WriteToFileXLS(string path, string _)
+        {
+            SpreadsheetLight.SLDocument spreadsheet = new SpreadsheetLight.SLDocument();
+            WriteToSpreadsheet(spreadsheet, null);
+            spreadsheet.DeleteWorksheet(SpreadsheetLight.SLDocument.DefaultFirstSheetName);
+            spreadsheet.SaveAs(path);
+        }
     }
 
     /// <summary>

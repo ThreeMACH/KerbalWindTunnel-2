@@ -344,5 +344,30 @@ namespace Graphing
                 catch (Exception) { }
             }
         }
+
+        public override void WriteToSpreadsheet(SpreadsheetLight.SLDocument file, string worksheet)
+        {
+            if (_values.Length == 0)
+                return;
+            GraphIO.SelectOrAddWorksheet(file, worksheet);
+            WriteToSheet(file, 0, true);
+        }
+
+        public virtual int WriteToSheet(SpreadsheetLight.SLDocument file, int columnOffset, bool includeX)
+        {
+            if (_values.Length == 0)
+                return 0;
+
+            if (includeX)
+                file.SetCellValue(1, 1 + columnOffset, FormatNameAndUnit(XName, XUnit));
+            file.SetCellValue(1, 2 + columnOffset, FormatNameAndUnit(YName, YUnit));
+            for (int i = 0; i < _values.Length; i++)
+            {
+                if (includeX)
+                    file.SetCellValue(i + 2, 1 + columnOffset, _values[i].x);
+                file.SetCellValue(i + 2, 2 + columnOffset, _values[i].y);
+            }
+            return includeX ? 2 : 1;
+        }
     }
 }

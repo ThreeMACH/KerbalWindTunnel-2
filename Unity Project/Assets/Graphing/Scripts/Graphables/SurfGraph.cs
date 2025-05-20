@@ -339,5 +339,48 @@ namespace Graphing
             }
             catch (Exception) { }
         }
+        
+        public override void WriteToSpreadsheet(SpreadsheetLight.SLDocument file, string worksheet)
+        {
+            const int rowOffset = 0 + 1, columnOffset = 2 + 1;
+            GraphIO.SelectOrAddWorksheet(file, worksheet);
+
+            int height = _values.GetUpperBound(1);
+            int width = _values.GetUpperBound(0);
+            if (height < 0 || width < 0)
+                return;
+            float xStep = (XMax - XMin) / width;
+            float yStep = (YMax - YMin) / height;
+
+            // Write data
+            for (int x = 0; x <= width; x++)
+            {
+                for (int y = 0; y <= height; y++)
+                {
+                    file.SetCellValue(rowOffset + (height - y), columnOffset + x, _values[x, y]);
+                }
+            }
+
+            // X name and unit
+            file.SetCellValue(rowOffset + height + 2, columnOffset, FormatNameAndUnit(XName, XUnit));
+#if OUTSIDE_UNITY
+            file.MergeWorksheetCells(rowOffset + height + 2, columnOffset, rowOffset + height + 2, columnOffset + width);
+#endif
+            // X values
+            for (int x = 0; x <= width; x++)
+                file.SetCellValue(rowOffset + height + 1, columnOffset + x, xStep * x + XMin);
+
+            // Y name and unit
+            file.SetCellValue(rowOffset, columnOffset - 2, FormatNameAndUnit(YName, YUnit));
+#if OUTSIDE_UNITY
+            file.MergeWorksheetCells(rowOffset, columnOffset - 2, rowOffset + height, columnOffset - 2);
+#endif
+            // Y values
+            for (int y = 0; y <= height; y++)
+                file.SetCellValue(rowOffset + (height - y), columnOffset - 1, yStep * y + YMin);
+
+            // Z name and unit
+            file.SetCellValue(1, 1, FormatNameAndUnit(ZName, ZUnit));
+        }
     }
 }
