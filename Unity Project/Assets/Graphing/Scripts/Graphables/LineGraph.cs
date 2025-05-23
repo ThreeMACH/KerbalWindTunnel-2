@@ -34,7 +34,7 @@ namespace Graphing
         protected bool sorted = false;
         protected bool equalSteps = false;
 
-        private LineGraph() { UseSingleColor = true; }
+        private LineGraph() { _color = Color.black; UseSingleColor = true; }
 
         /// <summary>
         /// Constructs a new <see cref="LineGraph"/> with the provided y-values at evenly spaced points.

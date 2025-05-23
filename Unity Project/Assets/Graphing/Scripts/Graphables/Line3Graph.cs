@@ -31,7 +31,7 @@ namespace Graphing
 
         protected override float DefaultColorFunc(Vector3 value) => 0;
 
-        private Line3Graph() { UseSingleColor = true; }
+        private Line3Graph() { _color = Color.black; UseSingleColor = true; }
 
         /// <summary>
         /// Constructs a new <see cref="Line3Graph"/> with the provided points.

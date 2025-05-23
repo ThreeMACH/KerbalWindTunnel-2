@@ -144,7 +144,7 @@ namespace Graphing
                     OnDisplayChanged(new ColorChangedEventArgs(ColorScheme, ColorFunc, UseSingleColor, color));
             }
         }
-        private Color _color = Color.white;
+        protected Color _color = Color.white;
 
         public static bool ValidFloat(float value) => !(float.IsNaN(value) || float.IsInfinity(value));
 
