@@ -144,7 +144,52 @@ namespace KerbalWindTunnel
             return vesselForward * Mathf.Cos(-AoA) + vesselUp * Mathf.Sin(-AoA);
         }
 
-        //public abstract AeroPredictor Clone();
+        public void WriteToFile(string directory, string filename, Graphing.GraphIO.FileFormat format)
+        {
+            if ((format & Graphing.GraphIO.FileFormat.Image) > 0)
+                throw new ArgumentException($"Format is not supported. {format}");
+
+            if (!System.IO.Directory.Exists(directory))
+                System.IO.Directory.CreateDirectory(directory);
+
+            string path = Graphing.GraphIO.ValidateFilePath(directory, filename, format);
+
+            try
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+            catch (Exception ex) { Debug.Log($"Unable to delete file:{ex.Message}"); }
+
+            System.Data.DataSet output = WriteToDataSet();
+
+            if (output == null)
+            {
+                Debug.LogError($"This AeroPredictor does not implement an output method. {this.GetType()}");
+                return;
+            }
+
+            if ((format & Graphing.GraphIO.FileFormat.Excel) > 0)
+                WriteToFileXLS(path, output);
+            else if (format == Graphing.GraphIO.FileFormat.CSV)
+                WriteToFileCSV(path, output);
+            else
+            {
+                output.Dispose();
+                throw new NotImplementedException($"The selected format is not supported: {format}");
+            }
+            output.Dispose();
+        }
+        protected virtual System.Data.DataSet WriteToDataSet() => null;
+        protected virtual void WriteToFileXLS(string path, System.Data.DataSet data)
+        {
+            MiniExcelLibs.MiniExcel.SaveAs(path, data, false, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
+        }
+        protected virtual void WriteToFileCSV(string path, System.Data.DataSet data)
+        {
+            foreach (System.Data.DataTable table in data.Tables)
+                MiniExcelLibs.MiniExcel.SaveAs(path.Insert(path.Length - 4, $"_{table.TableName}"), table, printHeader: false, excelType: MiniExcelLibs.ExcelType.CSV, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true });
+        }
 
         public readonly struct Conditions
         {

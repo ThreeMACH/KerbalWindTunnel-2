@@ -270,11 +270,11 @@ namespace KerbalWindTunnel.VesselCache
                 magnitude += groupMagnitude;
             }
             // These lists could be combined. But separate is easier for debugging.
-            foreach (var (liftMachCurve, liftCurve) in surfaceDragP)
+            foreach (var (dragMachCurve, dragCurve) in surfaceDragP)
             {
                 float groupMagnitude;
-                groupMagnitude = liftCurve.EvaluateThreadSafe(AoA);
-                groupMagnitude *= liftMachCurve.EvaluateThreadSafe(conditions.mach);
+                groupMagnitude = dragCurve.EvaluateThreadSafe(AoA);
+                groupMagnitude *= dragMachCurve.EvaluateThreadSafe(conditions.mach);
                 magnitude += groupMagnitude;
             }
 
@@ -452,6 +452,55 @@ namespace KerbalWindTunnel.VesselCache
         {
             WaitUntilAoACharacterized();
             return aoaMax.EvaluateThreadSafe(conditions.mach);
+        }
+
+        protected override System.Data.DataSet WriteToDataSet()
+        {
+            System.Data.DataSet data = new System.Data.DataSet();
+
+            bodyDrag.WriteToDataSet(data, "bodyDrag_");
+            //ctrlDeltaDragNeg.WriteToDataSet(data, "ctrlNeg_");
+            //ctrlDeltaDragPos.WriteToDataSet(data, "ctrlPos_");
+
+            static void WriteCurveSet(System.Data.DataSet data, List<(FloatCurve machCurve, FloatCurve forceCurve)> curveSet, string name)
+            {
+                bool multiple = curveSet.Count > 1;
+                int setIndex = 0;
+                foreach (var (machCurve, forceCurve) in curveSet)
+                {
+                    string localName = multiple ? $"{name}{setIndex}" : name;
+                    System.Data.DataTable curveTable = machCurve.WriteToDataTable();
+                    curveTable.TableName = string.Join("_", localName, "MFactor");
+                    data.Tables.Add(curveTable);
+                    curveTable = forceCurve.WriteToDataTable();
+                    curveTable.TableName = string.Join("_", localName, "Coef");
+                    data.Tables.Add(curveTable);
+                }
+            }
+
+            WriteCurveSet(data, surfaceDragP, "surfDrag");
+            WriteCurveSet(data, surfaceDragI, "induDrag");
+            WriteCurveSet(data, bodyLift, "bodyLift");
+            WriteCurveSet(data, surfaceLift, "surfLift");
+            // TODO: induDrag_MFactor = surfLigt_MFactor and one of them should be deleted.
+
+
+            return data;
+        }
+
+        protected override void WriteToFileXLS(string path, System.Data.DataSet data)
+        {
+            for (int i = 0; i < Math.Min(data.Tables.Count, 5); i++)
+                MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: false, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
+            for (int i = 5; i < data.Tables.Count; i++)
+                    MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None });
+        }
+        protected override void WriteToFileCSV(string path, System.Data.DataSet data)
+        {
+            for (int i = 0; i < Math.Min(data.Tables.Count, 5); i++)
+                MiniExcelLibs.MiniExcel.SaveAs(path.Insert(path.Length - 4, $"_{data.Tables[i].TableName}"), data.Tables[i], excelType: MiniExcelLibs.ExcelType.CSV, printHeader: false, sheetName: data.Tables[0].TableName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true }, overwriteFile: true);
+            for (int i = 5; i < data.Tables.Count; i++)
+                MiniExcelLibs.MiniExcel.SaveAs(path.Insert(path.Length - 4, $"_{data.Tables[i].TableName}"), data.Tables[i], excelType: MiniExcelLibs.ExcelType.CSV, printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true }, overwriteFile: true);
         }
     }
 }

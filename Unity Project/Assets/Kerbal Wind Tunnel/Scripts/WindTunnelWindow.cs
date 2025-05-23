@@ -95,6 +95,7 @@ namespace KerbalWindTunnel
         public static WindTunnelWindow Instance { get; private set; }
 
         private AeroPredictor vessel = null;
+        public AeroPredictor Vessel => vessel;
 
         // Only used externally. Rolling up is implemented by the prefab.
         public bool Minimized

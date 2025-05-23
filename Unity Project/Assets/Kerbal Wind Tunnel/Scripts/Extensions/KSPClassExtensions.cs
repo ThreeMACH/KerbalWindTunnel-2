@@ -220,6 +220,70 @@ namespace KerbalWindTunnel.Extensions
             return result;
         }
 
+        public static System.Data.DataTable WriteToDataTable(this FloatCurve curve)
+        {
+            System.Data.DataTable result = new System.Data.DataTable();
+            result.Columns.Add("time", typeof(float));
+            result.Columns.Add("value", typeof(float));
+            result.Columns.Add("inTangent", typeof(float));
+            result.Columns.Add("outTangent", typeof(float));
+            foreach (Keyframe keyframe in curve.Curve.keys)
+            {
+                System.Data.DataRow row = result.Rows.Add();
+                row[0] = keyframe.time;
+                row[1] = keyframe.value;
+                row[2] = keyframe.inTangent;
+                row[3] = keyframe.outTangent;
+            }
+            return result;
+        }
+
+        public static System.Data.DataSet WriteToDataSet(this FloatCurve2 curve, System.Data.DataSet dataSet = null, string prefix = "", bool ignoreCross = true)
+        {
+            if (dataSet == null)
+                dataSet = new System.Data.DataSet();
+
+            WriteToDataTable(curve, k => k.value, dataSet.Tables.Add($"{prefix}values"));
+            WriteToDataTable(curve, k => k.dDx_in, dataSet.Tables.Add($"{prefix}dDx_in"));
+            WriteToDataTable(curve, k => k.dDx_out, dataSet.Tables.Add($"{prefix}dDx_out"));
+            WriteToDataTable(curve, k => k.dDy_in, dataSet.Tables.Add($"{prefix}dDy_in"));
+            WriteToDataTable(curve, k => k.dDy_out, dataSet.Tables.Add($"{prefix}dDy_out"));
+            if (ignoreCross)
+                return dataSet;
+
+            WriteToDataTable(curve, k => k.ddDx_in_Dy_in, dataSet.Tables.Add($"{prefix}ddDx_in_Dy_in"));
+            WriteToDataTable(curve, k => k.ddDx_out_Dy_in, dataSet.Tables.Add($"{prefix}ddDx_out_Dy_in"));
+            WriteToDataTable(curve, k => k.ddDx_in_Dy_out, dataSet.Tables.Add($"{prefix}ddDx_in_Dy_out"));
+            WriteToDataTable(curve, k => k.ddDx_out_Dy_out, dataSet.Tables.Add($"{prefix}ddDx_out_Dy_out"));
+
+            return dataSet;
+
+#if OUTSIDE_UNITY
+            static
+#endif
+            void WriteToDataTable(FloatCurve2 curve, Func<FloatCurve2.Keyframe2, float> selector, System.Data.DataTable table)
+            {
+                table.Columns.Add("x", typeof(float));
+                foreach (float _ in curve.xKeys)
+                    table.Columns.Add().DataType = typeof(float);
+                System.Data.DataRow row = table.Rows.Add();
+
+                int upperBoundX = curve.GetUpperBound(0);
+                int upperBoundY = curve.GetUpperBound(1);
+
+                for (int x = 0; x <= upperBoundX; x++)
+                    row[x + 1] = curve.xKeys[x];
+
+                for (int y = 0; y <= upperBoundY; y++)
+                {
+                    row = table.Rows.Add();
+                    row[0] = curve.yKeys[y];
+                    for (int x = 0; x <= upperBoundX; x++)
+                        row[x + 1] = selector(curve.values[x, y]);
+                }
+            }
+        }
+
         public static Vector3 ProjectOnPlaneSafe(Vector3 vector, Vector3 planeNormal)
         {
             return vector - Vector3.Dot(vector, planeNormal) / planeNormal.sqrMagnitude * planeNormal;

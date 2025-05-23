@@ -291,5 +291,54 @@ namespace KerbalWindTunnel.VesselCache
             => maxAoA.Evaluate(conditions.mach);
 
         public bool DirectAoAInitialized { get; protected set; } = false;
+
+        protected override System.Data.DataSet WriteToDataSet()
+        {
+            System.Data.DataSet data = new System.Data.DataSet();
+            System.Data.DataTable drag = data.Tables.Add("Drag");
+            System.Data.DataTable lift = data.Tables.Add("Lift");
+
+            drag.Columns.Add("AoA", typeof(float));
+            lift.Columns.Add("AoA", typeof(float));
+
+            foreach (float _ in AoAMachs)
+            {
+                drag.Columns.Add().DataType = typeof(float);
+                lift.Columns.Add().DataType = typeof(float);
+            }
+            drag.Rows.Add();
+            lift.Rows.Add();
+            int m = 1;
+            foreach (float mach in AoAMachs)
+            {
+                drag.Rows[0][m] = lift.Rows[0][m] = mach;
+                m++;
+            }
+
+            Conditions baseConditions = new Conditions(WindTunnelWindow.Instance.CelestialBody ?? Planetarium.fetch.Home, 0, 0);
+
+            for (int i = -180; i <= 180; i += 5)
+            {
+                System.Data.DataRow dragRow = drag.Rows.Add();
+                System.Data.DataRow liftRow = lift.Rows.Add();
+                float aoa = i * Mathf.Deg2Rad;
+                dragRow[0] = liftRow[0] = aoa;
+                m = 1;
+                foreach (float mach in AoAMachs)
+                {
+                    float speed = baseConditions.speedOfSound * mach;
+                    if (speed == 0)
+                        speed = 0.001f;
+                    Conditions conditions = new Conditions(baseConditions.body, speed, 0);
+                    Vector3 force = GetAeroForce(conditions, aoa);
+                    dragRow[m] = GetDragForceComponent(force, aoa) / conditions.Q;
+                    liftRow[m] = GetLiftForceComponent(force, aoa) / conditions.Q;
+                    m++;
+                }
+            }
+            data.AcceptChanges();
+
+            return data;
+        }
     }
 }
