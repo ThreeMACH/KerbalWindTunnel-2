@@ -12,13 +12,16 @@ namespace Graphing
         public static readonly char[] invalidSheetChars = new char[] { '[', ']', '*', '/', '\\', '?', ':' };
         public enum FileFormat
         {
-            CSV = 0,
+            CSV = 1,
             [Obsolete]
-            XLS = 1,
-            XLSX = 2,
-            PNG = 4,
-            JPG = 8,
-            Image = PNG | JPG
+            XLS = 2,
+            XLSX = 4,
+            PNG = 8,
+            JPG = 16,
+            Image = PNG | JPG,
+#pragma warning disable CS0612 // Type or member is obsolete
+            Excel = XLS | XLSX
+#pragma warning restore CS0612 // Type or member is obsolete
         }
 
         public static readonly MiniExcelLibs.IConfiguration DefaultConfig =
@@ -207,7 +210,7 @@ namespace Graphing
             UnityEngine.Object.Destroy(texture);
         }
 
-        private static string ValidateFilePath(string directory, string filename, FileFormat format)
+        public static string ValidateFilePath(string directory, string filename, FileFormat format)
         {
             if (string.IsNullOrEmpty(directory))
                 throw new ArgumentNullException(nameof(directory));
