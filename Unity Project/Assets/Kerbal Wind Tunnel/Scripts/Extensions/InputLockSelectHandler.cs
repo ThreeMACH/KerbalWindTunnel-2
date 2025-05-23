@@ -16,10 +16,23 @@ namespace KerbalWindTunnel.Extensions
         [SerializeField]
         private ulong _controlTypesSerialized;
 
+        private UnityEngine.Events.UnityEvent<string> endEvent;
+        private bool locked = false;
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
         {
-            GetComponent<UI_Tools.Universal_Text.UT_InputField>().OnEndEdit.AddListener(Unlock);
+            endEvent = GetComponent<UI_Tools.Universal_Text.UT_InputField>()?.OnEndEdit;
+            if (endEvent == null)
+                endEvent = GetComponent<TMPro.TMP_InputField>()?.onEndEdit;
+            if (endEvent == null)
+                endEvent = GetComponent<UnityEngine.UI.InputField>()?.onEndEdit;
+            if (endEvent == null)
+            {
+                Destroy(this);
+                return;
+            }
+            endEvent.AddListener(Unlock);
         }
 
         public void Setup(string lockID, ControlTypes controlTypes = ControlTypes.KEYBOARDINPUT)
@@ -32,18 +45,24 @@ namespace KerbalWindTunnel.Extensions
             => Lock();
         public void Lock()
         {
+            if (locked)
+                return;
             if (LockID == null)
                 throw new NullReferenceException("LockID is null");
-            InputLockManager.SetControlLock(_controlTypes, "KerbalWindTunnel");
+            InputLockManager.SetControlLock(_controlTypes, LockID);
+            locked = true;
         }
 
         public void OnDeselect(BaseEventData eventData)
             => Unlock();
         public void Unlock()
         {
+            if (!locked)
+                return;
             if (LockID == null)
                 throw new NullReferenceException("lockID is null");
-            InputLockManager.RemoveControlLock("KerbalWindTunnel");
+            InputLockManager.RemoveControlLock(LockID);
+            locked = false;
         }
         public void Unlock(string _) => Unlock();
 
@@ -55,6 +74,13 @@ namespace KerbalWindTunnel.Extensions
         public void OnAfterDeserialize()
         {
             _controlTypes = (ControlTypes)_controlTypesSerialized;
+        }
+
+        private void OnDestroy()
+        {
+            if (locked)
+                Unlock();
+            endEvent?.RemoveListener(Unlock);
         }
     }
 }
