@@ -14,7 +14,7 @@ namespace KerbalWindTunnel.DataGenerators
     public class EnvelopeSurf
     {
         private static readonly (float speed, float altitude) ascentOrigin = (30, 0);
-        public readonly GraphableCollection graphables = new GraphableCollection3() { Name = "envelopeCollection" };
+        public readonly GraphableCollection graphables = new GraphableCollection3() { Name = "envelope" };
         public EnvelopePoint[,] EnvelopePoints { get; private set; } = null;
         private float left, right, bottom, top;
         private static readonly ConcurrentDictionary<SurfCoords, EnvelopePoint> cache = new ConcurrentDictionary<SurfCoords, EnvelopePoint>();

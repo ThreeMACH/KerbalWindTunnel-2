@@ -12,7 +12,7 @@ namespace KerbalWindTunnel.DataGenerators
     using LineGraphDefinition = LineGraphDefinition<EnvelopePoint>;
     public class VelCurve
     {
-        public readonly GraphableCollection graphables = new GraphableCollection() { Name = "velCollection" };
+        public readonly GraphableCollection graphables = new GraphableCollection() { Name = "speed" };
         public EnvelopePoint[] VelPoints { get; private set; }
         private static readonly ConcurrentDictionary<(int altitude, int velocity), EnvelopePoint> cache = new ConcurrentDictionary<(int, int), EnvelopePoint>();
 
