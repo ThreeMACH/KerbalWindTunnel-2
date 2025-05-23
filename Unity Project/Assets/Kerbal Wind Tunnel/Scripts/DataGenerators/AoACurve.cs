@@ -30,11 +30,15 @@ namespace KerbalWindTunnel.DataGenerators
             new GroupedGraphDefinition<LineGraphDefinition> ("pitchInput",
                 new LineGraphDefinition("pitchInput_wet", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input (Wet)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
                 new LineGraphDefinition("pitchInput_dry", ToVector(p => p.pitchInput_dry * 100)) { DisplayName = "Pitch Input (Dry)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = dryColor }
-                ) {DisplayName = "Pitch Input", YName = "Pitch Input", YUnit = "%" },
+                ) {DisplayName = "Pitch Input", YUnit = "%" },
+            /*new GroupedGraphDefinition<LineGraphDefinition> ("staticMargin",
+                new LineGraphDefinition("staticMargin_wet", ToVector(p => p.staticMargin * 100)) { DisplayName = "Static Margin (Wet)", YName = "Static Margin", YUnit = "% MAC", StringFormat = "F2", Color = defaultColor },
+                new LineGraphDefinition("staticMargin_wet", ToVector(p => p.staticMargin_dry * 100)) { DisplayName = "Static Margin (Dry)", YName = "Static Margin", YUnit = "% MAC", StringFormat = "F2", Color = dryColor }
+                ) { DisplayName = "Static Margin", YUnit = "% MAC" },*/
             new GroupedGraphDefinition<LineGraphDefinition> ("torque",
                 new LineGraphDefinition("torque_wet", ToVector(p => p.torque)) { DisplayName = "Torque (Wet)", YName = "Torque", YUnit = "kNm", StringFormat = "N0", Color = defaultColor },
                 new LineGraphDefinition("torque_dry", ToVector(p => p.torque_dry)) { DisplayName = "Torque (Dry)", YName = "Torque", YUnit = "kNm", StringFormat = "N0", Color = dryColor }
-                ) { DisplayName = "Torque", YName = "Torque", YUnit = "kNm" }
+                ) { DisplayName = "Torque", YUnit = "kNm" }
         };
 
         public void SetCoefficientMode(bool useCoefficients)
@@ -198,6 +202,8 @@ namespace KerbalWindTunnel.DataGenerators
             public readonly float mach;
             public readonly float pitchInput;
             public readonly float pitchInput_dry;
+            public readonly float staticMargin;
+            public readonly float staticMargin_dry;
             public readonly float torque;
             public readonly float torque_dry;
             public readonly bool completed;
@@ -226,6 +232,8 @@ namespace KerbalWindTunnel.DataGenerators
                 else
                     dLift = (vessel.GetLiftForceMagnitude(conditions, AoA + WindTunnelWindow.AoAdelta, pitchInput) - Lift) /
                         (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
+                /*staticMargin = vessel.GetStaticMargin(conditions, AoA, pitchInput, dLift: dLift, baselineTorque: torque);
+                staticMargin_dry = vessel.GetStaticMargin(conditions, AoA, pitchInput, dryTorque: true, dLift: dLift, baselineTorque: torque_dry);*/
                 wingArea = vessel.Area;
                 completed = true;
             }

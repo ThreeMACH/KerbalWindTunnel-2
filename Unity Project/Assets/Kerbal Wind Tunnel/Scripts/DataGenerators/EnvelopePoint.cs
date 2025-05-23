@@ -7,7 +7,7 @@ namespace KerbalWindTunnel.DataGenerators
     public readonly struct EnvelopePoint
     {
         private const float minSpeed = 0.001f;
-        private static readonly Unity.Profiling.ProfilerMarker ctorMarker = new Unity.Profiling.ProfilerMarker("EnvelopePoint..ctor");
+        private static readonly Unity.Profiling.ProfilerMarker s_ctorMarker = new Unity.Profiling.ProfilerMarker("EnvelopePoint..ctor");
         
         public readonly float AoA_level;
         public readonly float AoA_max;
@@ -22,8 +22,8 @@ namespace KerbalWindTunnel.DataGenerators
 
         public readonly float pitchInput;
         //public readonly float stabilityRange;
-        //public readonly float stabilityScore;
-        //public readonly float stabilityDerivative;
+        public readonly float staticMargin;
+        public readonly float dTorque;
 
         public readonly float fuelBurnRate;
 
@@ -32,7 +32,7 @@ namespace KerbalWindTunnel.DataGenerators
         public readonly float mach;
         public readonly float dynamicPressure;
 
-        private readonly float invMass;
+        public readonly float invMass;
         private readonly float invWingArea;
 
         public float Thrust_Excess { get => thrust_available - thrust_required; }
@@ -47,7 +47,7 @@ namespace KerbalWindTunnel.DataGenerators
 
         public EnvelopePoint(AeroPredictor vessel, CelestialBody body, float altitude, float speed, float AoA_guess = float.NaN, float maxA_guess = float.NaN, float pitchI_guess = float.NaN)
         {
-            ctorMarker.Begin();
+            s_ctorMarker.Begin();
             this.altitude = altitude;
             this.speed = speed = Math.Max(speed, minSpeed);
             invMass = 1 / vessel.Mass;
@@ -77,7 +77,8 @@ namespace KerbalWindTunnel.DataGenerators
 
             thrust_available = AeroPredictor.GetUsefulThrustMagnitude(thrustForce);
 
-            Vector3 force = vessel.GetAeroForce(conditions, AoA_level, pitchInput);
+            //Vector3 force = vessel.GetAeroForce(conditions, AoA_level, pitchInput);
+            vessel.GetAeroCombined(conditions, AoA_level, pitchInput, out Vector3 force, out Vector3 torque);
             Vector3 aeroforce = AeroPredictor.ToFlightFrame(force, AoA_level);
             drag = -aeroforce.z;
             Vector2 flightFrameThrust = AeroPredictor.ToFlightFrame(thrustForce, AoA_level);
@@ -97,13 +98,13 @@ namespace KerbalWindTunnel.DataGenerators
                 else
                     dLift = (vessel.GetLiftForceMagnitude(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput) - lift) /
                         (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
-            //stabilityDerivative = (vessel.GetAeroTorque(conditions, AoA_level + WindTunnelWindow.AoAdelta, pitchInput).x - torque.x)
-            //    / (WindTunnelWindow.AoAdelta * Mathf.Rad2Deg);
-            //GetStabilityValues(vessel, conditions, AoA_level, out stabilityRange, out stabilityScore);
-            ctorMarker.End();
+            /*staticMargin = vessel.GetStaticMargin(conditions, AoA_level, pitchInput, dLift: dLift, baselineTorque: torque.x);
+            dTorque = Coefficient(staticMargin * vessel.MAC * dLift);*/
+            //GetStabilityValues(vessel, conditions, AoA_level, out stabilityRange);
+            s_ctorMarker.End();
         }
 
-        private static void GetStabilityValues(AeroPredictor vessel, AeroPredictor.Conditions conditions, float AoA_centre, out float stabilityRange, out float stabilityScore)
+        private static void GetStabilityValues(AeroPredictor vessel, AeroPredictor.Conditions conditions, float AoA_centre, out float stabilityRange)
         {
             const int step = 5;
             const int range = 90;
@@ -134,7 +135,6 @@ namespace KerbalWindTunnel.DataGenerators
                 if (eq == 0 || eq == 2 * alphaSteps)
                 {
                     stabilityRange = 0;
-                    stabilityScore = 0;
                     return;
                 }
                 if (dir < 0)
@@ -155,11 +155,6 @@ namespace KerbalWindTunnel.DataGenerators
             float min = (Mathf.InverseLerp(torques[start], torques[start + 1], 0) + start) * step;
             float max = (-Mathf.InverseLerp(torques[end], torques[end - 1], 0) + end) * step;
             stabilityRange = max - min;
-            stabilityScore = 0;
-            for (int i = start; i < end; i++)
-            {
-                stabilityScore += (torques[i] + torques[i + 1]) / 2 * step;
-            }
         }
 
         public override string ToString()

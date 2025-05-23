@@ -27,8 +27,9 @@ namespace KerbalWindTunnel.DataGenerators
         {
             new SurfGraphDefinition("thrust_excess", p => p.Thrust_Excess) { DisplayName = "Excess Thrust", ZUnit = "kN", StringFormat = "N0", CMin = 0 },
             new SurfGraphDefinition("thrust_available", p => p.thrust_available) { DisplayName = "Thrust Available", ZUnit = "kN", StringFormat = "N0", CMin = 0 },
-            new SurfGraphDefinition("power_excess", p => p.Specific(p.Power_Excess)) {DisplayName = "Specific Excess Power", ZUnit = "m/s", StringFormat = "N0", CMin = 0 },
-            // TODO: Angle of climb
+            new SurfGraphDefinition("power_excess", p => p.Specific(p.Power_Excess)) { DisplayName = "Specific Excess Power", ZUnit = "m/s", StringFormat = "N0", CMin = 0 },
+            new SurfGraphDefinition("climbAngle", p => Mathf.Asin(Mathf.Clamp(p.Thrust_Excess * p.invMass * WindTunnelWindow.invGAccel, -1, 1)) * Mathf.Rad2Deg)
+                { DisplayName = "Max Climb Angle", ZUnit = "°", StringFormat = "F2" },
             new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad) { DisplayName = "Level AoA", ZUnit = "°", StringFormat = "F2" },
             new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2" },
             new SurfGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "Lift Slope", StringFormat = "F3" },
@@ -36,14 +37,13 @@ namespace KerbalWindTunnel.DataGenerators
             new SurfGraphDefinition("aoa_max", p => p.AoA_max * Mathf.Deg2Rad) { DisplayName = "Max Lift AoA", ZUnit = "°", StringFormat = "F2" },
             new SurfGraphDefinition("liftMax_coefSwap", null) { DisplayName = "Max Lift" },
             new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "Pitch Input", ZUnit = "%", StringFormat = "N0" },
-            // TODO: Static margin
+            /*new SurfGraphDefinition("staticMargin", p => p.speed >= 40 ? p.staticMargin * 100 : float.NaN) { DisplayName = "Static Margin", ZUnit = "% MAC", StringFormat = "F2" },
+            new SurfGraphDefinition("stabilityDerivative", p => p.dTorque) { DisplayName = "Stability Derivative", ZUnit = "kNm/°", StringFormat = "F2" },*/
             new SurfGraphDefinition("fuel_economy", p => p.speed >= 40 ? p.fuelBurnRate / p.speed * 100 * 1000 : float.NaN) { DisplayName = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2" },
             new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3" },
             new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0, Enabled = false }
         };
-        //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Derivative", ZUnit = "kNm/deg", StringFormat = "F3", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-        //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Score", ZUnit = "kNm-deg", StringFormat = "F1", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         public readonly OutlineGraphDefinition<EnvelopePoint> envelope = new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) { DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 };
         public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", p => new Vector2(p.speed, p.altitude),
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost, p => p.time },

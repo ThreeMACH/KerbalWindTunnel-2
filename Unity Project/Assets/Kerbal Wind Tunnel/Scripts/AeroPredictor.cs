@@ -14,6 +14,7 @@ namespace KerbalWindTunnel
         public Vector3 CoM_dry;
 
         public abstract float Area { get; }
+        public virtual float MAC { get; protected set; }
 
         public virtual Func<double, double> AerodynamicObjectiveFunc(Conditions conditions, float pitchInput, int scalar = 1)
         {
@@ -68,6 +69,30 @@ namespace KerbalWindTunnel
         }
 
         public abstract Vector3 GetAeroTorque(Conditions conditions, float AoA, float pitchInput = 0, bool dryTorque = false);
+
+        public virtual float GetStaticMargin(Conditions conditions, float AoA, float pitchInput = 0, bool dryTorque = false, float dLift = float.NaN, float baselineLift = float.NaN, float baselineTorque = float.NaN)
+        {
+            const float aoaDelta = WindTunnelWindow.AoAdelta;
+            if (float.IsNaN(dLift))
+            {
+                if (this is VesselCache.AeroOptimizer.ILiftAoADerivativePredictor liftDerivativePredictor)
+                    dLift = liftDerivativePredictor.GetLiftForceMagnitudeAoADerivative(conditions, AoA, pitchInput);
+                else
+                {
+                    dLift = GetLiftForceMagnitude(conditions, AoA + aoaDelta, pitchInput);
+                    if (float.IsNaN(baselineLift))
+                        dLift -= GetLiftForceMagnitude(conditions, AoA, pitchInput);
+                    else
+                        dLift -= baselineLift;
+                }
+            }
+            float dTorque = GetAeroTorque(conditions, AoA + aoaDelta, pitchInput, dryTorque).x;
+            if (float.IsNaN(baselineTorque))
+                dTorque -= GetAeroTorque(conditions, AoA, pitchInput, dryTorque).x;
+            else
+                dTorque -= baselineTorque;
+            return (dTorque / dLift) / MAC;
+        }
         
         public virtual void GetAeroCombined(Conditions conditions, float AoA, float pitchInput, out Vector3 forces, out Vector3 torques, bool dryTorque = false)
         {

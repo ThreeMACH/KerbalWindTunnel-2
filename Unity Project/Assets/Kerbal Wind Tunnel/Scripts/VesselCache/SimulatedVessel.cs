@@ -227,6 +227,13 @@ namespace KerbalWindTunnel.VesselCache
                 ScreenMessages.PostScreenMessage("No wings found, using a reference area of 1.", 5, ScreenMessageStyle.UPPER_CENTER);
                 relativeWingArea = 1;
             }
+            if (v is ShipConstruct construct)
+                MAC = construct.shipSize.x;
+            else if (v is Vessel vessel)
+                MAC = vessel.vesselSize.x;
+            else
+                MAC = 1;
+            MAC = relativeWingArea / MAC;
 
             //if (lgWarning)
                 //ScreenMessages.PostScreenMessage("Landing gear deployed, results may not be accurate.", 5, ScreenMessageStyle.UPPER_CENTER);

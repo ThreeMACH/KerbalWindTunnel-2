@@ -25,6 +25,7 @@ namespace KerbalWindTunnel.VesselCache
         public override bool ThrustIsConstantWithAoA => vessel.ThrustIsConstantWithAoA;
 
         public override float Area => vessel.Area;
+        public override float MAC => vessel.MAC;
 
         public bool DirectAoAInitialized => maxAoATaskHandle?.IsCompleted ?? false;
 

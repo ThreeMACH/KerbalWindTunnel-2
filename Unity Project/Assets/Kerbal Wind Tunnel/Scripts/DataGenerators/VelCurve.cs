@@ -32,6 +32,8 @@ namespace KerbalWindTunnel.DataGenerators
             new LineGraphDefinition("fuel_economy", ToVector(p => p.fuelBurnRate / p.speed * 100 * 1000)) { DisplayName = "Fuel Economy", YUnit = "kg/100 km", StringFormat = "F2", Color = defaultColor, Enabled = false },
             new LineGraphDefinition("fuel_rate", ToVector(p => p.fuelBurnRate)) { DisplayName = "Fuel Burn Rate", YUnit = "kg/s", StringFormat = "F3", Color = defaultColor, Enabled = false },
             new LineGraphDefinition("pitch_input", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
+            /*new LineGraphDefinition("staticMargin", ToVector(p => p.speed >= 40 ? p.staticMargin * 100 : float.NaN)) { DisplayName = "Static Margin", YUnit = "% MAC", StringFormat = "F2" },
+            new LineGraphDefinition("stabilityDerivative", ToVector(p => p.dTorque)) { DisplayName = "Stability Derivative", YUnit = "kNm/°", StringFormat = "F2" },*/
             new LineGraphDefinition("accel_excess", ToVector(p => p.Accel_Excess)) { DisplayName = "Excess Acceleration", YUnit = "g", StringFormat = "N2", Color = defaultColor, Enabled = false }
         };
 
