@@ -52,6 +52,11 @@
     <ImplicitlyExpandDesignTimeFacades>false</ImplicitlyExpandDesignTimeFacades>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="MiniExcel, Version=1.41.1.0, Culture=neutral, PublicKeyToken=e7310002a53eac39, processorArchitecture=MSIL">
+      <HintPath>packages\MiniExcel.1.41.1\lib\net45\MiniExcel.dll</HintPath>
+    </Reference>
+    <Reference Include="System.Data" />
+    <Reference Include="System.IO.Compression" />
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2019.4.38f1\Editor\Data\Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
@@ -107,6 +112,7 @@
     <None Include="Assets\Graphing\Resources\Shaders\_colorMapInc.shader" />
     <None Include="Assets\Graphing\Resources\Shaders\_contours.shader" />
     <None Include="Assets\Graphing\Resources\Shaders\_outline.shader" />
+    <None Include="packages.config" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>

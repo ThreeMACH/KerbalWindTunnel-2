@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
 
@@ -6,6 +7,7 @@ namespace Graphing
 {
     public static class GraphIO
     {
+        public const string defaultSheetName = "Sheet1";
 
         public static readonly char[] invalidSheetChars = new char[] { '[', ']', '*', '/', '\\', '?', ':' };
         public enum FileFormat
@@ -17,6 +19,12 @@ namespace Graphing
             PNG,
             JPG
         }
+
+        public static readonly MiniExcelLibs.IConfiguration DefaultConfig =
+            new MiniExcelLibs.OpenXml.OpenXmlConfiguration() {
+                FastMode = true,
+                TableStyles = MiniExcelLibs.OpenXml.TableStyles.None
+            };
 
         /// <summary>
         /// Outputs the object's values to file.
@@ -61,12 +69,12 @@ namespace Graphing
                 case FileFormat.XLS:
 #pragma warning restore CS0612 // Type or member is obsolete
                 case FileFormat.XLSX:
-                    throw new NotImplementedException();
                     if (string.IsNullOrEmpty(sheetName))
                         sheetName = graph.DisplayName;
-                    if (string.IsNullOrEmpty(sheetName))
-                        sheetName = "Sheet1";
+                    if (string.IsNullOrEmpty(sheetName) && !(graph is GraphableCollection))
+                        sheetName = defaultSheetName;
                     sheetName = StripInvalidSheetChars(sheetName);
+                    graph.WriteToFileXLS(path, sheetName);
                     break;
                 case FileFormat.PNG:
                 case FileFormat.JPG:
@@ -221,6 +229,25 @@ namespace Graphing
                 if (invalidSheetChars.Contains(chars[i]))
                     sheetName.Remove(i, 1);
             return sheetName;
+        }
+
+        public static string GetUniqueName(IEnumerable<string> usedNames, string name)
+        {
+            if (!usedNames.Contains(name))
+                return name;
+            int i = 1;
+            while (usedNames.Contains(string.Concat(name, i.ToString())))
+                i++;
+            return string.Concat(name, i.ToString());
+        }
+        public static string GetUniqueColumnName(System.Data.DataTable dataTable, string name)
+        {
+            return GetUniqueName(dataTable.Columns.ColumnNames(), name);
+        }
+        public static IEnumerable<string> ColumnNames(this System.Data.DataColumnCollection collection)
+        {
+            foreach (System.Data.DataColumn column in collection)
+                yield return column.ColumnName;
         }
     }
 }

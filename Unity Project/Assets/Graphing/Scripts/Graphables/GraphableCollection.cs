@@ -1158,6 +1158,68 @@ namespace Graphing
             }
             return true && moreThanOne;
         }
+
+        public virtual void WriteToFileXLS(string path, string worksheet)
+            => WriteToFileXLS(path, worksheet, true);
+        public virtual void WriteToFileXLS(string path, string worksheet, bool limitToVisible)
+        {
+            IEnumerable<IGraphable> graphsToWrite = Flatten();
+            if (limitToVisible)
+                graphsToWrite = graphsToWrite.Where(Graphable.VisiblePredicate);
+
+            HashSet<string> names = new HashSet<string>();
+
+            if (CanCombineLineGraphs(graphsToWrite.Where(IsCombinableLineGraph)))
+            {
+                System.Data.DataTable dataTable = new System.Data.DataTable(worksheet);
+                AddLineGraphsToCombinedTable(dataTable, graphsToWrite.Where(IsCombinableLineGraph).Cast<ILineGraph>());
+                if (string.IsNullOrWhiteSpace(worksheet))
+                    worksheet = DisplayName;
+                if (string.IsNullOrWhiteSpace(worksheet))
+                    worksheet = GraphIO.defaultSheetName;
+                names.Add(worksheet);
+                MiniExcelLibs.MiniExcel.Insert(
+                    path, dataTable, worksheet,
+                    printHeader: true,
+                    configuration: GraphIO.DefaultConfig);
+                graphsToWrite = graphsToWrite.Where(g => !IsCombinableLineGraph(g));
+                dataTable.Dispose();
+            }
+            else
+            {
+                graphsToWrite = graphs;
+                if (limitToVisible)
+                    graphsToWrite = graphsToWrite.Where(Graphable.VisiblePredicate);
+            }
+
+            foreach (IGraphable graph in graphsToWrite)
+            {
+                string sheetName = GraphIO.StripInvalidSheetChars(graph.DisplayName.Replace("/", "-").Replace("\\", "-"));
+                if (string.IsNullOrEmpty(sheetName))
+                    sheetName = graph.GetType().Name;
+                if (names.Contains(sheetName))
+                {
+                    int i = 1;
+                    while (names.Contains(string.Concat(sheetName, i.ToString())))
+                        i++;
+                    sheetName = string.Concat(sheetName, i.ToString());
+                }
+                names.Add(sheetName);
+                if (!string.IsNullOrEmpty(worksheet))
+                    sheetName = string.Join("_", worksheet, sheetName);
+                graph.WriteToFileXLS(path, sheetName);
+            }
+        }
+
+        protected void AddLineGraphsToCombinedTable(System.Data.DataTable table, IEnumerable<ILineGraph> lineGraphs)
+        {
+            bool includeX = true;
+            foreach (ILineGraph lineGraph in lineGraphs)
+            {
+                lineGraph.WriteToDataTable(table, includeX);
+                includeX = false;
+            }
+        }
     }
 
     /// <summary>

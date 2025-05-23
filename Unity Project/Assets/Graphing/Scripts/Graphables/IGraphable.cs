@@ -93,6 +93,12 @@ namespace Graphing
         /// </summary>
         /// <param name="path">The path to the file.</param>
         void WriteToFileCSV(string path);
+        /// <summary>
+        /// Outputs the object's values to a spreadsheet file.
+        /// </summary>
+        /// <param name="path">The path to the file.</param>
+        /// <param name="worksheet">Optional sheet name (defaults to <see cref="GraphIO.defaultSheetName"/>).</param>
+        void WriteToFileXLS(string path, string worksheet = GraphIO.defaultSheetName);
     }
 
     /// <summary>
@@ -176,6 +182,12 @@ namespace Graphing
         /// <param name="withName">When true, requests the object include its name.</param>
         /// <returns>A string representing the value.</returns>
         string GetFormattedValueAt(float x, float y, float width, float height, bool withName = false);
+        /// <summary>
+        /// Intended for internal use. Writes data to the supplied <see cref="System.Data.DataTable"/>.
+        /// </summary>
+        /// <param name="dataTable">The <see cref="System.Data.DataTable"/> to write to.</param>
+        /// <param name="includeX">If set to <c>true</c> include the x value column.</param>
+        void WriteToDataTable(System.Data.DataTable dataTable, bool includeX);
     }
 
     /// <summary>

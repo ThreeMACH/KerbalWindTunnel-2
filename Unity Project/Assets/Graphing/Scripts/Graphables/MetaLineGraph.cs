@@ -279,11 +279,7 @@ namespace Graphing
             strCsv += FormatNameAndUnit(YName, YUnit);
 
             for (int i = 0; i < MetaFields.Length && i < metaCount; i++)
-            {
-                string nameStr = string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i];
-                string unitStr = MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "-" : MetaUnits[i];
-                strCsv += nameStr != "" ? string.Format(",{0} [{1}]", nameStr, unitStr) : string.Format(",{0}", unitStr);
-            }
+                strCsv += string.Format(",{0}", FormatNameAndUnit(MetaFields[i], MetaUnits[i]));
 
             try
             {
@@ -307,6 +303,17 @@ namespace Graphing
                     System.IO.File.AppendAllText(path, strCsv + "\r\n");
                 }
                 catch (Exception) { }
+            }
+        }
+
+        public override void WriteToDataTable(System.Data.DataTable dataTable, bool includeX)
+        {
+            base.WriteToDataTable(dataTable, includeX);
+            for (int m = 0; m < metaCount; m++)
+            {
+                System.Data.DataColumn column = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(MetaFields[m], MetaUnits[m])), typeof(float));
+                for (int i = Math.Min(metaData[m].Length, dataTable.Rows.Count) - 1; i >= 0; i--)
+                    dataTable.Rows[i][column] = metaData[m][i];
             }
         }
     }

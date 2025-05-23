@@ -344,5 +344,25 @@ namespace Graphing
                 catch (Exception) { }
             }
         }
+
+        public override void WriteToDataTable(System.Data.DataTable dataTable)
+            => WriteToDataTable(dataTable, true);
+
+        public virtual void WriteToDataTable(System.Data.DataTable dataTable, bool includeX)
+        {
+            const int rowOffset = 0;
+            if (_values.Length == 0)
+                return;
+            System.Data.DataColumn xColumn = includeX ? dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(XName, XUnit, "X")), typeof(float)) : null;
+            System.Data.DataColumn yColumn = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(YName, YUnit, "Y")), typeof(float));
+            for (int i = dataTable.Rows.Count; i < _values.Length + rowOffset; i++)
+                dataTable.Rows.Add();
+            for (int i = 0; i < _values.Length; i++)
+            {
+                if (includeX)
+                    dataTable.Rows[i + rowOffset][xColumn] = _values[i].x;
+                dataTable.Rows[i + rowOffset][yColumn] = _values[i].y;
+            }
+        }
     }
 }

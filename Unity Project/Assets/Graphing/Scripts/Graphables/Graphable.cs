@@ -206,7 +206,29 @@ namespace Graphing
         /// </summary>
         public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
+        protected virtual MiniExcelLibs.IConfiguration MiniExcelConfig => GraphIO.DefaultConfig;
+        protected virtual bool MiniExcelHeaders => true;
+
         public abstract void WriteToFileCSV(string path);
+
+        public virtual void WriteToFileXLS(string path, string worksheet)
+        {
+            System.Data.DataTable data = new System.Data.DataTable(worksheet);
+            WriteToDataTable(data);
+            data.AcceptChanges();
+            MiniExcelLibs.MiniExcel.Insert(
+                path, data, worksheet,
+                printHeader: MiniExcelHeaders,
+                configuration: MiniExcelConfig);
+            data.Dispose();
+        }
+
+        /// <summary>
+        /// Outputs the object's values to a <see cref="System.Data.DataTable"/> object.
+        /// The incoming DataTable object can be expected to be empty.
+        /// </summary>
+        /// <param name="dataTable">The <see cref="System.Data.DataTable"/> object to write to.</param>
+        public abstract void WriteToDataTable(System.Data.DataTable dataTable);
 
         /// <summary>
         /// Invokes the <see cref="ValuesChanged"/> event for this object.
@@ -237,10 +259,10 @@ namespace Graphing
             return string.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y), YUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
         }
 
-        protected static string FormatNameAndUnit(string axisName, string unit)
+        protected static string FormatNameAndUnit(string axisName, string unit, string fallback = "")
         {
-            if (string.IsNullOrEmpty(axisName))
-                return $"{unit}";
+            if (string.IsNullOrWhiteSpace(axisName))
+                return string.IsNullOrWhiteSpace(unit) ? fallback : $"{unit}";
             else
                 return $"{axisName} [{(unit != "" ? unit : "-")}]";
         }

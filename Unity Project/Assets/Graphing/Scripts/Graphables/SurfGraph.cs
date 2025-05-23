@@ -339,5 +339,51 @@ namespace Graphing
             }
             catch (Exception) { }
         }
+
+        protected override MiniExcelLibs.IConfiguration MiniExcelConfig => _miniExcelConfig;
+        private static readonly MiniExcelLibs.IConfiguration _miniExcelConfig =
+            new MiniExcelLibs.OpenXml.OpenXmlConfiguration()
+            {
+                FastMode = true,
+                TableStyles = MiniExcelLibs.OpenXml.TableStyles.None,
+                AutoFilter = false,
+                FreezeRowCount = 0,
+                FreezeColumnCount = 0,
+            };
+        protected override bool MiniExcelHeaders => false;
+
+        public override void WriteToDataTable(System.Data.DataTable dataTable)
+        {
+            const int columnOffest = 2;
+            if (_values.Length <= 0)
+                return;
+            int height = _values.GetUpperBound(1);
+            int width = _values.GetUpperBound(0);
+            if (height < 0 || width < 0)
+                return;
+            float xStep = (XMax - XMin) / width;
+            float yStep = (YMax - YMin) / height;
+
+            dataTable.Columns.Add("YName", typeof(string));
+            dataTable.Columns.Add("YValues", typeof(float));
+            dataTable.Columns.Add("Col0", typeof(object));  // Needs to be object since there's a single string value for the X name/unit.
+            for (int x = 1; x <= width; x++)
+                dataTable.Columns.Add($"Col{x}", typeof(float));
+            System.Data.DataRow row;
+            for (int y = height; y >= 0; y--)
+            {
+                row = dataTable.Rows.Add();
+                row[1] = YMin + yStep * y;
+                for (int x = 0; x <= width; x++)
+                    row[columnOffest + x] = _values[x, y];
+            }
+            row = dataTable.Rows.Add();
+            for (int x = 0; x <= width; x++)
+                row[columnOffest + x] = XMin + xStep * x;
+            row = dataTable.Rows.Add();
+            row[2] = FormatNameAndUnit(XName, XUnit, "X");
+            dataTable.Rows[0][0] = FormatNameAndUnit(YName, YUnit, "Y");
+            row[0] = FormatNameAndUnit(ZName, ZUnit, "Z");
+        }
     }
 }

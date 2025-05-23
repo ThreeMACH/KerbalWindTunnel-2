@@ -1,5 +1,4 @@
 ﻿using System;
-using System.Collections.Generic;
 using UnityEngine;
 
 namespace Graphing
@@ -242,13 +241,12 @@ namespace Graphing
             }
         }
 
-        /// <summary>
-        /// Outputs the object's values to file.
-        /// </summary>
-        /// <param name="directory">The directory in which to place the file.</param>
-        /// <param name="filename">The filename for the file.</param>
-        /// <param name="sheetName">An optional sheet name for within the file.</param>
         public override void WriteToFileCSV(string path)
+        {
+            return;
+        }
+
+        public override void WriteToDataTable(System.Data.DataTable dataTable)
         {
             // COULDDO print each contour.
             // List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
