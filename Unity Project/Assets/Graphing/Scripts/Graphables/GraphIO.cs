@@ -12,12 +12,13 @@ namespace Graphing
         public static readonly char[] invalidSheetChars = new char[] { '[', ']', '*', '/', '\\', '?', ':' };
         public enum FileFormat
         {
-            CSV,
+            CSV = 0,
             [Obsolete]
-            XLS,
-            XLSX,
-            PNG,
-            JPG
+            XLS = 1,
+            XLSX = 2,
+            PNG = 4,
+            JPG = 8,
+            Image = PNG | JPG
         }
 
         public static readonly MiniExcelLibs.IConfiguration DefaultConfig =
@@ -29,6 +30,7 @@ namespace Graphing
         /// <summary>
         /// Outputs the object's values to file.
         /// </summary>
+        /// <param name="graph">The graph object to write.</param>
         /// <param name="directory">The directory in which to place the file.</param>
         /// <param name="filename">The filename for the file.</param>
         /// <param name="format">The format to be written.</param>
@@ -94,6 +96,62 @@ namespace Graphing
                     }
                     System.IO.File.WriteAllBytes(path, byteStream);
                     UnityEngine.Object.Destroy(texture);
+                    break;
+                default:
+                    throw new NotImplementedException("File format is not supported.");
+            }
+        }
+
+        /// <summary>
+        /// Outputs a collection's values to file.
+        /// </summary>
+        /// <param name="collection">The collection to write.</param>
+        /// <param name="directory">The directory in which to place the file.</param>
+        /// <param name="filename">The filename for the file.</param>
+        /// <param name="visibleOnly">If set to <c>true</c> only writes the visible children of the collection.</param>
+        /// <param name="format">The format to be written.</param>
+        /// <param name="sheetName">An optional sheet name for within the file.</param>
+        /// <param name="resolution">An optional value for the resolution of the target image.</param>
+        /// <exception cref="System.NotImplementedException">File format is not supported.</exception>
+        public static void WriteToFile(this GraphableCollection collection, string directory, string filename, bool visibleOnly, FileFormat format = FileFormat.CSV, string sheetName = "", (int width, int height)? resolution = null)
+        {
+            if (!visibleOnly || (format & FileFormat.Image) > 0)
+                WriteToFile(collection, directory, filename, format, sheetName, resolution);
+
+            if (!System.IO.Directory.Exists(directory))
+                System.IO.Directory.CreateDirectory(directory);
+
+            string path = ValidateFilePath(directory, filename, format);
+
+            if (format == FileFormat.CSV && !string.IsNullOrEmpty(sheetName))
+            {
+                sheetName = sheetName.Replace("/", "-").Replace("\\", "-");
+                sheetName = StripInvalidFileChars(sheetName);
+                path.Insert(path.Length - 4, sheetName);
+            }
+
+            try
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+            catch (Exception ex) { Debug.Log($"Unable to delete file:{ex.Message}"); }
+
+            switch (format)
+            {
+                case FileFormat.CSV:
+                    collection.WriteToFileCSV(path, visibleOnly);
+                    break;
+#pragma warning disable CS0612 // Type or member is obsolete
+                case FileFormat.XLS:
+#pragma warning restore CS0612 // Type or member is obsolete
+                case FileFormat.XLSX:
+                    if (string.IsNullOrEmpty(sheetName))
+                        sheetName = collection.DisplayName;
+                    if (string.IsNullOrEmpty(sheetName))
+                        sheetName = defaultSheetName;
+                    sheetName = StripInvalidSheetChars(sheetName);
+                    collection.WriteToFileXLS(path, sheetName, visibleOnly);
                     break;
                 default:
                     throw new NotImplementedException("File format is not supported.");
