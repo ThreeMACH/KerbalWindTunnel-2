@@ -256,7 +256,8 @@ namespace Graphing
                 return;
             System.Data.DataColumn xColumn = includeX ? dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(XName, XUnit, "X")), typeof(float)) : null;
             System.Data.DataColumn yColumn = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(YName, YUnit, "Y")), typeof(float));
-            System.Data.DataColumn zColumn = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(ZName, ZUnit, "Z")), typeof(float));
+            string zDisplayName = (ZName == DisplayName || DisplayName.Contains(ZName)) ? DisplayName : $"{DisplayName}, {ZName}";
+            System.Data.DataColumn zColumn = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(zDisplayName, ZUnit, "Z")), typeof(float));
             for (int i = dataTable.Rows.Count; i < _values.Length + rowOffset; i++)
                 dataTable.Rows.Add();
             for (int i = 0; i < _values.Length; i++)

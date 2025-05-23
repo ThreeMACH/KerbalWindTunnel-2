@@ -354,7 +354,8 @@ namespace Graphing
             if (_values.Length == 0)
                 return;
             System.Data.DataColumn xColumn = includeX ? dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(XName, XUnit, "X")), typeof(float)) : null;
-            System.Data.DataColumn yColumn = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(YName, YUnit, "Y")), typeof(float));
+            string yDisplayName = (YName == DisplayName || DisplayName.Contains(YName)) ? DisplayName : $"{DisplayName}, {YName}";
+            System.Data.DataColumn yColumn = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(yDisplayName, YUnit, "Y")), typeof(float));
             for (int i = dataTable.Rows.Count; i < _values.Length + rowOffset; i++)
                 dataTable.Rows.Add();
             for (int i = 0; i < _values.Length; i++)
