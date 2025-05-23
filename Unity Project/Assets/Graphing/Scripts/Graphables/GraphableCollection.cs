@@ -1119,16 +1119,14 @@ namespace Graphing
         private static bool CanCombineLineGraphs(IEnumerable graphs)
         {
             bool moreThanOne = false;
-            IEnumerator<float> basis = null;
+            IEnumerable<float> basisValues = null;
             foreach (IGraphable graph in graphs)
             {
-                if (basis == null)
+                if (basisValues == null)
                 {
-                    IEnumerable<float> basisValues = XValues(graph);
-                    if (basis == null)
+                    basisValues = XValues(graph);
+                    if (basisValues == null)
                         return false;
-                    if (basisValues.Any())
-                        basis = basisValues.GetEnumerator();
                     continue;
                 }
                 IEnumerable<float> values = XValues(graph);
@@ -1139,6 +1137,7 @@ namespace Graphing
                 if (!values.Any())
                     continue;
                 IEnumerator<float> test = values.GetEnumerator();
+                IEnumerator<float> basis = basisValues.GetEnumerator();
 
                 while (true)
                 {
