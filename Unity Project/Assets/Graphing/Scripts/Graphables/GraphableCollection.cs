@@ -1194,16 +1194,10 @@ namespace Graphing
 
             foreach (IGraphable graph in graphsToWrite)
             {
-                string sheetName = GraphIO.StripInvalidSheetChars(graph.DisplayName.Replace("/", "-").Replace("\\", "-"));
-                if (string.IsNullOrEmpty(sheetName))
-                    sheetName = graph.GetType().Name;
-                if (names.Contains(sheetName))
-                {
-                    int i = 1;
-                    while (names.Contains(string.Concat(sheetName, i.ToString())))
-                        i++;
-                    sheetName = string.Concat(sheetName, i.ToString());
-                }
+                string sheetName = GraphIO.GetValidSheetName(graph);
+                if (sheetName.Length + worksheet.Length + 1 >= 31)
+                    throw new ArgumentException("Sheet name is too long (max 30 characters)", string.Join("_", worksheet, sheetName));
+                sheetName = GraphIO.GetUniqueName(names, sheetName);
                 names.Add(sheetName);
                 if (!string.IsNullOrEmpty(worksheet))
                     sheetName = string.Join("_", worksheet, sheetName);

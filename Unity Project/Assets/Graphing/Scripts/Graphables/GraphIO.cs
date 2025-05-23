@@ -249,5 +249,15 @@ namespace Graphing
             foreach (System.Data.DataColumn column in collection)
                 yield return column.ColumnName;
         }
+        public static string GetValidSheetName(IGraphable graph)
+        {
+            string sheetName = graph.DisplayName.Replace("/", "-").Replace("\\", "-");
+            if (sheetName.Length >= 30)
+                sheetName = graph.Name.Replace("/", "-").Replace("\\", "-");
+            if (string.IsNullOrWhiteSpace(sheetName))
+                sheetName = graph.GetType().Name;
+            sheetName = StripInvalidSheetChars(sheetName);
+            return sheetName;
+        }
     }
 }
