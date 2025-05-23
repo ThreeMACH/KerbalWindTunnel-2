@@ -18,7 +18,7 @@ namespace KerbalWindTunnel
         public (int, int) Size { get => (xKeys.Length, yKeys.Length); }
         public int Length { get { return values.Length; } }
 
-        public int GetUpperBound(int dimension) { return dimension == 0 ? xKeys.Length : yKeys.Length; }
+        public int GetUpperBound(int dimension) { return (dimension == 0 ? xKeys.Length : yKeys.Length) - 1; }
 
         public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys)
         {
