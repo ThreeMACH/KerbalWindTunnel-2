@@ -243,6 +243,12 @@ namespace Graphing
 
         public override void WriteToFileCSV(string path)
         {
+            // COULDDO print each contour.
+            // List<Vector3[]> lines = OutlineGraphDrawer.GenerateOutlines(this);
+            return;
+        }
+        public override void WriteToFileXLS(string path, string worksheet)
+        {
             return;
         }
 
