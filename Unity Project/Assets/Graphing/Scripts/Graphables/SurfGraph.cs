@@ -347,8 +347,8 @@ namespace Graphing
                 FastMode = true,
                 TableStyles = MiniExcelLibs.OpenXml.TableStyles.None,
                 AutoFilter = false,
-                FreezeRowCount = 0,
-                FreezeColumnCount = 0,
+                FreezeRowCount = 2,
+                FreezeColumnCount = 2,
             };
         protected override bool MiniExcelHeaders => false;
 
@@ -370,13 +370,7 @@ namespace Graphing
             for (int x = 1; x <= width; x++)
                 dataTable.Columns.Add($"Col{x}", typeof(float));
             System.Data.DataRow row;
-            for (int y = height; y >= 0; y--)
-            {
-                row = dataTable.Rows.Add();
-                row[1] = YMin + yStep * y;
-                for (int x = 0; x <= width; x++)
-                    row[columnOffest + x] = _values[x, y];
-            }
+
             row = dataTable.Rows.Add();
             for (int x = 0; x <= width; x++)
                 row[columnOffest + x] = XMin + xStep * x;
@@ -384,6 +378,14 @@ namespace Graphing
             row[2] = FormatNameAndUnit(XName, XUnit, "X");
             dataTable.Rows[0][0] = FormatNameAndUnit(YName, YUnit, "Y");
             row[0] = FormatNameAndUnit(ZName, ZUnit, "Z");
+
+            for (int y = 0; y <= height; y--)
+            {
+                row = dataTable.Rows.Add();
+                row[1] = YMin + yStep * y;
+                for (int x = 0; x <= width; x++)
+                    row[columnOffest + x] = _values[x, y];
+            }
         }
     }
 }
