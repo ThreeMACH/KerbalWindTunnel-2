@@ -205,11 +205,11 @@ namespace KerbalWindTunnel
             if (ToolbarManager.ToolbarAvailable)
                 dialog.Add(new DialogGUIToggle(UseBlizzy, "Use Blizzy's Toolbar", b => UseBlizzy = b));
 
-            dialog.Add(new DialogGUIButton("Accept", () => {
-                PopupDialog.DismissPopup(popupWindowName);
+            dialog.Add(new DialogGUIButton("Accept", () =>
+            {
                 if (!invokeOnlyOnChange || settingsChanged)
                     acceptAction?.Invoke();
-            }));
+            }, true));
 
             return PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
                 new MultiOptionDialog(popupWindowName, "", "Kerbal Wind Tunnel Settings", UISkinManager.defaultSkin, dialog.ToArray()),
