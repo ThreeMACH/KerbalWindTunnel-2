@@ -1,7 +1,6 @@
 ﻿using Graphing;
 using KerbalWindTunnel.DataGenerators;
 using KSP.Localization;
-using Microsoft.SqlServer.Server;
 using System;
 using System.Collections.Generic;
 using System.Linq;
@@ -397,22 +396,21 @@ namespace KerbalWindTunnel
         {
 #if !OUTSIDE_UNITY
             Debug.Log("Exporting.");
-            envelopeCollection.WriteToFile(WindTunnel.graphPath, "Test", GraphIO.FileFormat.CSV);
+            envelopeCollection.WriteToFile(WindTunnel.graphPath, "Test", GraphIO.FileFormat.XLSX);
             Debug.Log("Done.");
             return;
 #endif
-            GraphIO.FileFormat format = GraphIO.FileFormat.CSV;
             switch (GraphMode)
             {
                 default:
                 case 0:
-                    envelopeCollection.WriteToFile(WindTunnel.graphPath, EditorLogic.fetch.ship.shipName, format);
+                    new GraphExportDialog(envelopeCollection);
                     break;
                 case 1:
-                    aoaCollection.WriteToFile(WindTunnel.graphPath, EditorLogic.fetch.ship.shipName, format);
+                    new GraphExportDialog(aoaCollection);
                     break;
                 case 2:
-                    velocityCollection.WriteToFile(WindTunnel.graphPath, EditorLogic.fetch.ship.shipName, format);
+                    new GraphExportDialog(velocityCollection);
                     break;
             }
         }
