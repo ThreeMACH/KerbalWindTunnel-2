@@ -57,7 +57,9 @@ namespace Graphing
                 case FileFormat.CSV:
                     graph.WriteToFileCSV(path);
                     break;
+#pragma warning disable CS0612 // Type or member is obsolete
                 case FileFormat.XLS:
+#pragma warning restore CS0612 // Type or member is obsolete
                 case FileFormat.XLSX:
                     throw new NotImplementedException();
                     if (string.IsNullOrEmpty(sheetName))
@@ -155,7 +157,9 @@ namespace Graphing
                 case FileFormat.CSV:
                     formatExtension = ".csv";
                     break;
+#pragma warning disable CS0612 // Type or member is obsolete
                 case FileFormat.XLS:
+#pragma warning restore CS0612 // Type or member is obsolete
                     formatExtension = ".xls";
                     break;
                 case FileFormat.XLSX:
