@@ -7,6 +7,7 @@ namespace KerbalWindTunnel
     public class GraphExportDialog
     {
         public const string popupWindowName = "KWTExport";
+        public const string popupConfirmName = "KWTOverwrite";
         public enum OutputMode
         {
             Visible = 0,
@@ -69,11 +70,34 @@ namespace KerbalWindTunnel
 
         private void Export()
         {
+            string path = GraphIO.ValidateFilePath(WindTunnel.graphPath, filename, format);
+            if (System.IO.File.Exists(path))
+            {
+                PopupDialog.SpawnPopupDialog(new UnityEngine.Vector2(0.5f, 0.5f), new UnityEngine.Vector2(0.5f, 0.5f),
+                    new MultiOptionDialog(popupConfirmName, "The specified file already exists. Would you like to replace it?", "", UISkinManager.defaultSkin,
+                        new DialogGUIHorizontalLayout(
+                            new DialogGUIFlexibleSpace(),
+                            new DialogGUIButton("Yes", () => { DeleteFile(path); Dismiss(); ContinueExport(filename); }),
+                            new DialogGUIButton("No", () => { }),
+                            new DialogGUIFlexibleSpace()
+                            )
+                        ), false, UISkinManager.defaultSkin, true);
+                return;
+            }
+
             Dismiss();
+            ContinueExport(filename);
+        }
+        private void DeleteFile(string path)
+        {
+            System.IO.File.Delete(path);
+        }
+        private void ContinueExport(string filename)
+        {
             if (outputMode <= OutputMode.All)
                 collection.WriteToFile(WindTunnel.graphPath, filename, outputMode == OutputMode.Visible, format);
             else
-                throw new NotImplementedException();
+                WindTunnelWindow.Instance.Vessel.WriteToFile(WindTunnel.graphPath, filename, format);
         }
     }
 }
