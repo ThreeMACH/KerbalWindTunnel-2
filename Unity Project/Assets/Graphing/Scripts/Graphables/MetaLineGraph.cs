@@ -311,7 +311,7 @@ namespace Graphing
             base.WriteToDataTable(dataTable, includeX);
             for (int m = 0; m < metaCount; m++)
             {
-                System.Data.DataColumn column = dataTable.Columns.Add(GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(MetaFields[m], MetaUnits[m])), typeof(float));
+                System.Data.DataColumn column = dataTable.Columns.Add(IO.GraphIO.GetUniqueColumnName(dataTable, FormatNameAndUnit(MetaFields[m], MetaUnits[m])), typeof(float));
                 for (int i = Math.Min(metaData[m].Length, dataTable.Rows.Count) - 1; i >= 0; i--)
                     dataTable.Rows[i][column] = metaData[m][i];
             }

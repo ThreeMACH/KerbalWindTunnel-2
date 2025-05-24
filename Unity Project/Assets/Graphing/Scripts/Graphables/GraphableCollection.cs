@@ -318,6 +318,8 @@ namespace Graphing
 
         public static IGraphable FirstVisibleGraph(IGraphable graph)
         {
+            if (graph == null)
+                return null;
             if (!graph.Visible)
                 return null;
             if (graph is GraphableCollection collection)
@@ -1016,7 +1018,7 @@ namespace Graphing
             
             foreach (IGraphable graph in graphsToWrite)
             {
-                string graphSuffix = GraphIO.StripInvalidFileChars(graph.DisplayName.Replace("/", "-").Replace("\\", "-"));
+                string graphSuffix = IO.GraphIO.StripInvalidFileChars(graph.DisplayName.Replace("/", "-").Replace("\\", "-"));
                 if (string.IsNullOrEmpty(graphSuffix))
                     graphSuffix = graph.GetType().Name;
                 if (names.Contains(graphSuffix))
@@ -1176,12 +1178,12 @@ namespace Graphing
                 if (string.IsNullOrWhiteSpace(worksheet))
                     worksheet = DisplayName;
                 if (string.IsNullOrWhiteSpace(worksheet))
-                    worksheet = GraphIO.defaultSheetName;
+                    worksheet = IO.GraphIO.defaultSheetName;
                 names.Add(worksheet);
                 MiniExcelLibs.MiniExcel.Insert(
                     path, dataTable, worksheet,
                     printHeader: true,
-                    configuration: GraphIO.DefaultConfig);
+                    configuration: IO.GraphIO.DefaultConfig);
                 graphsToWrite = graphsToWrite.Where(g => !IsCombinableLineGraph(g));
                 dataTable.Dispose();
             }
@@ -1194,10 +1196,10 @@ namespace Graphing
 
             foreach (IGraphable graph in graphsToWrite)
             {
-                string sheetName = GraphIO.GetValidSheetName(graph);
+                string sheetName = IO.GraphIO.GetValidSheetName(graph);
                 if (sheetName.Length + worksheet.Length + 1 >= 31)
                     throw new ArgumentException("Sheet name is too long (max 30 characters)", string.Join("_", worksheet, sheetName));
-                sheetName = GraphIO.GetUniqueName(names, sheetName);
+                sheetName = IO.GraphIO.GetUniqueName(names, sheetName);
                 names.Add(sheetName);
                 if (!string.IsNullOrEmpty(worksheet))
                     sheetName = string.Join("_", worksheet, sheetName);

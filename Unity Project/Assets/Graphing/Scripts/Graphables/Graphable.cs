@@ -206,7 +206,7 @@ namespace Graphing
         /// </summary>
         public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
-        protected virtual MiniExcelLibs.IConfiguration MiniExcelConfig => GraphIO.DefaultConfig;
+        protected virtual MiniExcelLibs.IConfiguration MiniExcelConfig => IO.GraphIO.DefaultConfig;
         protected virtual bool MiniExcelHeaders => true;
 
         public abstract void WriteToFileCSV(string path);

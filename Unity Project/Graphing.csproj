@@ -76,7 +76,7 @@
     <Compile Include="Assets\Graphing\Scripts\Extensions\Linq2.cs" />
     <Compile Include="Assets\Graphing\Scripts\Extensions\MeshIntersectionOutline.cs" />
     <Compile Include="Assets\Graphing\Scripts\Extensions\SurfMeshGeneration.cs" />
-    <Compile Include="Assets\Graphing\Scripts\Graphables\GraphIO.cs" />
+    <Compile Include="Assets\Graphing\Scripts\IO\GraphIO.cs" />
     <Compile Include="Assets\Graphing\Scripts\GraphDrawer.cs" />
     <Compile Include="Assets\Graphing\Scripts\GraphDrawer_Collection.cs" />
     <Compile Include="Assets\Graphing\Scripts\GraphDrawer_LineGraph.cs" />
@@ -181,6 +181,7 @@
       <Name>UI_Tools</Name>
     </ProjectReference>
   </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\"

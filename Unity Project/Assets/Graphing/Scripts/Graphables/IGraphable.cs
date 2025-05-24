@@ -97,8 +97,8 @@ namespace Graphing
         /// Outputs the object's values to a spreadsheet file.
         /// </summary>
         /// <param name="path">The path to the file.</param>
-        /// <param name="worksheet">Optional sheet name (defaults to <see cref="GraphIO.defaultSheetName"/>).</param>
-        void WriteToFileXLS(string path, string worksheet = GraphIO.defaultSheetName);
+        /// <param name="worksheet">Optional sheet name (defaults to <see cref="IO.GraphIO.defaultSheetName"/>).</param>
+        void WriteToFileXLS(string path, string worksheet = IO.GraphIO.defaultSheetName);
     }
 
     /// <summary>
