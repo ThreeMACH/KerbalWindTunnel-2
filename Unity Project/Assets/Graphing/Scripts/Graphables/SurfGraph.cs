@@ -367,25 +367,26 @@ namespace Graphing
             dataTable.Columns.Add("YName", typeof(string));
             dataTable.Columns.Add("YValues", typeof(float));
             dataTable.Columns.Add("Col0", typeof(object));  // Needs to be object since there's a single string value for the X name/unit.
-            for (int x = 1; x <= width; x++)
-                dataTable.Columns.Add($"Col{x}", typeof(float));
+            for (int x = 0; x <= width; x++)
+                dataTable.Columns.Add().DataType = typeof(float);
             System.Data.DataRow row;
 
+            dataTable.Rows.Add();
             row = dataTable.Rows.Add();
             for (int x = 0; x <= width; x++)
                 row[columnOffest + x] = XMin + xStep * x;
-            row = dataTable.Rows.Add();
-            row[2] = FormatNameAndUnit(XName, XUnit, "X");
-            dataTable.Rows[0][0] = FormatNameAndUnit(YName, YUnit, "Y");
-            row[0] = FormatNameAndUnit(ZName, ZUnit, "Z");
 
-            for (int y = 0; y <= height; y--)
+            for (int y = 0; y <= height; y++)
             {
                 row = dataTable.Rows.Add();
                 row[1] = YMin + yStep * y;
                 for (int x = 0; x <= width; x++)
                     row[columnOffest + x] = _values[x, y];
             }
+
+            dataTable.Rows[2][0] = FormatNameAndUnit(XName, XUnit, "X");
+            dataTable.Rows[0][2] = FormatNameAndUnit(YName, YUnit, "Y");
+            dataTable.Rows[0][0] = FormatNameAndUnit(ZName, ZUnit, "Z");
         }
     }
 }
