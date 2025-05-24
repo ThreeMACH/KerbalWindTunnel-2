@@ -12,7 +12,8 @@
         "Assembly-CSharp.dll",
         "KSPAssets.dll",
         "Microsoft.Bcl.HashCode.dll",
-        "PriorityQueue.dll"
+        "PriorityQueue.dll",
+        "MiniExcel.dll"
     ],
     "autoReferenced": true,
     "defineConstraints": [],

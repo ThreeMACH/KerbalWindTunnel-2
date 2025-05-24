@@ -261,25 +261,25 @@ namespace KerbalWindTunnel.Extensions
 #if OUTSIDE_UNITY
             static
 #endif
-            void WriteToDataTable(FloatCurve2 curve, Func<FloatCurve2.Keyframe2, float> selector, System.Data.DataTable table)
+            void WriteToDataTable(FloatCurve2 fc2, Func<FloatCurve2.Keyframe2, float> selector, System.Data.DataTable table)
             {
                 table.Columns.Add("x", typeof(float));
-                foreach (float _ in curve.xKeys)
+                foreach (float _ in fc2.xKeys)
                     table.Columns.Add().DataType = typeof(float);
                 System.Data.DataRow row = table.Rows.Add();
 
-                int upperBoundX = curve.GetUpperBound(0);
-                int upperBoundY = curve.GetUpperBound(1);
+                int upperBoundX = fc2.GetUpperBound(0);
+                int upperBoundY = fc2.GetUpperBound(1);
 
                 for (int x = 0; x <= upperBoundX; x++)
-                    row[x + 1] = curve.xKeys[x];
+                    row[x + 1] = fc2.xKeys[x];
 
                 for (int y = 0; y <= upperBoundY; y++)
                 {
                     row = table.Rows.Add();
-                    row[0] = curve.yKeys[y];
+                    row[0] = fc2.yKeys[y];
                     for (int x = 0; x <= upperBoundX; x++)
-                        row[x + 1] = selector(curve.values[x, y]);
+                        row[x + 1] = selector(fc2.values[x, y]);
                 }
             }
         }

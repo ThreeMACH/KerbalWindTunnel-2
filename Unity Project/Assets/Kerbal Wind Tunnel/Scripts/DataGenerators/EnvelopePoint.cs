@@ -22,8 +22,8 @@ namespace KerbalWindTunnel.DataGenerators
 
         public readonly float pitchInput;
         //public readonly float stabilityRange;
-        public readonly float staticMargin;
-        public readonly float dTorque;
+        //public readonly float staticMargin;
+        //public readonly float dTorque;
 
         public readonly float fuelBurnRate;
 

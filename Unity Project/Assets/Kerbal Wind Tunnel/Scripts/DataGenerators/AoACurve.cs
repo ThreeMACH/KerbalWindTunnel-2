@@ -202,8 +202,8 @@ namespace KerbalWindTunnel.DataGenerators
             public readonly float mach;
             public readonly float pitchInput;
             public readonly float pitchInput_dry;
-            public readonly float staticMargin;
-            public readonly float staticMargin_dry;
+            //public readonly float staticMargin;
+            //public readonly float staticMargin_dry;
             public readonly float torque;
             public readonly float torque_dry;
             public readonly bool completed;

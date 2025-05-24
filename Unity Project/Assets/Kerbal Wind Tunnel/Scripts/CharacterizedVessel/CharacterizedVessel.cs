@@ -463,7 +463,10 @@ namespace KerbalWindTunnel.VesselCache
             //ctrlDeltaDragNeg.WriteToDataSet(data, "ctrlNeg_");
             //ctrlDeltaDragPos.WriteToDataSet(data, "ctrlPos_");
 
-            static void WriteCurveSet(System.Data.DataSet data, List<(FloatCurve machCurve, FloatCurve forceCurve)> curveSet, string name)
+#if OUTSIDE_UNITY
+            static
+#endif
+            void WriteCurveSet(System.Data.DataSet ds, List<(FloatCurve machCurve, FloatCurve forceCurve)> curveSet, string name)
             {
                 bool multiple = curveSet.Count > 1;
                 int setIndex = 0;
@@ -472,10 +475,10 @@ namespace KerbalWindTunnel.VesselCache
                     string localName = multiple ? $"{name}{setIndex}" : name;
                     System.Data.DataTable curveTable = machCurve.WriteToDataTable();
                     curveTable.TableName = string.Join("_", localName, "MFactor");
-                    data.Tables.Add(curveTable);
+                    ds.Tables.Add(curveTable);
                     curveTable = forceCurve.WriteToDataTable();
                     curveTable.TableName = string.Join("_", localName, "Coef");
-                    data.Tables.Add(curveTable);
+                    ds.Tables.Add(curveTable);
                 }
             }
 
