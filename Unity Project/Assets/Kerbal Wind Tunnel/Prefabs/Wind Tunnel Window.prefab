@@ -3947,7 +3947,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Export Graph Data
+  m_Text: Export Data
 --- !u!114 &8936178595171215548
 MonoBehaviour:
   m_ObjectHideFlags: 0
