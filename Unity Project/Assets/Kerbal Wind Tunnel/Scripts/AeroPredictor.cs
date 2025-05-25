@@ -169,15 +169,15 @@ namespace KerbalWindTunnel
             return vesselForward * Mathf.Cos(-AoA) + vesselUp * Mathf.Sin(-AoA);
         }
 
-        public void WriteToFile(string directory, string filename, Graphing.GraphIO.FileFormat format)
+        public void WriteToFile(string directory, string filename, Graphing.IO.GraphIO.FileFormat format)
         {
-            if ((format & Graphing.GraphIO.FileFormat.Image) > 0)
+            if ((format & Graphing.IO.GraphIO.FileFormat.Image) > 0)
                 throw new ArgumentException($"Format is not supported. {format}");
 
             if (!System.IO.Directory.Exists(directory))
                 System.IO.Directory.CreateDirectory(directory);
 
-            string path = Graphing.GraphIO.ValidateFilePath(directory, filename, format);
+            string path = Graphing.IO.GraphIO.ValidateFilePath(directory, filename, format);
 
             try
             {
@@ -194,9 +194,9 @@ namespace KerbalWindTunnel
                 return;
             }
 
-            if ((format & Graphing.GraphIO.FileFormat.Excel) > 0)
+            if ((format & Graphing.IO.GraphIO.FileFormat.Excel) > 0)
                 WriteToFileXLS(path, output);
-            else if (format == Graphing.GraphIO.FileFormat.CSV)
+            else if (format == Graphing.IO.GraphIO.FileFormat.CSV)
                 WriteToFileCSV(path, output);
             else
             {
@@ -208,7 +208,8 @@ namespace KerbalWindTunnel
         protected virtual System.Data.DataSet WriteToDataSet() => null;
         protected virtual void WriteToFileXLS(string path, System.Data.DataSet data)
         {
-            MiniExcelLibs.MiniExcel.SaveAs(path, data, false, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
+            Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, "", data, new Graphing.IO.SpreadsheetOptions(false, false, 1, 1));
+            //MiniExcelLibs.MiniExcel.SaveAs(path, data, false, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
         }
         protected virtual void WriteToFileCSV(string path, System.Data.DataSet data)
         {

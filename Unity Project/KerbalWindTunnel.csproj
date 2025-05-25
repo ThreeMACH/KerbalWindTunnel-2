@@ -90,6 +90,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\GraphExportDialog.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\HighlightManager.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\MiniExcelWrapper.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ToolbarWrapper.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedVessel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\AeroOptimizer.cs" />

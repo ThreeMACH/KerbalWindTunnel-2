@@ -41,6 +41,8 @@ namespace KerbalWindTunnel
         private Texture2D icon_blizzy_on; // = new Texture2D(24, 24, TextureFormat.ARGB32, false);
         private Texture2D icon_blizzy; // = new Texture2D(24, 24, TextureFormat.ARGB32, false);
 
+        private static MiniExcelWrapper miniExcelWrapper;
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()
         {
@@ -68,6 +70,10 @@ namespace KerbalWindTunnel
             
             //window.UseMach = WindTunnelSettings.DefaultToMach;
             //window.Minimized = WindTunnelSettings.StartMinimized;
+
+            if (miniExcelWrapper == null)
+                miniExcelWrapper = new MiniExcelWrapper();
+            Graphing.IO.GraphIO.SpreadsheetWriter = miniExcelWrapper;
         }
 
         internal bool ActivateBlizzyToolBar()

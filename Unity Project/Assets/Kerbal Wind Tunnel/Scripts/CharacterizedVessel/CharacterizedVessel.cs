@@ -475,9 +475,13 @@ namespace KerbalWindTunnel.VesselCache
                     string localName = multiple ? $"{name}{setIndex}" : name;
                     System.Data.DataTable curveTable = machCurve.WriteToDataTable();
                     curveTable.TableName = string.Join("_", localName, "MFactor");
+                    curveTable.Columns[0].ColumnName = Graphing.Graphable.FormatNameAndUnit("Mach Number", "");
                     ds.Tables.Add(curveTable);
                     curveTable = forceCurve.WriteToDataTable();
                     curveTable.TableName = string.Join("_", localName, "Coef");
+                    foreach (System.Data.DataRow row in curveTable.Rows)
+                        row[0] = (float)row[0] * Mathf.Rad2Deg;
+                    curveTable.Columns[0].ColumnName = Graphing.Graphable.FormatNameAndUnit("Angle of Attack", "°");
                     ds.Tables.Add(curveTable);
                 }
             }
@@ -495,9 +499,11 @@ namespace KerbalWindTunnel.VesselCache
         protected override void WriteToFileXLS(string path, System.Data.DataSet data)
         {
             for (int i = 0; i < Math.Min(data.Tables.Count, 5); i++)
-                MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: false, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
+                Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, data.Tables[i].TableName, data.Tables[i], new Graphing.IO.SpreadsheetOptions(false, false, 1, 1));
+                //MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: false, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
             for (int i = 5; i < data.Tables.Count; i++)
-                    MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None });
+                Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, data.Tables[i].TableName, data.Tables[i], new Graphing.IO.SpreadsheetOptions(true, true, 1, 0));
+                //MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None });
         }
         protected override void WriteToFileCSV(string path, System.Data.DataSet data)
         {

@@ -397,7 +397,7 @@ namespace KerbalWindTunnel
         {
 #if !OUTSIDE_UNITY
             Debug.Log("Exporting.");
-            envelopeCollection.WriteToFile(WindTunnel.graphPath, "Test", GraphIO.FileFormat.XLSX);
+            Graphing.IO.GraphIO.WriteToFile(envelopeCollection, WindTunnel.graphPath, "Test", Graphing.IO.GraphIO.FileFormat.XLSX);
             Debug.Log("Done.");
             return;
 #endif
