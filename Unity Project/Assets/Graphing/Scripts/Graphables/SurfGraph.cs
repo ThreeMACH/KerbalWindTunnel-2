@@ -340,17 +340,8 @@ namespace Graphing
             catch (Exception) { }
         }
 
-        protected override MiniExcelLibs.IConfiguration MiniExcelConfig => _miniExcelConfig;
-        private static readonly MiniExcelLibs.IConfiguration _miniExcelConfig =
-            new MiniExcelLibs.OpenXml.OpenXmlConfiguration()
-            {
-                FastMode = true,
-                TableStyles = MiniExcelLibs.OpenXml.TableStyles.None,
-                AutoFilter = false,
-                FreezeRowCount = 2,
-                FreezeColumnCount = 2,
-            };
-        protected override bool MiniExcelHeaders => false;
+        protected override IO.SpreadsheetOptions SpreadsheetOptions => _spreadsheetOptions;
+        private static readonly IO.SpreadsheetOptions _spreadsheetOptions = new IO.SpreadsheetOptions(false, false, 2, 2);
 
         public override void WriteToDataTable(System.Data.DataTable dataTable)
         {

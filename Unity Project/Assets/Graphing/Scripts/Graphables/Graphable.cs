@@ -206,8 +206,7 @@ namespace Graphing
         /// </summary>
         public event EventHandler<IDisplayEventArgs> DisplayChanged;
 
-        protected virtual MiniExcelLibs.IConfiguration MiniExcelConfig => IO.GraphIO.DefaultConfig;
-        protected virtual bool MiniExcelHeaders => true;
+        protected virtual IO.SpreadsheetOptions SpreadsheetOptions => IO.GraphIO.defaultOptions;
 
         public abstract void WriteToFileCSV(string path);
 
@@ -216,10 +215,7 @@ namespace Graphing
             System.Data.DataTable data = new System.Data.DataTable(worksheet);
             WriteToDataTable(data);
             data.AcceptChanges();
-            MiniExcelLibs.MiniExcel.Insert(
-                path, data, worksheet,
-                printHeader: MiniExcelHeaders,
-                configuration: MiniExcelConfig);
+            IO.GraphIO.SpreadsheetWriter.Write(path, worksheet, data, SpreadsheetOptions);
             data.Dispose();
         }
 
@@ -259,7 +255,7 @@ namespace Graphing
             return string.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y), YUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
         }
 
-        protected static string FormatNameAndUnit(string axisName, string unit, string fallback = "")
+        public static string FormatNameAndUnit(string axisName, string unit, string fallback = "")
         {
             if (string.IsNullOrWhiteSpace(axisName))
                 return string.IsNullOrWhiteSpace(unit) ? fallback : $"{unit}";

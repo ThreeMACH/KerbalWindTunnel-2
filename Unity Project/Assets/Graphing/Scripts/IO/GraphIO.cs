@@ -24,11 +24,9 @@ namespace Graphing.IO
 #pragma warning restore CS0612 // Type or member is obsolete
         }
 
-        public static readonly MiniExcelLibs.IConfiguration DefaultConfig =
-            new MiniExcelLibs.OpenXml.OpenXmlConfiguration() {
-                FastMode = true,
-                TableStyles = MiniExcelLibs.OpenXml.TableStyles.None
-            };
+        public static readonly SpreadsheetOptions defaultOptions = new SpreadsheetOptions(true, true, 1, 0);
+
+        public static ISpreadsheetWriter SpreadsheetWriter { get; set; } = new MiniExcelWriter();
 
         /// <summary>
         /// Outputs the object's values to file.

@@ -91,6 +91,8 @@
     <Compile Include="Assets\Graphing\Scripts\Graphables\OutlineMask.cs" />
     <Compile Include="Assets\Graphing\Scripts\Graphables\SurfGraph.cs" />
     <Compile Include="Assets\Graphing\Scripts\Grapher.cs" />
+    <Compile Include="Assets\Graphing\Scripts\IO\ISpreadsheetWriter.cs" />
+    <Compile Include="Assets\Graphing\Scripts\IO\MiniExcelWriter.cs" />
     <Compile Include="Assets\Graphing\Scripts\PlaceholderData.cs" />
     <Compile Include="Assets\Graphing\Scripts\QuadTessellator.cs" />
     <Compile Include="Assets\Graphing\Scripts\ScreenSpaceLineRenderer.cs" />

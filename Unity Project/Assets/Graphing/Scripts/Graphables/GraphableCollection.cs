@@ -1180,10 +1180,7 @@ namespace Graphing
                 if (string.IsNullOrWhiteSpace(worksheet))
                     worksheet = IO.GraphIO.defaultSheetName;
                 names.Add(worksheet);
-                MiniExcelLibs.MiniExcel.Insert(
-                    path, dataTable, worksheet,
-                    printHeader: true,
-                    configuration: IO.GraphIO.DefaultConfig);
+                IO.GraphIO.SpreadsheetWriter.Write(path, worksheet, dataTable, IO.GraphIO.defaultOptions);
                 graphsToWrite = graphsToWrite.Where(g => !IsCombinableLineGraph(g));
                 dataTable.Dispose();
             }
