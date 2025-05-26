@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584534136395951120" AutoLoad="false">
+<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584533219686861514" AutoLoad="false">
   <Author />
   <Info />
   <Assets>
@@ -16,6 +16,14 @@
     <Asset Name="Jet" Path="Assets/Graphing/Resources/Textures/Jet.tif" Type="Texture2D" Url="Graphing/Resources/Textures/Jet" AutoLoad="false" />
     <Asset Name="Jet_Dark" Path="Assets/Graphing/Resources/Textures/Jet_Dark.tif" Type="Texture2D" Url="Graphing/Resources/Textures/Jet_Dark" AutoLoad="false" />
     <Asset Name="Wind Tunnel Window" Path="Assets/Kerbal Wind Tunnel/Prefabs/Wind Tunnel Window.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/Prefabs/Wind Tunnel Window" AutoLoad="false" />
+    <Asset Name="Check blue" Path="Assets/Kerbal Wind Tunnel/Resources/Check blue.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Check blue" AutoLoad="false" />
+    <Asset Name="Check gray" Path="Assets/Kerbal Wind Tunnel/Resources/Check gray.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Check gray" AutoLoad="false" />
+    <Asset Name="Check white" Path="Assets/Kerbal Wind Tunnel/Resources/Check white.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Check white" AutoLoad="false" />
+    <Asset Name="Circle blue" Path="Assets/Kerbal Wind Tunnel/Resources/Circle blue.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Circle blue" AutoLoad="false" />
+    <Asset Name="Circle white" Path="Assets/Kerbal Wind Tunnel/Resources/Circle white.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Circle white" AutoLoad="false" />
+    <Asset Name="Dropdown blue" Path="Assets/Kerbal Wind Tunnel/Resources/Dropdown blue.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Dropdown blue" AutoLoad="false" />
+    <Asset Name="Dropdown gray" Path="Assets/Kerbal Wind Tunnel/Resources/Dropdown gray.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Dropdown gray" AutoLoad="false" />
+    <Asset Name="Dropdown white" Path="Assets/Kerbal Wind Tunnel/Resources/Dropdown white.png" Type="Texture2D" Url="Kerbal Wind Tunnel/Resources/Dropdown white" AutoLoad="false" />
   </Assets>
   <Dependencies>
     <Dependency>graphingshaders</Dependency>

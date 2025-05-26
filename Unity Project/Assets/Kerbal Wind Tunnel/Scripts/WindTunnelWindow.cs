@@ -75,6 +75,8 @@ namespace KerbalWindTunnel
         private Toggle selectOnGraphToggle;
         [SerializeField]
         private Toggle rollUpToggle;
+        [SerializeField]
+        private UT_Text highlightSpeedLabel;
 #pragma warning restore IDE0044 // Add readonly modifier
 #pragma warning restore CS0649 // Field is never assigned to
         private PopupDialog settingsDialog;
