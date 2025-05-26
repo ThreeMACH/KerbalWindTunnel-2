@@ -441,12 +441,19 @@ namespace KerbalWindTunnel
         // Called by On End Edit of the highlight altitude entry field
         public void SetHighlightAltitude(string altitude)
         {
-            if (float.TryParse(altitude, out float result) && result != _highlightAltitude && result > -CelestialBody.Radius * 0.5f && result <= CelestialBody.atmosphereDepth)
+            if (float.TryParse(altitude, out float result) && result != _highlightAltitude)
             {
-                _highlightAltitude = result;
-                if (GraphMode > 0)
-                    RefreshData();
-                UpdateHighlightingMethod();
+                if (result > CelestialBody.atmosphereDepth)
+                    HighlightAltitude = (float)CelestialBody.atmosphereDepth;
+                else if (result < -CelestialBody.Radius * 0.5f)
+                    HighlightAltitude = (float)CelestialBody.Radius * 0.5f;
+                else
+                {
+                    _highlightAltitude = result;
+                    if (GraphMode > 0)
+                        RefreshData();
+                    UpdateHighlightingMethod();
+                }
             }
             else
                 highlightAltitudeInput.Text = HighlightAltitude.ToString();
