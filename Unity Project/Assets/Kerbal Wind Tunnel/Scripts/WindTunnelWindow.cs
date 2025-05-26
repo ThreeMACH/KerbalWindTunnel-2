@@ -14,6 +14,7 @@ namespace KerbalWindTunnel
     public class WindTunnelWindow : MonoBehaviour
     {
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649 // Field is never assigned to
         [SerializeField]
         private UT_Dropdown planetDropdown;
         [SerializeField]
@@ -47,9 +48,9 @@ namespace KerbalWindTunnel
         [SerializeField]
         private Toggle ascentTimeToggle;
         [SerializeField]
-        private UI_Tools.NonExclusiveToggleArray aoaToggleArray;
+        private NonExclusiveToggleArray aoaToggleArray;
         [SerializeField]
-        private UI_Tools.NonExclusiveToggleArray velToggleArray;
+        private NonExclusiveToggleArray velToggleArray;
         [SerializeField]
         private Toggle aoaWetToggle;
         [SerializeField]
@@ -63,11 +64,11 @@ namespace KerbalWindTunnel
         [SerializeField]
         private UT_Text velCurveInfo;
         [SerializeField]
-        private Graphing.Grapher envelopeGrapher;
+        private Grapher envelopeGrapher;
         [SerializeField]
-        private Graphing.Grapher aoaCurveGrapher;
+        private Grapher aoaCurveGrapher;
         [SerializeField]
-        private Graphing.Grapher velCurveGrapher;
+        private Grapher velCurveGrapher;
         [SerializeField]
         private Button settingsButton;
         [SerializeField]
@@ -75,6 +76,7 @@ namespace KerbalWindTunnel
         [SerializeField]
         private Toggle rollUpToggle;
 #pragma warning restore IDE0044 // Add readonly modifier
+#pragma warning restore CS0649 // Field is never assigned to
         private PopupDialog settingsDialog;
 
         private GraphableCollection envelopeCollection;
@@ -725,6 +727,7 @@ namespace KerbalWindTunnel
 
 #if DEBUG
 #pragma warning disable CS0162 // Unreachable code detected
+        [System.Diagnostics.CodeAnalysis.SuppressMessage("Style", "IDE0059:Unnecessary assignment of a value", Justification = "<Pending>")]
         private void CharacterizedTestDump()
         {
             VesselCache.SimulatedVessel simVessel_test = VesselCache.SimulatedVessel.Borrow(EditorLogic.fetch.ship);
