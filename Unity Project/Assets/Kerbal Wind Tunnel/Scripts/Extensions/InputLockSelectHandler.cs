@@ -32,7 +32,7 @@ namespace KerbalWindTunnel.Extensions
                 Destroy(this);
                 return;
             }
-            endEvent.AddListener(Unlock);
+            endEvent.AddListener(UnlockAndDeselect);
         }
 
         public void Setup(string lockID, ControlTypes controlTypes = ControlTypes.KEYBOARDINPUT)
@@ -64,7 +64,12 @@ namespace KerbalWindTunnel.Extensions
             InputLockManager.RemoveControlLock(LockID);
             locked = false;
         }
-        public void Unlock(string _) => Unlock();
+        public void UnlockAndDeselect(string _)
+        {
+            Unlock();
+            if (!EventSystem.current.alreadySelecting)
+                EventSystem.current.SetSelectedGameObject(null);
+        }
 
         public void OnBeforeSerialize()
         {
@@ -80,7 +85,7 @@ namespace KerbalWindTunnel.Extensions
         {
             if (locked)
                 Unlock();
-            endEvent?.RemoveListener(Unlock);
+            endEvent?.RemoveListener(UnlockAndDeselect);
         }
     }
 }
