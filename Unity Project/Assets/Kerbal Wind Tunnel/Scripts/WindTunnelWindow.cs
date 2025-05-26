@@ -272,7 +272,10 @@ namespace KerbalWindTunnel
                 if (_highlightSpeed == value)
                     return;
                 _highlightSpeed = value;
-                highlightSpeedInput.Text = value.ToString();
+                if (WindTunnelSettings.SpeedIsMach)
+                    highlightSpeedInput.Text = (value / GetSpeedOfSound(HighlightAltitude)).ToString("F2");
+                else
+                    highlightSpeedInput.Text = value.ToString("N0");
                 if (GraphMode == 1)
                     RefreshData();
                 UpdateHighlightingMethod();
@@ -359,12 +362,6 @@ namespace KerbalWindTunnel
             aoaCollection = aoaData.graphables;
             envelopeCollection = envelopeData.graphables;
 
-            highlightAltitudeInput.Text = HighlightAltitude.ToString();
-            highlightSpeedInput.Text = HighlightSpeed.ToString();
-            highlightAoAInput.Text = HighlightAoA.ToString();
-
-            highlightManager = gameObject.AddComponent<HighlightManager>();
-
             InitializePlanetList();
             invGAccel = 1 / (float)(PhysicsGlobals.GravitationalAcceleration * Planetarium.fetch.Home.GeeASL);
             int homeIndex = planets.FindIndex(x => x.celestialBody == Planetarium.fetch.CurrentMainBody);
@@ -372,6 +369,12 @@ namespace KerbalWindTunnel
                 homeIndex = 0;
             body = planets[homeIndex];
             planetDropdown.Value = homeIndex;
+
+            highlightAltitudeInput.Text = HighlightAltitude.ToString();
+            highlightSpeedInput.Text = WindTunnelSettings.SpeedIsMach ? (HighlightSpeed / GetSpeedOfSound(HighlightAltitude)).ToString("F2") : HighlightSpeed.ToString("N0");
+            highlightAoAInput.Text = HighlightAoA.ToString();
+
+            highlightManager = gameObject.AddComponent<HighlightManager>();
 
             SetEnvelopeOptions(envelopeData.graphDefinitions.Where(g => g.Enabled && g.Graph is SurfGraph).Select(g => g.DisplayName));
             SetToggleOptions(aoaToggleArray, aoaData.graphDefinitions.Where(g => g.Enabled));
@@ -421,7 +424,10 @@ namespace KerbalWindTunnel
         {
             if (float.TryParse(speed, out float result) && result != _highlightSpeed && result >= 0)
             {
-                _highlightSpeed = result;
+                if (WindTunnelSettings.SpeedIsMach)
+                    _highlightSpeed = result * GetSpeedOfSound(HighlightAltitude);
+                else
+                    _highlightSpeed = result;
                 if (GraphMode == 1)
                     RefreshData();
                 UpdateHighlightingMethod();
@@ -574,7 +580,10 @@ namespace KerbalWindTunnel
                 return;
 
             clickedPosition = envelopeGrapher.GetGraphCoordinate(clickedPosition);
-            HighlightSpeed = clickedPosition.x;
+            if (WindTunnelSettings.SpeedIsMach)
+                HighlightSpeed = clickedPosition.x * GetSpeedOfSound(clickedPosition.y);
+            else
+                HighlightSpeed = clickedPosition.x;
             HighlightAltitude = clickedPosition.y;
             HighlightAoA = Mathf.Round(Mathf.Rad2Deg * SetEnvelopeDetails() * 10) / 10;
 
@@ -906,6 +915,14 @@ namespace KerbalWindTunnel
             }
         }
 
+        public static float GetSpeedOfSound(float altitude)
+        {
+            double atmPressure = Instance.CelestialBody.GetPressure(altitude);
+            double atmDensity = Extensions.KSPClassExtensions.GetDensity(Instance.CelestialBody, altitude);
+            float speedOfSound = (float)Instance.CelestialBody.GetSpeedOfSound(atmPressure, atmDensity);
+            return speedOfSound;
+        }
+
         private void UpdateFromSettings()
         {
             settingsDialog = null;
@@ -916,6 +933,11 @@ namespace KerbalWindTunnel
                 envelopeData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
                 velData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
                 aoaData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+
+                envelopeData.SetMachMode(WindTunnelSettings.SpeedIsMach);
+
+                if (WindTunnelSettings.SpeedIsMach)
+                    highlightSpeedInput.Text = (HighlightSpeed / GetSpeedOfSound(HighlightAltitude)).ToString("F2");
 
                 UpdateToggleCompatibility(velToggleArray, velData.graphDefinitions);
                 UpdateToggleCompatibility(aoaToggleArray, aoaData.graphDefinitions);

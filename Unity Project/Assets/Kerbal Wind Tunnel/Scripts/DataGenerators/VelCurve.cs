@@ -17,7 +17,8 @@ namespace KerbalWindTunnel.DataGenerators
         private static readonly ConcurrentDictionary<(int altitude, int velocity), EnvelopePoint> cache = new ConcurrentDictionary<(int, int), EnvelopePoint>();
 
         private static Color defaultColor = Color.green;
-        private static Func<EnvelopePoint, Vector2> ToVector(Func<EnvelopePoint, float> func) => (pt) => new Vector2(pt.speed, func(pt));
+        private static Func<EnvelopePoint, Vector2> ToVector(Func<EnvelopePoint, float> func) => (pt) => new Vector2(WindTunnelSettings.SpeedIsMach ? pt.mach : pt.speed, func(pt));
+
         public readonly List<LineGraphDefinition> graphDefinitions = new List<LineGraphDefinition>()
         {
             new LineGraphDefinition("aoa_level", ToVector(p => p.AoA_level * Mathf.Rad2Deg)){ DisplayName = "Level AoA", YName = "Angle", YUnit = "°", StringFormat = "F2", Color = defaultColor },

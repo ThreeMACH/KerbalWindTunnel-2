@@ -22,6 +22,11 @@ namespace KerbalWindTunnel.DataGenerators
         public static (int x, int y)[] resolution = { (10, 10), (40, 90), (80, 180), (160, 180) };
 
         private const string xName = "Speed", xUnit = "m/s", yName = "Altitude", yUnit = "m";
+        private const string xMachName = "Sea Level Mach", xMachUnit = "-";
+        private static Func<EnvelopeLine.AscentPathPoint, Vector2> ToVector =>
+            (pt) => new Vector2(
+                WindTunnelSettings.SpeedIsMach ? pt.speed / WindTunnelWindow.GetSpeedOfSound(0) : pt.speed,
+                pt.altitude);
 
         public readonly List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
         {
@@ -45,13 +50,13 @@ namespace KerbalWindTunnel.DataGenerators
         };
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
         public readonly OutlineGraphDefinition<EnvelopePoint> envelope = new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) { DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 };
-        public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", p => new Vector2(p.speed, p.altitude),
+        public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", ToVector,
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost, p => p.time },
                 new string[] { "Climb Angle", "Climb Rate", "Fuel Used", "Time" },
                 new string[] { "N1", "N0", "N3", "N1" },
                 new string[] { "°", "m/s", "units", "s" })
         { DisplayName = "Fuel-Optimal Path", StringFormat = "N0", Color = Color.black, LineWidth = 3 };
-        public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", p => new Vector2(p.speed, p.altitude),
+        public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", ToVector,
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost },
                 new string[] { "Climb Angle", "Climb Rate", "Time" },
                 new string[] { "N1", "N0", "N1" },
@@ -88,6 +93,44 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
+        private bool speedIsMach = WindTunnelSettings.SpeedIsMach;
+        public void SetMachMode(bool speedIsMach)
+        {
+            string xName, xUnit;
+            if (speedIsMach)
+            {
+                xName = xMachName;
+                xUnit = xMachUnit;
+            }
+            else
+            {
+                xName = EnvelopeSurf.xName;
+                xUnit = EnvelopeSurf.xUnit;
+            }
+
+            foreach (GraphDefinition graphDefinition in graphDefinitions)
+            {
+                graphDefinition.XName = xName;
+                graphDefinition.XUnit = xUnit;
+            }
+            if (this.speedIsMach == speedIsMach)
+                return;
+            this.speedIsMach = speedIsMach;
+            float asl = WindTunnelWindow.GetSpeedOfSound(0);
+            fuelPath.Graph.SetValues(
+                fuelPath.Graph.Values.Select(
+                    v => new Vector2(
+                        speedIsMach ? v.x / asl : v.x * asl,
+                        v.y))
+                .ToArray());
+            timePath.Graph.SetValues(
+                timePath.Graph.Values.Select(
+                    v => new Vector2(
+                        speedIsMach ? v.x / asl : v.x * asl,
+                        v.y))
+                .ToArray());
+        }
+
         public EnvelopeSurf()
         {
             SetCoefficientMode(WindTunnelSettings.UseCoefficients);
@@ -96,8 +139,16 @@ namespace KerbalWindTunnel.DataGenerators
             graphDefinitions.Add(timePath);
             foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                graphDefinition.XName = xName;
-                graphDefinition.XUnit = xUnit;
+                if (WindTunnelSettings.SpeedIsMach)
+                {
+                    graphDefinition.XName = xMachName;
+                    graphDefinition.XUnit = xMachUnit;
+                }
+                else
+                {
+                    graphDefinition.XName = xName;
+                    graphDefinition.XUnit = xUnit;
+                }
                 graphDefinition.YName = yName;
                 graphDefinition.YUnit = yUnit;
             }
@@ -236,12 +287,13 @@ namespace KerbalWindTunnel.DataGenerators
         {
             if (EnvelopePoints == null)
                 return;
+            float scalar = WindTunnelSettings.SpeedIsMach ? 1 / WindTunnelWindow.GetSpeedOfSound(0) : 1;
             foreach (GraphDefinition graph in graphDefinitions.Where(g => g.Enabled))
             {
                 if (graph is SurfGraphDefinition surfDefinition)
-                    surfDefinition.UpdateGraph(left, right, bottom, top, EnvelopePoints);
+                    surfDefinition.UpdateGraph(left * scalar, right * scalar, bottom, top, EnvelopePoints);
                 else if (graph is OutlineGraphDefinition<EnvelopePoint> outlineDefinition)
-                    outlineDefinition.UpdateGraph(left, right, bottom, top, EnvelopePoints);
+                    outlineDefinition.UpdateGraph(left * scalar, right * scalar, bottom, top, EnvelopePoints);
             }
         }
 

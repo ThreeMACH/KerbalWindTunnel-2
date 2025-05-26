@@ -31,17 +31,17 @@ namespace KerbalWindTunnel
         [Persistent]
         private bool useCoefficients = true;
 
-        public static bool DefaultToMach
+        public static bool SpeedIsMach
         {
-            get { return Instance.defaultToMach; }
+            get { return Instance.speedIsMach; }
             set
             {
-                Instance.defaultToMach = value;
+                Instance.speedIsMach = value;
                 settingsChanged = true;
             }
         }
         [Persistent]
-        private bool defaultToMach;
+        private bool speedIsMach;
 
         public static bool StartMinimized
         {
@@ -189,7 +189,7 @@ namespace KerbalWindTunnel
             List<DialogGUIBase> dialog = new List<DialogGUIBase>
             {
                 new DialogGUIToggle(UseCoefficients, "Lift, Drag as coefficients", b => UseCoefficients = b ),
-                //new DialogGUIToggle(DefaultToMach, "Default to speed as Mach", (b) => WindTunnelSettings.DefaultToMach = b), // TODO: Implement this
+                new DialogGUIToggle(SpeedIsMach, "Speed as Mach", (b) => SpeedIsMach = b),
                 new DialogGUIToggle(UseCharacterized, "Use faster vessel characterization",  b => UseCharacterized = b),
                 new DialogGUIToggle(StartMinimized, "Start minimized", b => StartMinimized = b),
                 new DialogGUIToggle(UseSingleColorHighlighting, "Use simple part highlighting", b => UseSingleColorHighlighting = b),
