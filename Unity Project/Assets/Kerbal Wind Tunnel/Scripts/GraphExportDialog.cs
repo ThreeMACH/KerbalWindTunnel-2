@@ -51,8 +51,8 @@ namespace KerbalWindTunnel
                 ),
                 new DialogGUIHorizontalLayout(
                     new DialogGUIFlexibleSpace(),
-                    new DialogGUIButton("Save", Export),
-                    new DialogGUIButton("Cancel", Dismiss),
+                    new DialogGUIButton("Save", Export, false),
+                    new DialogGUIButton("Cancel", Dismiss, false),
                     new DialogGUIFlexibleSpace()
                     )
             };
@@ -77,8 +77,8 @@ namespace KerbalWindTunnel
                     new MultiOptionDialog(popupConfirmName, "The specified file already exists. Would you like to replace it?", "", UISkinManager.defaultSkin,
                         new DialogGUIHorizontalLayout(
                             new DialogGUIFlexibleSpace(),
-                            new DialogGUIButton("Yes", () => { DeleteFile(path); Dismiss(); ContinueExport(filename); }),
-                            new DialogGUIButton("No", () => { }),
+                            new DialogGUIButton("Yes", () => { DeleteFile(path); ContinueExport(filename); Dismiss(); }, true),
+                            new DialogGUIButton("No", () => { }, true),
                             new DialogGUIFlexibleSpace()
                             )
                         ), false, UISkinManager.defaultSkin, true);
