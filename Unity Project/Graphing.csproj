@@ -187,7 +187,13 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\"
-	copy /Y "$(ProjectDir)AssetBundles\graphingshaders.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\graphingShaders.assetbundle"</PostBuildEvent>
+copy /Y "$(ProjectDir)AssetBundles\graphingshaders.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\graphingShaders.assetbundle"
+
+if not $(ConfigurationName) == Release (EXIT)
+
+cd $(ProjectDir)..
+copy /Y "$(TargetDir)$(ProjectName).*" "Builds\WindTunnel\Plugins\"
+copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "Builds\WindTunnel\graphingShaders.assetbundle"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

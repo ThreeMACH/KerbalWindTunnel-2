@@ -378,6 +378,8 @@ namespace KerbalWindTunnel
             highlightSpeedInput.Text = WindTunnelSettings.SpeedIsMach ? (HighlightSpeed / GetSpeedOfSound(HighlightAltitude)).ToString("F2") : HighlightSpeed.ToString("N0");
             highlightAoAInput.Text = HighlightAoA.ToString();
 
+            highlightSpeedLabel.Text = WindTunnelSettings.SpeedIsMach ? "Mach:" : "Speed:";
+
             highlightManager = gameObject.AddComponent<HighlightManager>();
 
             SetEnvelopeOptions(envelopeData.graphDefinitions.Where(g => g.Enabled && g.Graph is SurfGraph).Select(g => g.DisplayName));
@@ -938,29 +940,29 @@ namespace KerbalWindTunnel
         private void UpdateFromSettings()
         {
             settingsDialog = null;
+            highlightSpeedLabel.Text = WindTunnelSettings.SpeedIsMach ? "Mach:" : "Speed:";
+
+            envelopeData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+            velData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+            aoaData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
+
+            envelopeData.SetMachMode(WindTunnelSettings.SpeedIsMach);
+
+            if (WindTunnelSettings.SpeedIsMach)
+                highlightSpeedInput.Text = (HighlightSpeed / GetSpeedOfSound(HighlightAltitude)).ToString("F2");
+
+            UpdateToggleCompatibility(velToggleArray, velData.graphDefinitions);
+            UpdateToggleCompatibility(aoaToggleArray, aoaData.graphDefinitions);
+
+            envelopeData.UpdateGraphs();
+            velData.UpdateGraphs();
+            aoaData.UpdateGraphs();
+
+            envelopeData.envelope.Visible = WindTunnelSettings.ShowEnvelopeMaskAlways
+                    || (WindTunnelSettings.ShowEnvelopeMask && !envelopeCollection[envelopeDropdown.Value].Name.EndsWith("_excess"));
+
             if (WindTunnelSettings.UseCharacterized != vessel is VesselCache.CharacterizedVessel)
                 RefreshData();
-            else
-            {
-                envelopeData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
-                velData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
-                aoaData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
-
-                envelopeData.SetMachMode(WindTunnelSettings.SpeedIsMach);
-
-                if (WindTunnelSettings.SpeedIsMach)
-                    highlightSpeedInput.Text = (HighlightSpeed / GetSpeedOfSound(HighlightAltitude)).ToString("F2");
-
-                UpdateToggleCompatibility(velToggleArray, velData.graphDefinitions);
-                UpdateToggleCompatibility(aoaToggleArray, aoaData.graphDefinitions);
-
-                envelopeData.UpdateGraphs();
-                velData.UpdateGraphs();
-                aoaData.UpdateGraphs();
-
-                envelopeData.envelope.Visible = WindTunnelSettings.ShowEnvelopeMaskAlways
-                        || (WindTunnelSettings.ShowEnvelopeMask && !envelopeCollection[envelopeDropdown.Value].Name.EndsWith("_excess"));
-            }
         }
 
         private void OnEditorShipModified(ShipConstruct _)

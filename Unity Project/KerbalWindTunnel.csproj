@@ -190,10 +190,10 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/System.Xml.dll</HintPath>
     </Reference>
     <Reference Include="System.Xml.Linq">
-      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/System.Xml.Linq.dll</HintPath>
+      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.5/System.Xml.Linq.dll</HintPath>
     </Reference>
     <Reference Include="System.Numerics">
-      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/System.Numerics.dll</HintPath>
+      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.5/System.Numerics.dll</HintPath>
     </Reference>
     <Reference Include="System.IO.Compression">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/System.IO.Compression.dll</HintPath>
@@ -202,7 +202,7 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/Microsoft.CSharp.dll</HintPath>
     </Reference>
     <Reference Include="System.Data">
-      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/System.Data.dll</HintPath>
+      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.5/System.Data.dll</HintPath>
     </Reference>
     <Reference Include="Microsoft.Win32.Primitives">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/Facades/Microsoft.Win32.Primitives.dll</HintPath>
@@ -420,6 +420,9 @@
     <Reference Include="System.Threading.Timer">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/Facades/System.Threading.Timer.dll</HintPath>
     </Reference>
+    <Reference Include="System.Transactions">
+	  <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.5/System.Transactions.dll</HintPath>
+    </Reference>
     <Reference Include="System.ValueTuple">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/Facades/System.ValueTuple.dll</HintPath>
     </Reference>
@@ -467,7 +470,20 @@
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\"
-copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\windtunnelassetbundle.dat"</PostBuildEvent>
+copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\windtunnelassetbundle.dat"
+
+if not $(ConfigurationName) == Release (EXIT)
+
+cd $(ProjectDir)..
+copy /Y "$(TargetDir)$(ProjectName).*" "Builds\WindTunnel\Plugins\"
+copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "Builds\WindTunnel\windtunnelassetbundle.dat"
+copy /Y "$(TargetDir)PriorityQueue.dll" "Builds\WindTunnel\Plugins\+PriorityQueue.dll"
+copy /Y "$(TargetDir)Microsoft.Bcl.HashCode.dll" "Builds\WindTunnel\Plugins\References"
+copy /Y "$(TargetDir)System.Xml.Linq.dll" "Builds\WindTunnel\Plugins\References\System.Xml.Linq.dll.ignore"
+copy /Y "$(TargetDir)System.Numerics.dll" "Builds\WindTunnel\Plugins\References\Load 1st"
+copy /Y "$(TargetDir)System.Transactions.dll" "Builds\WindTunnel\Plugins\References\Load 1st"
+copy /Y "$(TargetDir)System.Data.dll" "Builds\WindTunnel\Plugins\References\Load 2nd"
+copy /Y "$(TargetDir)MiniExcel.*" "Builds\WindTunnel\Plugins\References\Load 3rd"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
