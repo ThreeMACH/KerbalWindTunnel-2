@@ -49,15 +49,6 @@ namespace KerbalWindTunnel
     {
         bool loaded = false;
         private ISpreadsheetWriter writer;
-        /*public void PrintDomain()
-        {
-            UnityEngine.Debug.LogFormat("Object is executing in AppDomain \"{0}\"", AppDomain.CurrentDomain.FriendlyName);
-            if (!AppDomain.CurrentDomain.FriendlyName.Contains("Excel"))
-                return;
-            return;
-            foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
-                UnityEngine.Debug.Log(assembly.FullName);
-        }*/
         internal string ListAssemblies()
         {
             return string.Join("\n", AppDomain.CurrentDomain.GetAssemblies().Select(a => a.FullName));
@@ -68,43 +59,71 @@ namespace KerbalWindTunnel
                 return;
             string[] dlls = Directory.GetFiles(path, "*.dll*", SearchOption.AllDirectories);
             // System.Xml.Linq
-            try
+            if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.StartsWith("System.Xml.Linq,")))
             {
-                Assembly.Load("System.Xml.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
-            }
-            catch (FileNotFoundException)
-            {
-                Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("System.Xml.Linq.dll.ignore")));
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
+                try
+                {
+                    Assembly.Load("System.Xml.Linq, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+                }
+                catch (FileNotFoundException)
+                {
+                    Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("System.Xml.Linq.dll.ignore")));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
             // System.Numerics
-            try
+            if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.StartsWith("System.Numerics,")))
             {
-                Assembly.Load("System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
-            }
-            catch (FileNotFoundException)
-            {
-                Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("System.Numerics.dll")));
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
+                try
+                {
+                    Assembly.Load("System.Numerics, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+                }
+                catch (FileNotFoundException)
+                {
+                    Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("System.Numerics.dll")));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
             // MiniExcel
-            try
+            if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.StartsWith("MiniExcel,")))
             {
-                Assembly.Load("MiniExcel, Version=1.41.2.0, Culture=neutral, PublicKeyToken=e7310002a53eac39");
+                try
+                {
+                    Assembly.Load("MiniExcel, Version=1.41.2.0, Culture=neutral, PublicKeyToken=e7310002a53eac39");
+                }
+                catch (FileNotFoundException)
+                {
+                    Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("MiniExcel.dll")));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
-            catch (FileNotFoundException)
+            // System.IO.Compression
+            if (!AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.StartsWith("System.IO.Compression,")))
             {
-                Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("MiniExcel.dll")));
-            }
-            catch (Exception ex)
-            {
-                Debug.LogException(ex);
+                try
+                {
+                    Assembly.Load("System.IO.Compression, Version=4.0.0.0, Culture=neutral, PublicKeyToken=b77a5c561934e089");
+                }
+                catch (FileNotFoundException)
+                {
+                    if (dlls.Any(s => s.EndsWith("System.IO.Compression.dll")))
+                        Assembly.LoadFile(dlls.First(s => s.EndsWith("System.IO.Compression.dll")));
+                    else
+                        Assembly.LoadFile(dlls.FirstOrDefault(s => s.EndsWith("System.IO.Compression.dll.ignore")));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                }
             }
             loaded = true;
         }
