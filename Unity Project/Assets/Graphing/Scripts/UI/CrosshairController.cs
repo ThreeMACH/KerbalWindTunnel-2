@@ -14,6 +14,7 @@ namespace Graphing.UI
         private UI_Tools.Universal_Text.UT_Text label;
         //private RectTransform rectTransform;
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649 // Field is never written to
         [SerializeField]
         private RectTransform verticalRectTransform;
         [SerializeField]
@@ -24,6 +25,7 @@ namespace Graphing.UI
         private RectTransform heldHorizontalRectTransform;
         [SerializeField]
         private RectTransform labelRectTransform;
+#pragma warning restore CS0649 // Field is never written to
 #pragma warning restore IDE0044 // Add readonly modifier
         public bool hasVertical = true;
         public bool hasHorizontal = true;

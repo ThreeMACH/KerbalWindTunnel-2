@@ -14,6 +14,7 @@ namespace Graphing
     {
         public readonly Axis axis = new Axis();
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649 // Field is never written to
         [SerializeField]
         private RectTransform tickHolder;
         [SerializeField]
@@ -28,6 +29,7 @@ namespace Graphing
         private RectTransform axisLabel;
         [SerializeField]
         public Material defaultSurfGraphMaterial;
+#pragma warning restore CS0649 // Field is never written to
 #pragma warning restore IDE0044 // Add readonly modifier
         [SerializeField]
         private Material axisMaterial;

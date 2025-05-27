@@ -7,6 +7,7 @@ namespace UI_Tools
     public class RenderTextureResizer : MonoBehaviour
     {
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649 // Field is never written to
         [SerializeField]
         private UnityEngine.UI.RawImage imageElement;
         [SerializeField]
@@ -15,6 +16,7 @@ namespace UI_Tools
         private GameObject scalingGroup;
         [SerializeField]
         public int resolutionFactor = 1;
+#pragma warning restore CS0649 // Field is never written to
 #pragma warning restore IDE0044 // Add readonly modifier
 
         private RenderTexture graphTex;

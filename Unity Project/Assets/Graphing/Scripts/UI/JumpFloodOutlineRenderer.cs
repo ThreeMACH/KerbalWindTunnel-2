@@ -19,7 +19,9 @@ namespace Graphing.UI
 
         // hidden reference to ensure shader gets included with builds
         // gets auto-assigned with an OnValidate() function later
+#pragma warning disable CS0649 // Field is never written to
         [HideInInspector, SerializeField] internal Shader outlineShader;
+#pragma warning restore CS0649 // Field is never written to
 
         // some hidden settings
         const string shaderName = "Hidden/JumpFloodOutline";

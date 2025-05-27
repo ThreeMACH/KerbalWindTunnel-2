@@ -37,10 +37,12 @@ namespace Graphing
 #pragma warning restore IDE1006 // Naming Styles
 
 #pragma warning disable IDE0044 // Add readonly modifier
+#pragma warning disable CS0649 // Field is never written to
         [SerializeField]
         private UI_Tools.Universal_Text.UT_Text label;
         [SerializeField]
         private UnityEngine.UI.Image tick;
+#pragma warning restore CS0649 // Field is never written to
 #pragma warning restore IDE0044 // Add readonly modifier
 
         // Start is called before the first frame update
