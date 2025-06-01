@@ -496,21 +496,19 @@ namespace KerbalWindTunnel.VesselCache
             return data;
         }
 
-        protected override void WriteToFileXLS(string path, System.Data.DataSet data)
+        protected override async Task WriteToFileXLS(string path, System.Data.DataSet data)
         {
             for (int i = 0; i < Math.Min(data.Tables.Count, 5); i++)
-                Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, data.Tables[i].TableName, data.Tables[i], new Graphing.IO.SpreadsheetOptions(false, false, 1, 1));
-                //MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: false, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
+                await Task.Run(() => Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, data.Tables[i].TableName, data.Tables[i], new Graphing.IO.SpreadsheetOptions(false, false, 1, 1))).ConfigureAwait(false);
             for (int i = 5; i < data.Tables.Count; i++)
-                Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, data.Tables[i].TableName, data.Tables[i], new Graphing.IO.SpreadsheetOptions(true, true, 1, 0));
-                //MiniExcelLibs.MiniExcel.Insert(path, data.Tables[i], printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None });
+                await Task.Run(() => Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, data.Tables[i].TableName, data.Tables[i], new Graphing.IO.SpreadsheetOptions(true, true, 1, 0))).ConfigureAwait(false);
         }
-        protected override void WriteToFileCSV(string path, System.Data.DataSet data)
+        protected override async Task WriteToFileCSV(string path, System.Data.DataSet data)
         {
             for (int i = 0; i < Math.Min(data.Tables.Count, 5); i++)
-                MiniExcelLibs.MiniExcel.SaveAs(path.Insert(path.Length - 4, $"_{data.Tables[i].TableName}"), data.Tables[i], excelType: MiniExcelLibs.ExcelType.CSV, printHeader: false, sheetName: data.Tables[0].TableName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true }, overwriteFile: true);
+                await MiniExcelLibs.MiniExcel.SaveAsAsync(path.Insert(path.Length - 4, $"_{data.Tables[i].TableName}"), data.Tables[i], excelType: MiniExcelLibs.ExcelType.CSV, printHeader: false, sheetName: data.Tables[0].TableName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true }, overwriteFile: true);
             for (int i = 5; i < data.Tables.Count; i++)
-                MiniExcelLibs.MiniExcel.SaveAs(path.Insert(path.Length - 4, $"_{data.Tables[i].TableName}"), data.Tables[i], excelType: MiniExcelLibs.ExcelType.CSV, printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true }, overwriteFile: true);
+                await MiniExcelLibs.MiniExcel.SaveAsAsync(path.Insert(path.Length - 4, $"_{data.Tables[i].TableName}"), data.Tables[i], excelType: MiniExcelLibs.ExcelType.CSV, printHeader: true, sheetName: data.Tables[i].TableName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true }, overwriteFile: true);
         }
     }
 }

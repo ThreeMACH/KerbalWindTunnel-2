@@ -169,7 +169,7 @@ namespace KerbalWindTunnel
             return vesselForward * Mathf.Cos(-AoA) + vesselUp * Mathf.Sin(-AoA);
         }
 
-        public void WriteToFile(string directory, string filename, Graphing.IO.GraphIO.FileFormat format)
+        public async void WriteToFile(string directory, string filename, Graphing.IO.GraphIO.FileFormat format)
         {
             if ((format & Graphing.IO.GraphIO.FileFormat.Image) > 0)
                 throw new ArgumentException($"Format is not supported. {format}");
@@ -195,9 +195,9 @@ namespace KerbalWindTunnel
             }
 
             if ((format & Graphing.IO.GraphIO.FileFormat.Excel) > 0)
-                WriteToFileXLS(path, output);
+                await WriteToFileXLS(path, output);
             else if (format == Graphing.IO.GraphIO.FileFormat.CSV)
-                WriteToFileCSV(path, output);
+                await WriteToFileCSV(path, output);
             else
             {
                 output.Dispose();
@@ -206,15 +206,14 @@ namespace KerbalWindTunnel
             output.Dispose();
         }
         protected virtual System.Data.DataSet WriteToDataSet() => null;
-        protected virtual void WriteToFileXLS(string path, System.Data.DataSet data)
+        protected virtual async System.Threading.Tasks.Task WriteToFileXLS(string path, System.Data.DataSet data)
         {
-            Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, "", data, new Graphing.IO.SpreadsheetOptions(false, false, 1, 1));
-            //MiniExcelLibs.MiniExcel.SaveAs(path, data, false, configuration: new MiniExcelLibs.OpenXml.OpenXmlConfiguration() { FastMode = true, AutoFilter = false, TableStyles = MiniExcelLibs.OpenXml.TableStyles.None, FreezeColumnCount = 1, FreezeRowCount = 1 });
+            await System.Threading.Tasks.Task.Run(() => Graphing.IO.GraphIO.SpreadsheetWriter.Write(path, "", data, new Graphing.IO.SpreadsheetOptions(false, false, 1, 1)));
         }
-        protected virtual void WriteToFileCSV(string path, System.Data.DataSet data)
+        protected virtual async System.Threading.Tasks.Task WriteToFileCSV(string path, System.Data.DataSet data)
         {
             foreach (System.Data.DataTable table in data.Tables)
-                MiniExcelLibs.MiniExcel.SaveAs(path.Insert(path.Length - 4, $"_{table.TableName}"), table, printHeader: false, excelType: MiniExcelLibs.ExcelType.CSV, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true });
+                await MiniExcelLibs.MiniExcel.SaveAsAsync(path.Insert(path.Length - 4, $"_{table.TableName}"), table, printHeader: false, excelType: MiniExcelLibs.ExcelType.CSV, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true });
         }
 
         public readonly struct Conditions

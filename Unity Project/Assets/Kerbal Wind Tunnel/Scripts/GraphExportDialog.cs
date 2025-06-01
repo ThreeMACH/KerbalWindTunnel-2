@@ -95,7 +95,9 @@ namespace KerbalWindTunnel
         private void ContinueExport(string filename)
         {
             if (outputMode <= OutputMode.All)
-                collection.WriteToFile(WindTunnel.graphPath, filename, outputMode == OutputMode.Visible, format);
+                // Acceptable to not await an Async method since this is the main thread calling an IO operation.
+                // Discard is used suppress the warning.
+                System.Threading.Tasks.Task.Run(() => collection.WriteToFile(WindTunnel.graphPath, filename, outputMode == OutputMode.Visible, format));
             else
                 WindTunnelWindow.Instance.Vessel.WriteToFile(WindTunnel.graphPath, filename, format);
         }
