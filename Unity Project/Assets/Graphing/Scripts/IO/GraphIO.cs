@@ -44,25 +44,7 @@ namespace Graphing.IO
         /// </exception>
         public static void WriteToFile(this IGraphable graph, string directory, string filename, FileFormat format = FileFormat.CSV, string sheetName = "", (int width, int height)? resolution = null)
         {
-            if (!System.IO.Directory.Exists(directory))
-                System.IO.Directory.CreateDirectory(directory);
-
-            string path = ValidateFilePath(directory, filename, format);
-
-            if (format == FileFormat.CSV && !string.IsNullOrEmpty(sheetName))
-            {
-                sheetName = sheetName.Replace("/", "-").Replace("\\", "-");
-                sheetName = StripInvalidFileChars(sheetName);
-                path.Insert(path.Length - 4, sheetName);
-            }
-
-            try
-            {
-                if (System.IO.File.Exists(path))
-                    System.IO.File.Delete(path);
-            }
-            catch (Exception ex) { Debug.Log($"Unable to delete file:{ex.Message}"); }
-
+            string path = InitializeAndGetPath(directory, filename, sheetName, format);
             switch (format)
             {
                 case FileFormat.CSV:
@@ -116,28 +98,13 @@ namespace Graphing.IO
         /// <exception cref="System.NotImplementedException">File format is not supported.</exception>
         public static void WriteToFile(this GraphableCollection collection, string directory, string filename, bool visibleOnly, FileFormat format = FileFormat.CSV, string sheetName = "", (int width, int height)? resolution = null)
         {
-            if (!visibleOnly || (format & FileFormat.Image) > 0)
+            if ((format & FileFormat.Image) > 0)
+            {
                 WriteToFile(collection, directory, filename, format, sheetName, resolution);
-
-            if (!System.IO.Directory.Exists(directory))
-                System.IO.Directory.CreateDirectory(directory);
-
-            string path = ValidateFilePath(directory, filename, format);
-
-            if (format == FileFormat.CSV && !string.IsNullOrEmpty(sheetName))
-            {
-                sheetName = sheetName.Replace("/", "-").Replace("\\", "-");
-                sheetName = StripInvalidFileChars(sheetName);
-                path.Insert(path.Length - 4, sheetName);
+                return;
             }
 
-            try
-            {
-                if (System.IO.File.Exists(path))
-                    System.IO.File.Delete(path);
-            }
-            catch (Exception ex) { Debug.Log($"Unable to delete file:{ex.Message}"); }
-
+            string path = InitializeAndGetPath(directory, filename, sheetName, format);
             switch (format)
             {
                 case FileFormat.CSV:
@@ -157,6 +124,30 @@ namespace Graphing.IO
                 default:
                     throw new NotImplementedException("File format is not supported.");
             }
+        }
+
+        private static string InitializeAndGetPath(string directory, string filename, string sheetName, FileFormat format)
+        {
+            if (!System.IO.Directory.Exists(directory))
+                System.IO.Directory.CreateDirectory(directory);
+
+            string path = ValidateFilePath(directory, filename, format);
+
+            if (format == FileFormat.CSV && !string.IsNullOrEmpty(sheetName))
+            {
+                sheetName = sheetName.Replace("/", "-").Replace("\\", "-");
+                sheetName = StripInvalidFileChars(sheetName);
+                path.Insert(path.Length - 4, sheetName);
+            }
+
+            try
+            {
+                if (System.IO.File.Exists(path))
+                    System.IO.File.Delete(path);
+            }
+            catch (Exception ex) { Debug.Log($"Unable to delete file:{ex.Message}"); }
+
+            return path;
         }
 
         /// <summary>
