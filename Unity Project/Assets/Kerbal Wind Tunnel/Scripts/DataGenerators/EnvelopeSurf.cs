@@ -159,7 +159,15 @@ namespace KerbalWindTunnel.DataGenerators
         public async Task Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, TaskProgressTracker tracker, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude)
         {
             Task lineUpdateTask = null;
-            for (int i = 0; i < resolution.Length; i++)
+            int startLevel = 0;
+            if (EnvelopePoints != null)
+            {
+                int width = EnvelopePoints.GetUpperBound(0) + 1;
+                int height = EnvelopePoints.GetUpperBound(1) + 1;
+                while (startLevel < resolution.Length && resolution[startLevel].x <= width && resolution[startLevel].y <= height)
+                    startLevel++;
+            }
+            for (int i = startLevel; i < resolution.Length; i++)
             {
                 if (i > 0)
                 {
