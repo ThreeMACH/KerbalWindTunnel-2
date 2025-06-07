@@ -507,6 +507,7 @@ namespace Graphing
             CrosshairController.OnClick += OnGraphClicked;
         }
 
+        // TODO: Refactor to get rid of this.
         protected virtual void Update()
         {
             while (activatorQueue.TryDequeue(out var activator))

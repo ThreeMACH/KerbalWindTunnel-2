@@ -120,11 +120,11 @@ namespace Graphing
                             InstantiateChildGraphDrawer(newGraph);
                     }
                     else if (reason is GraphElementRemovedEventArgs removedEvent)
-                        DestroyChildGraphDrawers(removedEvent.Graph);
+                        DestroyChildGraphDrawer(removedEvent.Graph);
                     else if (reason is GraphElementsRemovedEventArgs multiRemoveEvent)
                     {
                         foreach (IGraphable oldGraph in multiRemoveEvent.Graphs)
-                            DestroyChildGraphDrawers(oldGraph);
+                            DestroyChildGraphDrawer(oldGraph);
                     }
                 }
             }
@@ -141,7 +141,7 @@ namespace Graphing
                 ((RectTransform)childDrawer.transform).anchoredPosition3D = new Vector3(0, 0, grapher.ZOffset2D / transform.localScale.z);
         }
         
-        private void DestroyChildGraphDrawers(IGraphable removedGraph)
+        private void DestroyChildGraphDrawer(IGraphable removedGraph)
         {
             foreach (GraphDrawer child in childDrawers.Where(drawer => drawer.graph == removedGraph))
                 Destroy(child.gameObject);

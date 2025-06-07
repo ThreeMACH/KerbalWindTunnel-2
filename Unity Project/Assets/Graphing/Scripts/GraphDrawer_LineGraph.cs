@@ -31,7 +31,7 @@ namespace Graphing
         protected internal void InitializeMaterial(Material material)
             => lineVertexMaterial = material;
 
-        protected void GenerateLineGraph()
+        protected void GenerateLineGraph(ScreenSpaceLineRenderer lineRenderer)
         {
             Vector3[] values;
             if (graph is LineGraph lineGraph)
@@ -47,7 +47,6 @@ namespace Graphing
                     return;
                 values = line3Graph.Values.Select(v3 => line3Graph.Transpose ? new Vector3(-v3.y, v3.x, -v3.z) : new Vector3(-v3.x, v3.y, -v3.z)).Where(NotNaN).ToArray();
             }
-            ScreenSpaceLineRenderer lineRenderer = GetComponent<ScreenSpaceLineRenderer>();
             lineRenderer.Points = values;
         }
 
@@ -56,9 +55,9 @@ namespace Graphing
         protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
             s_lineMarker.Begin();
-            if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs))
-                GenerateLineGraph();
             ScreenSpaceLineRenderer lineRenderer = GetComponentInChildren<ScreenSpaceLineRenderer>(true);
+            if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs))
+                GenerateLineGraph(lineRenderer);
             if (forceRegenerate || redrawReasons.Key == typeof(ColorChangedEventArgs))
             {
                 if (lineGraphable.UseSingleColor)
