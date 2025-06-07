@@ -55,6 +55,7 @@ namespace Graphing
                 mesh = new Mesh();
             MeshFilter meshFilter = gameObject.AddComponent<MeshFilter>();
             meshFilter.mesh = mesh;
+
             if (TryGetComponent(out MeshRenderer meshRenderer))
                 meshRenderer.material = outlineGraphMaterial;
             ignoreZScalePos = true;
@@ -64,11 +65,10 @@ namespace Graphing
             transform.localEulerAngles = new Vector3(0, 180, 0);
         }
 
-        void ISingleMaterialUser.InitializeMaterial(Material material) => InitializeMaterial(material);
+        void ISingleMaterialUser.InitializeMaterial(Material material)
+            => InitializeMaterial(material);
         protected internal void InitializeMaterial(Material material)
-        {
-            outlineGraphMaterial = material;
-        }
+            => outlineGraphMaterial = material;
 
         protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
@@ -81,14 +81,14 @@ namespace Graphing
                 {
                     if (outlineMask.Values.Length > 0)
                     {
-                        SurfMeshGeneration.ConstructQuadSurfMesh(outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, mesh, false);
+                        SurfMeshGeneration.ConstructQuadSurfMesh(mesh, outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, false);
                         QuadTessellator tessellator = new QuadTessellator(mesh);
                         tessellator.SubdivideForDegeneracy(Mathf.Abs(outlineMask.Values.Max() - outlineMask.Values.Min()), tessTolerance);
                         mesh.SetVertices(tessellator.Vertices.ToList());
                         mesh.SetIndices(tessellator.Indices.ToList(), MeshTopology.Triangles, 0);
                         mesh.SetUVs(0, tessellator.Coords.ToList());
-                        //mesh.SetUVs(2, GenerateVertexData(tessellator.Coords, tessellator.Heights, v => v.z).ToList());
                         mesh.SetUVs(1, GenerateVertexData(tessellator.Coords, tessellator.Heights, outlineMask.MaskCriteria).ToList());
+                        //mesh.SetUVs(2, GenerateVertexData(tessellator.Coords, tessellator.Heights, v => v.z).ToList());
                     }
                     else
                         mesh.Clear();
@@ -103,12 +103,13 @@ namespace Graphing
                     mesh.GetUVs(0, coords);
                     mesh.GetUVs(1, heights);
                     //mesh.SetUVs(1, GenerateVertexData(coords, heights, outlineMask.MaskCriteria).ToList());
+                    //mesh.SetUVs(2, GenerateVertexData(coords, heights, v => v.z).ToList());
                 }
                 pass = 2;
             }
             if (forceRegenerate || pass != 0 || redrawReasons.Key == typeof(MaskLineOnlyChangedEventArgs))
             {
-                // TODO: Implement the filled area.
+                // TODO: Implement the filled area through the material.
             }
             if (forceRegenerate || redrawReasons.Key == typeof(ColorChangedEventArgs))
             {
@@ -116,7 +117,10 @@ namespace Graphing
                 OutlineGraphMaterial.SetColor("_OutlineColor", outlineMask.color);
             }
             if (forceRegenerate || redrawReasons.Key == typeof(LineWidthChangedEventArgs))
-                outlineGraphMaterial.SetFloat("_OutlineThickness", outlineMask.LineWidth);
+            {
+                // Calling a method on the OutlineGraphMaterial property inherently makes the material unique.
+                OutlineGraphMaterial.SetFloat("_OutlineThickness", outlineMask.LineWidth);
+            }
             s_outlineMarker.End();
             return pass;
         }
@@ -127,7 +131,7 @@ namespace Graphing
             if (nullMesh)
                 mesh = new Mesh();
 
-            SurfMeshGeneration.ConstructQuadSurfMesh(outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, mesh, false);
+            SurfMeshGeneration.ConstructQuadSurfMesh(mesh, outlineMask.Values, outlineMask.XMin, outlineMask.XMax, outlineMask.YMin, outlineMask.YMax, false);
             //EnhancedSubMesh enhancedMesh = new EnhancedSubMesh(mesh);
             //enhancedMesh.SubdivideQuadMesh(subdivisionLevel);
             //enhancedMesh.UpdateMesh();

@@ -45,8 +45,7 @@ namespace Graphing.Meshing
 
             for (int i = 0; i < this.indices.Count; i += 4)
             {
-                // This seems to wind the wrong way... But if it works, it works.
-                quads.Add(new Quad(vertices, indices[i], indices[i + 3], indices[i + 2], indices[i + 1]));
+                quads.Add(new Quad(vertices, indices[i], indices[i + 1], indices[i + 2], indices[i + 3]));
             }
 
             indices_backup.Clear();
@@ -55,6 +54,9 @@ namespace Graphing.Meshing
             vertices_backup.AddRange(this.vertices.Select(v => v.position));
         }
         public void Reset() => Setup(indices_backup, vertices_backup);
+
+        public async void SubdivideForDegeneracyAsync(float scale = 1, float tolerance = 0.015625f)
+            => await Task.Run(() => SubdivideForDegeneracy(scale, tolerance));
 
         // The tessellation into tris could be broken out to a separate method, but I can't be bothered right now.
         public void SubdivideForDegeneracy(float scale = 1, float tolerance = 0.015625f)

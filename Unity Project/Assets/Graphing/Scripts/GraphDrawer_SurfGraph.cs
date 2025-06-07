@@ -68,6 +68,7 @@ namespace Graphing
         protected override int DrawInternal(IGrouping<Type, EventArgs> redrawReasons, int pass, bool forceRegenerate = false)
         {
             s_surfgraphMarker.Begin();
+
             // TODO: Most of this is working, but wrong. E.G. Shouldn't need a new mesh every bounds changed, just shift the mesh position.
             if (forceRegenerate || redrawReasons.Key == typeof(ValuesChangedEventArgs) || redrawReasons.Key == typeof(BoundsChangedEventArgs))
             {
@@ -75,7 +76,7 @@ namespace Graphing
                 {
                     if (surfGraph.Values.Length > 0)
                     {
-                        SurfMeshGeneration.ConstructQuadSurfMesh(surfGraph.Values, surfGraph.XMin, surfGraph.XMax, surfGraph.YMin, surfGraph.YMax, mesh, false);
+                        SurfMeshGeneration.ConstructQuadSurfMesh(mesh, surfGraph.Values, surfGraph.XMin, surfGraph.XMax, surfGraph.YMin, surfGraph.YMax, false);
                         QuadTessellator tessellator = new QuadTessellator(mesh);
                         tessellator.SubdivideForDegeneracy(Mathf.Abs(surfGraph.ZMax - surfGraph.ZMin));
                         mesh.SetVertices(tessellator.Vertices.ToList());

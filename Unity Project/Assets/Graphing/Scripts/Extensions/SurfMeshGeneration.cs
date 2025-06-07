@@ -5,7 +5,7 @@ namespace Graphing.Meshing
 {
     public static class SurfMeshGeneration
     {
-        public static void ConstructQuadSurfMesh(float[,] values, float xMin, float xMax, float yMin, float yMax, Mesh mesh, bool invertZ = false)
+        public static void ConstructQuadSurfMesh(Mesh mesh, float[,] values, float xMin, float xMax, float yMin, float yMax, bool invertZ = false)
         {
             float[] xValues = new float[values.GetUpperBound(0) + 1];
             float[] yValues = new float[values.GetUpperBound(1) + 1];
@@ -16,10 +16,10 @@ namespace Graphing.Meshing
             for (int j = yValues.Length - 1; j >= 0; j--)
                 yValues[j] = yMin + j * yStep;
 
-            ConstructQuadSurfMesh(values, xValues, yValues, mesh, invertZ);
+            ConstructQuadSurfMesh(mesh, values, xValues, yValues, invertZ);
         }
 
-        public static void ConstructQuadSurfMesh(float[,] values, float[] xValues, float[] yValues, Mesh mesh, bool invertZ = false)
+        public static void ConstructQuadSurfMesh(Mesh mesh, float[,] values, float[] xValues, float[] yValues, bool invertZ = false)
         {
             int iMax = values.GetUpperBound(0) + 1;
             int jMax = values.GetUpperBound(1) + 1;
@@ -50,9 +50,9 @@ namespace Graphing.Meshing
                         int quadIndex = ((i - 1) + (j - 1) * (iMax - 1)) * 4;
                         // Quad:
                         quadIndices[quadIndex] = (i - 1) + (j - 1) * iMax;
-                        quadIndices[quadIndex + 3] = (i - 1) + j * iMax;
+                        quadIndices[quadIndex + 1] = (i - 1) + j * iMax;
                         quadIndices[quadIndex + 2] = i + j * iMax;
-                        quadIndices[quadIndex + 1] = i + (j - 1) * iMax;
+                        quadIndices[quadIndex + 3] = i + (j - 1) * iMax;
                     }
                 }
             }
