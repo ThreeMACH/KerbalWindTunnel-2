@@ -82,7 +82,7 @@ namespace Graphing
             }
         }
 
-        private static Func<float, bool> IsaN = v => !float.IsNaN(v);
+        private static bool IsaN(float v) => !float.IsNaN(v);
         public float AutoMin
         {
             get
@@ -404,35 +404,14 @@ namespace Graphing
             if (sender != axis)
                 return;
 
-            boundsChangedEvents.Enqueue(eventArgs);
-        }
+            SetOriginsAndScales();
 
-        private readonly System.Collections.Concurrent.ConcurrentQueue<Axis.AxisBoundsEventArgs> boundsChangedEvents = new System.Collections.Concurrent.ConcurrentQueue<Axis.AxisBoundsEventArgs>();
-        private readonly System.Collections.Concurrent.ConcurrentQueue<(object sender, IDisplayEventArgs eventArgs)> displayEvents = new System.Collections.Concurrent.ConcurrentQueue<(object, IDisplayEventArgs)>();
+            if ((_use & AxisDirection.Color) > 0 && axisMaterial != null)
+                axisMaterial.SetRange(Min, Max);
 
-        [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
-        private void Update()
-        {
-            while (displayEvents.TryDequeue(out var displayEvent))
-            {
-                GraphDisplayChangeHandler(displayEvent.sender, displayEvent.eventArgs);
-            }
-
-            bool boundsChanged = !boundsChangedEvents.IsEmpty;
-            while (boundsChangedEvents.TryDequeue(out var eventArgs))
-            {
-                AxisBoundsChangedEvent?.Invoke(this, eventArgs);
-            }
-            if (boundsChanged)
-            {
-                SetOriginsAndScales();
-
-                if ((_use & AxisDirection.Color) > 0 && axisMaterial != null)
-                    axisMaterial.SetRange(Min, Max);
-
-                GenerateTicksAndLabels();
-                RedrawTicks();
-            }
+            GenerateTicksAndLabels();
+            RedrawTicks();
+            AxisBoundsChangedEvent?.Invoke(this, eventArgs);
         }
 
         private void SetOriginsAndScales()
@@ -563,7 +542,7 @@ namespace Graphing
 
             SetOriginsAndScales();
 
-            graphDrawer.Graph.DisplayChanged += GraphDisplayChangeListener;
+            graphDrawer.Graph.DisplayChanged += GraphDisplayChangeHandler;
             return true;
         }
 
@@ -582,7 +561,7 @@ namespace Graphing
 
             if (!attachedGraphDrawers.Remove(graphDrawer))
                 return false;
-            graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeListener;
+            graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeHandler;
             if (autoSetMin || autoSetMax)
                 RecalculateBounds();
             if (resetAxis)
@@ -590,18 +569,10 @@ namespace Graphing
             return true;
         }
 
-        private void GraphDisplayChangeListener(object sender, IDisplayEventArgs eventArgs)
-        {
-            displayEvents.Enqueue((sender, eventArgs));
-        }
-
         private void GraphDisplayChangeHandler(object sender, IDisplayEventArgs eventArgs)
         {
-            while (eventArgs is ChildDisplayChangedEventArgs childArgs)
-            {
-                eventArgs = childArgs.EventArgs;
-                sender = childArgs.OriginalSender;
-            }
+            if (eventArgs is ChildDisplayChangedEventArgs childArgs)
+                eventArgs = childArgs.Unwrap();
 
             if (eventArgs is TransposeChangedEventArgs)
             {
@@ -988,7 +959,7 @@ namespace Graphing
             axis.AxisBoundsChangedEvent -= BoundsChanged;
             foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
             {
-                graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeListener;
+                graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeHandler;
             }
             if (shaderTex != null)
                 Destroy(shaderTex);
