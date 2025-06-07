@@ -44,7 +44,7 @@ namespace Graphing
                 lock (this)
                 {
                     _values = value;
-                    OnValuesChanged(new ValuesChangedEventArgs(Values, false, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+                    OnValuesChanged(new ValuesChangedEventArgs(Values));
                 }
             }
         }
@@ -237,7 +237,9 @@ namespace Graphing
                 this.xMax = xRight;
                 this.yMin = yBottom;
                 this.yMax = yTop;
-                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax));
             }
         }
 

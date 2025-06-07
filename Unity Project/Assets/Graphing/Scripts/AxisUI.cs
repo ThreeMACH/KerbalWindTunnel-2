@@ -564,7 +564,6 @@ namespace Graphing
             SetOriginsAndScales();
 
             graphDrawer.Graph.DisplayChanged += GraphDisplayChangeListener;
-            graphDrawer.Graph.ValuesChanged += GraphBoundsChangeHandler;
             return true;
         }
 
@@ -584,40 +583,11 @@ namespace Graphing
             if (!attachedGraphDrawers.Remove(graphDrawer))
                 return false;
             graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeListener;
-            graphDrawer.Graph.ValuesChanged -= GraphBoundsChangeHandler;
             if (autoSetMin || autoSetMax)
                 RecalculateBounds();
             if (resetAxis)
                 SetUpAxis(FirstVisibleGraph());
             return true;
-        }
-
-        /// <summary>
-        /// Handler method for any changes affecting the display of the graphs.
-        /// </summary>
-        /// <param name="sender">The sender graph.</param>
-        /// <param name="eventArgs">The <see cref="EventArgs"/> instance containing the event data.</param>
-        private void GraphBoundsChangeHandler(object sender, IValueEventArgs eventArgs)
-        {
-            while (eventArgs is ChildValueChangedEventArgs childArgs)
-            {
-                eventArgs = childArgs.EventArgs;
-                sender = childArgs.OriginalSender;
-            }
-
-            if (eventArgs is ValuesChangedEventArgs valuesChangedEventArgs && valuesChangedEventArgs.BoundsChanged)
-            {
-                // If the sender is not an IGraphable3 and Use == Depth, its bounds won't apply
-                // If the sender is not an IColorGraph and Use == Color, its bounds won't apply
-                if ((Use == AxisDirection.Depth && !(sender is IGraphable3)) ||
-                    (Use == AxisDirection.Color && !(sender is IColorGraph)) ||
-                    (Use == AxisDirection.ColorWithDepth && !(sender is IColorGraph) && !(sender is IGraphable3)))
-                    return;
-                // Set axis bounds for all axes driven by this drawer.
-                if (AutoSetMin || AutoSetMax)
-                    RecalculateBounds();
-                return;
-            }
         }
 
         private void GraphDisplayChangeListener(object sender, IDisplayEventArgs eventArgs)
@@ -1019,7 +989,6 @@ namespace Graphing
             foreach (GraphDrawer graphDrawer in attachedGraphDrawers)
             {
                 graphDrawer.Graph.DisplayChanged -= GraphDisplayChangeListener;
-                graphDrawer.Graph.ValuesChanged -= GraphBoundsChangeHandler;
             }
             if (shaderTex != null)
                 Destroy(shaderTex);

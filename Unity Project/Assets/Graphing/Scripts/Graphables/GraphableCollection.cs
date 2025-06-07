@@ -894,16 +894,10 @@ namespace Graphing
             IValueEventArgs realEventArgs = eventArgs;
             if (realEventArgs is ChildValueChangedEventArgs wrappedEventArgs)
                 realEventArgs = wrappedEventArgs.Unwrap();
-            if (realEventArgs is ValuesChangedEventArgs valuesChangedEventArgs)
+            if (realEventArgs is ValuesChangedEventArgs)
             {
-                if (valuesChangedEventArgs.BoundsChanged)
-                {
-                    RecalculateLimits();
-                    // Pretend that the child's bounds haven't changed because the collection's bounds have already been changed and sent a BoundsChangedEventArgs.
-                    OnValuesChanged(new ChildValueChangedEventArgs((IGraphable)sender, new ValuesChangedEventArgs(valuesChangedEventArgs.NewValues, false, valuesChangedEventArgs.NewBounds)));
-                }
-                else
-                    OnValuesChanged(new ChildValueChangedEventArgs((IGraphable)sender, eventArgs));
+                OnValuesChanged(new ChildValueChangedEventArgs((IGraphable)sender, eventArgs));
+                RecalculateLimits();
             }
         }
         /// <summary>

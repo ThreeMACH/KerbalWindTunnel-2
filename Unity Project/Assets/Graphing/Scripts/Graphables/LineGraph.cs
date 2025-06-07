@@ -205,7 +205,9 @@ namespace Graphing
             lock (this)
             {
                 SetValuesInternal(values, xLeft, xRight);
-                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax));
             }
         }
         private void SetValuesInternal(float[] values, float xLeft, float xRight)
@@ -244,7 +246,9 @@ namespace Graphing
             lock (this)
             {
                 SetValuesInternal(values);
-                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax));
             }
         }
         private void SetValuesInternal(Vector2[] values)

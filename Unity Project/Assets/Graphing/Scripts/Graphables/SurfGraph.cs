@@ -39,7 +39,9 @@ namespace Graphing
                     _values = value;
                     zMin = _values.Min(true);
                     zMax = _values.Max(true);
-                    OnValuesChanged(new ValuesChangedEventArgs(Values, true, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                    OnValuesChanged(new ValuesChangedEventArgs(Values));
+                    OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax));
+                    OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Color, CMin, CMax));
                 }
             }
         }
@@ -287,7 +289,11 @@ namespace Graphing
                 zMin = values.Min(true);
                 zMax = values.Max(true);
 
-                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Color, CMin, CMax));
             }
         }
 

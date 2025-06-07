@@ -57,14 +57,14 @@ namespace Graphing
         /// </summary>
         string YName { get; set; }
         /// <summary>
-        /// Draws the object on the specified <see cref="UnityEngine.Texture2D"/>.
+        /// Draws the object on the specified <see cref="Texture2D"/>.
         /// </summary>
         /// <param name="texture">The texture on which to draw the object.</param>
         /// <param name="xLeft">The X axis lower bound.</param>
         /// <param name="xRight">The X axis upper bound.</param>
         /// <param name="yBottom">The Y axis lower bound.</param>
         /// <param name="yTop">The Y axis upper bound.</param>
-        void Draw(ref UnityEngine.Texture2D texture, float xLeft, float xRight, float yBottom, float yTop);
+        void Draw(ref Texture2D texture, float xLeft, float xRight, float yBottom, float yTop);
         /// <summary>
         /// Gets a value from the object given a selected coordinate.
         /// </summary>
@@ -132,15 +132,15 @@ namespace Graphing
         /// <summary>
         /// Defines the color scheme for the graph.
         /// </summary>
-        UnityEngine.Gradient ColorScheme { get; set; }
+        Gradient ColorScheme { get; set; }
         /// <summary>
         /// Provides the mapping function as input to the <see cref="ColorScheme"/>.
         /// </summary>
-        System.Func<UnityEngine.Vector3, float> ColorFunc { get; set; }
+        Func<Vector3, float> ColorFunc { get; set; }
         /// <summary>
         /// Evaluates the color at a given point.
         /// </summary>
-        UnityEngine.Color EvaluateColor(Vector3 value);
+        Color EvaluateColor(Vector3 value);
         /// <summary>
         /// Disables the <see cref="ColorScheme"/> and uses a single color.
         /// </summary>
@@ -150,7 +150,7 @@ namespace Graphing
         /// A single color that should be used for the entire graph.
         /// </summary>
 #pragma warning disable IDE1006 // Naming Styles
-        UnityEngine.Color color { get; set; }
+        Color color { get; set; }
 #pragma warning restore IDE1006 // Naming Styles
     }
 

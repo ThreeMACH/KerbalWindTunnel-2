@@ -41,10 +41,7 @@ namespace Graphing
     public sealed class ValuesChangedEventArgs : EventArgs, IValueEventArgs
     {
         public Array NewValues { get; }
-        public (float, float)[] NewBounds { get; }
-        public bool BoundsChanged { get; }
-        public ValuesChangedEventArgs(Array newValues, (float, float)[] newBounds) : this(newValues, true, newBounds) { }
-        public ValuesChangedEventArgs(Array newValues, bool boundsChanged, (float, float)[] newBounds) { NewValues = newValues; BoundsChanged = boundsChanged; NewBounds = newBounds; }
+        public ValuesChangedEventArgs(Array newValues) { NewValues = newValues; }
     }
     public sealed class VisibilityChangedEventArgs : EventArgs, IDisplayEventArgs
     {

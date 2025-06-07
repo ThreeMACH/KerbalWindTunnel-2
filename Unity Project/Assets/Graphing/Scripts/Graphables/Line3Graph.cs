@@ -147,7 +147,10 @@ namespace Graphing
             lock (this)
             {
                 SetValuesInternal(values);
-                OnValuesChanged(new ValuesChangedEventArgs(Values, new (float, float)[] { (XMin, XMax), (YMin, YMax), (ZMin, ZMax) }));
+                OnValuesChanged(new ValuesChangedEventArgs(Values));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Horizontal, XMin, XMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Vertical, YMin, YMax));
+                OnDisplayChanged(new BoundsChangedEventArgs(AxisUI.AxisDirection.Depth, ZMin, ZMax));
             }
         }
 
