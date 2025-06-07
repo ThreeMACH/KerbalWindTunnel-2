@@ -156,44 +156,39 @@ namespace KerbalWindTunnel.DataGenerators
             graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
         }
 
-        public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude)
+        public async Task Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, TaskProgressTracker tracker, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude)
         {
-            TaskProgressTracker result = Calculate_Internal(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, upperBoundSpeed, lowerBoundAltitude, upperBoundAltitude, resolution[0].x, resolution[0].y);
-            TaskProgressTracker prevTask = result;
-            for (int i = 1; i < resolution.Length; i++)
+            Task lineUpdateTask = null;
+            for (int i = 0; i < resolution.Length; i++)
             {
-                TaskProgressTracker tracker = new TaskProgressTracker();
+                if (i > 0)
+                {
+                    tracker.FollowOnTaskTracker = new TaskProgressTracker();
+                    tracker = tracker.FollowOnTaskTracker;
+                }
                 int xResolution = resolution[i].x, yResolution = resolution[i].y;
-                // prevTask is the Calculate task.
-                // Its FollowOn is the PushResults task.
-                // We want to wait until after results have been pushed to begin the next batch.
-                // This prevents a potential race condition of pushing results.
-                ResultsType IterationTask(Task _) => CalculateTask(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, upperBoundSpeed, lowerBoundAltitude, upperBoundAltitude, xResolution, yResolution, tracker);
-                Task<ResultsType> task = prevTask.FollowOnTaskTracker.Task.ContinueWith(IterationTask, TaskContinuationOptions.OnlyOnRanToCompletion);
+                Task<ResultsType> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, upperBoundSpeed, lowerBoundAltitude, upperBoundAltitude, xResolution, yResolution, tracker));
                 tracker.Task = task;
-                prevTask.FollowOnTaskTracker.FollowOnTaskTracker = tracker;
-                prevTask = tracker;
-                Task pushTask = task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
-                tracker.FollowOnTaskTracker = new TaskProgressTracker(pushTask);
-                task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
-                task.ContinueWith(t => CalculateOptimalLinesTask(t.Result, cancellationToken), TaskContinuationOptions.OnlyOnRanToCompletion);
+                try
+                {
+                    await task;
+                }
+                catch (OperationCanceledException) { return; }
+                if (i > 0)
+                {
+                    if (lineUpdateTask != null)
+                    {
+                        try
+                        {
+                            // Wait on the previous lineCalcTask so there's no risk of races to update the graphs.
+                            await lineUpdateTask;
+                        }
+                        catch (OperationCanceledException) { }
+                    }
+                    lineUpdateTask = CalculateOptimalLines(task.Result, cancellationToken);
+                }
+                PushResults(task);
             }
-            return result;
-        }
-        public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude, int speedSegments, int altitudeSegments)
-        {
-            TaskProgressTracker result = Calculate_Internal(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, lowerBoundAltitude, upperBoundSpeed, upperBoundAltitude, speedSegments, altitudeSegments);
-            ((Task<ResultsType>)result.Task).ContinueWith(task => CalculateOptimalLinesTask(task.Result, cancellationToken), TaskContinuationOptions.OnlyOnRanToCompletion);
-            return result;
-        }
-        private TaskProgressTracker Calculate_Internal(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude, int speedSegments, int altitudeSegments)
-        {
-            TaskProgressTracker tracker = new TaskProgressTracker();
-            Task<ResultsType> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, lowerBoundSpeed, upperBoundSpeed, lowerBoundAltitude, upperBoundAltitude, speedSegments, altitudeSegments, tracker), cancellationToken);
-            Task pushTask = task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
-            tracker.FollowOnTaskTracker = new TaskProgressTracker(pushTask);
-            task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
-            return tracker;
         }
 
         private static ResultsType CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float lowerBoundSpeed, float upperBoundSpeed, float lowerBoundAltitude, float upperBoundAltitude, int speedSegments, int altitudeSegments, TaskProgressTracker progressTracker = null)
@@ -223,6 +218,7 @@ namespace KerbalWindTunnel.DataGenerators
                         if (!cache.TryGetValue(coords, out EnvelopePoint result))
                         {
                             cancellationToken.ThrowIfCancellationRequested();
+                            // Is there an efficient way of searching for the nearest filled cache to have a guess for AoAs?
                             result = new EnvelopePoint(predictor, body, y * stepAltitude + lowerBoundAltitude, x * stepSpeed + lowerBoundSpeed);
                             cancellationToken.ThrowIfCancellationRequested();
                             cache[coords] = result;
@@ -263,16 +259,6 @@ namespace KerbalWindTunnel.DataGenerators
             }
             Debug.Log("[KWT] Graphs updated - Envelope");
         }
-        private void RethrowErrors(Task<ResultsType> task)
-        {
-            if (task.Status == TaskStatus.Faulted)
-            {
-                Debug.LogError("[KWT] Wind tunnel task faulted. (Env)");
-                Debug.LogException(task.Exception);
-            }
-            else if (task.Status == TaskStatus.Canceled)
-                Debug.Log("[KWT] Wind tunnel task was canceled. (Env)");
-        }
 
         public static void Clear(Task task = null)
         {
@@ -297,10 +283,10 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
-        public void CalculateOptimalLines(CancellationToken cancellationToken)
-            => Task.Run(() => CalculateOptimalLinesTask((EnvelopePoints, (left, right), (bottom, top)), cancellationToken));
+        public async Task CalculateOptimalLines(CancellationToken cancellationToken)
+            => await CalculateOptimalLines((EnvelopePoints, (left, right), (bottom, top)), cancellationToken);
 
-        private void CalculateOptimalLinesTask(ResultsType results, CancellationToken cancellationToken)
+        private async Task CalculateOptimalLines(ResultsType results, CancellationToken cancellationToken)
         {
             EnvelopePoint[,] data = results.data;
             
@@ -314,7 +300,7 @@ namespace KerbalWindTunnel.DataGenerators
                 exitCoords = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
                 WindTunnelWindow.Instance.ProvideAscentTarget(exitCoords);
             }
-            EnvelopeLine.CalculateOptimalLines(exitCoords, initialCoords, speedBounds, altitudeBounds, data, cancellationToken, fuelPath, timePath);
+            await EnvelopeLine.CalculateOptimalLines(exitCoords, initialCoords, speedBounds, altitudeBounds, data, cancellationToken, fuelPath, timePath);
         }
 
         public static (float speed, float altitude) GetMaxSustainableEnergy(EnvelopePoint[,] data, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds)

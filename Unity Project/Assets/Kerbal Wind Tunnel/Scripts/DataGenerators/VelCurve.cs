@@ -78,14 +78,16 @@ namespace KerbalWindTunnel.DataGenerators
             graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
         }
 
-        public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50)
+        public async Task Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, TaskProgressTracker tracker, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50)
         {
-            TaskProgressTracker tracker = new TaskProgressTracker();
             Task<EnvelopePoint[]> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, lowerBound, upperBound, segments, tracker), cancellationToken);
             tracker.Task = task;
-            task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
-            task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
-            return tracker;
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException) { return; }
+            PushResults(task);
         }
 
         private static EnvelopePoint[] CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
@@ -148,16 +150,6 @@ namespace KerbalWindTunnel.DataGenerators
                 UpdateGraphs();
             }
             Debug.Log("[KWT] Graphs updated - Velocity");
-        }
-        private void RethrowErrors(Task<EnvelopePoint[]> task)
-        {
-            if (task.Status == TaskStatus.Faulted)
-            {
-                Debug.LogError("[KWT] Wind tunnel task faulted. (Vel)");
-                Debug.LogException(task.Exception);
-            }
-            else if (task.Status == TaskStatus.Canceled)
-                Debug.Log("[KWT] Wind tunnel task was canceled. (Vel)");
         }
 
         public static void Clear(Task task = null)

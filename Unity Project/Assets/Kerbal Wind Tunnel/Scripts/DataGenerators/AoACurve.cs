@@ -81,14 +81,16 @@ namespace KerbalWindTunnel.DataGenerators
             graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
         }
 
-        public TaskProgressTracker Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float velocity, float lowerBound, float upperBound, int segments = 50)
+        public async Task Calculate(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, TaskProgressTracker tracker, CelestialBody body, float altitude, float velocity, float lowerBound, float upperBound, int segments = 50)
         {
-            TaskProgressTracker tracker = new TaskProgressTracker();
             Task <AoAPoint[]> task = Task.Run(() => CalculateTask(aeroPredictorToClone, cancellationToken, body, altitude, velocity, lowerBound, upperBound, segments, tracker), cancellationToken);
             tracker.Task = task;
-            task.ContinueWith(PushResults, TaskContinuationOptions.OnlyOnRanToCompletion);
-            task.ContinueWith(RethrowErrors, TaskContinuationOptions.NotOnRanToCompletion);
-            return tracker;
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException) { return; }
+            PushResults(task);
         }
 
         private static AoAPoint[] CalculateTask(AeroPredictor aeroPredictorToClone, CancellationToken cancellationToken, CelestialBody body, float altitude, float velocity, float lowerBound, float upperBound, int segments = 50, TaskProgressTracker tracker = null)
@@ -97,8 +99,6 @@ namespace KerbalWindTunnel.DataGenerators
             const int altitudeRound = 10;
             int altitude_ = Mathf.RoundToInt(altitude / altitudeRound) * altitudeRound;
             int velocity_ = Mathf.RoundToInt(velocity);
-            lowerBound = Mathf.Round(lowerBound);
-            upperBound = Mathf.Round(upperBound);
             List<float> keysList = new List<float>();
             float delta = (upperBound - lowerBound) / segments;
             for (int i = 0; i <= segments; i++)
@@ -151,16 +151,6 @@ namespace KerbalWindTunnel.DataGenerators
                 UpdateGraphs();
             }
             Debug.Log("[KWT] Graphs updated - AoA");
-        }
-        private void RethrowErrors(Task<AoAPoint[]> task)
-        {
-            if (task.Status == TaskStatus.Faulted)
-            {
-                Debug.LogError("[KWT] Wind tunnel task faulted. (AoA)");
-                Debug.LogException(task.Exception);
-            }
-            else if (task.Status == TaskStatus.Canceled)
-                Debug.Log("[KWT] Wind tunnel task was canceled. (AoA)");
         }
 
         public static void Clear(Task task = null)

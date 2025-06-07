@@ -785,17 +785,20 @@ namespace KerbalWindTunnel
                     maxX = envelopeGrapher.PrimaryHorizontalAxis.AutoSetMax ? body.upperSpeed : envelopeGrapher.PrimaryHorizontalAxis.Max;
                     minY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryVerticalAxis.Min;
                     maxY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMax ? body.upperAlt : envelopeGrapher.PrimaryVerticalAxis.Max;
-                    taskTracker_surf = envelopeData.Calculate(vessel, cancellationTokenSource.Token, CelestialBody, minX, maxX, minY, maxY);
+                    taskTracker_surf = new TaskProgressTracker();
+                    var _ = envelopeData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_surf, CelestialBody, minX, maxX, minY, maxY);
                     break;
                 case 1:
                     minX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMin ? -20 : aoaCurveGrapher.PrimaryHorizontalAxis.Min;
                     maxX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMax ? 20 : aoaCurveGrapher.PrimaryHorizontalAxis.Max;
-                    taskTracker_aoa = aoaData.Calculate(vessel, cancellationTokenSource.Token, CelestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
+                    taskTracker_aoa = new TaskProgressTracker();
+                    _ = aoaData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_aoa, CelestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
                     break;
                 case 2:
                     minX = Mathf.Min(0, velCurveGrapher.PrimaryHorizontalAxis.Min);
                     maxX = Mathf.Max(body.upperSpeed, velCurveGrapher.PrimaryHorizontalAxis.Max);
-                    taskTracker_vel = velData.Calculate(vessel, cancellationTokenSource.Token, CelestialBody, HighlightAltitude, minX, maxX);
+                    taskTracker_vel = new TaskProgressTracker();
+                    _ = velData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_vel, CelestialBody, HighlightAltitude, minX, maxX);
                     break;
             }
         }
@@ -821,7 +824,7 @@ namespace KerbalWindTunnel
         // Called whenever the target ascent altitude or velocity is changed.
         private void UpdateAscentTarget()
         {
-            envelopeData.CalculateOptimalLines(cancellationTokenSource.Token);
+            var _ = envelopeData.CalculateOptimalLines(cancellationTokenSource.Token);
         }
         internal void ProvideAscentTarget((float speed, float altitude) maxSustainableEnergy)
         {
@@ -830,6 +833,7 @@ namespace KerbalWindTunnel
             if (_ascentTargetAlt < 0)
                 _ascentTargetAlt = maxSustainableEnergy.altitude;
             // TODO: Set the text fields to these numbers. Can't do it here since this will be called from a worker thread.
+            // TODO: It's not a worker thread anymore!
         }
 
         // Called whenever one of the AoA graph selection toggles *changes*.

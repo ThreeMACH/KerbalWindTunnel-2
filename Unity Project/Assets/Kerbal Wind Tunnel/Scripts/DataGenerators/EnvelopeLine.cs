@@ -9,8 +9,14 @@ namespace KerbalWindTunnel.DataGenerators
 {
     public static class EnvelopeLine
     {
-        public static void CalculateOptimalLines((float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, EnvelopePoint[,] dataArray, CancellationToken cancellationToken, MetaLineGraphDefinition<AscentPathPoint> fuelPath, MetaLineGraphDefinition<AscentPathPoint> timePath)
+        public static async Task CalculateOptimalLines((float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, EnvelopePoint[,] dataArray, CancellationToken cancellationToken, MetaLineGraphDefinition<AscentPathPoint> fuelPath, MetaLineGraphDefinition<AscentPathPoint> timePath)
         {
+            Task fuelTask = ProcessOptimalLine(fuelPath, exitCoords, initialCoords, speedBounds, altitudeBounds, fuelToClimb, dataArray, timeToClimb, cancellationToken);
+            Task timeTask = ProcessOptimalLine(timePath, exitCoords, initialCoords, speedBounds, altitudeBounds, timeToClimb, dataArray, timeToClimb, cancellationToken);
+            await Task.WhenAll(fuelTask, timeTask);
+            return;
+
+            // Local methods to keep code clean:
             float timeToClimb(in PathSolverPoint next, in PathSolverPoint current)
             {
                 ref EnvelopePoint currentPoint = ref dataArray[next.xi, next.yi];
@@ -25,14 +31,17 @@ namespace KerbalWindTunnel.DataGenerators
             {
                 return timeToClimb(next, current) * (dataArray[next.xi, next.yi].fuelBurnRate + dataArray[current.xi, current.yi].fuelBurnRate) * 0.5f;
             }
-            Task.Run(() => ProcessOptimalLine(fuelPath, exitCoords, initialCoords, speedBounds, altitudeBounds, fuelToClimb, dataArray, timeToClimb, cancellationToken));
-            Task.Run(() => ProcessOptimalLine(timePath, exitCoords, initialCoords, speedBounds, altitudeBounds, timeToClimb, dataArray, timeToClimb, cancellationToken));
         }
 
-        private static void ProcessOptimalLine(MetaLineGraphDefinition<AscentPathPoint> graphDef, (float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, CostIncreaseFunction costIncreaseFunc, EnvelopePoint[,] data, CostIncreaseFunction timeDifferenceFunc, CancellationToken cancellationToken)
+        private static async Task ProcessOptimalLine(MetaLineGraphDefinition<AscentPathPoint> graphDef, (float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, CostIncreaseFunction costIncreaseFunc, EnvelopePoint[,] data, CostIncreaseFunction timeDifferenceFunc, CancellationToken cancellationToken)
         {
-            IList<AscentPathPoint> results = GetOptimalPath(exitCoords, initialCoords, speedBounds, altitudeBounds, costIncreaseFunc, data, timeDifferenceFunc, cancellationToken);
-            graphDef.UpdateGraph(results);
+            Task<IList<AscentPathPoint>> task = Task.Run(() => GetOptimalPath(exitCoords, initialCoords, speedBounds, altitudeBounds, costIncreaseFunc, data, timeDifferenceFunc, cancellationToken));
+            try
+            {
+                await task;
+            }
+            catch (OperationCanceledException) { return; }
+            graphDef.UpdateGraph(task.Result);
         }
 
         private delegate float CostIncreaseFunction(in PathSolverPoint next, in PathSolverPoint current);
