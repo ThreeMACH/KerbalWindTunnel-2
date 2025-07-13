@@ -40,17 +40,17 @@
         
         Pass
         {
-            CGPROGRAM
-            #pragma multi_compile_local_fragment __ _DRAWGRADIENT
+            HLSLPROGRAM
+            #pragma multi_compile_local __ _DRAWGRADIENT
 #ifdef _DRAWGRADIENT
-            #pragma multi_compile_local_fragment _MODE_JET _MODE_JET_DARK _MODE_GRAYSCALE _MODE_CUSTOM
+            #pragma multi_compile_local _MODE_JET _MODE_JET_DARK _MODE_GRAYSCALE _MODE_CUSTOM
 # ifdef _MODE_CUSTOM
-            #pragma multi_compile_local_fragment _MAPSOURCE_EVEN __ _MAPSOURCE_ALPHA
+            #pragma multi_compile_local _MAPSOURCE_EVEN __ _MAPSOURCE_ALPHA
 # endif
 #endif
-            #pragma multi_compile_local_fragment  __ _DRAWCONTOURS
+            #pragma multi_compile_local  __ _DRAWCONTOURS
 #ifdef _DRAWCONTOURS
-            #pragma multi_compile_local_fragment _CONTOURMAPSOURCE_EVEN  _CONTOURMAPSOURCE_ALPHA
+            #pragma multi_compile_local _CONTOURMAPSOURCE_EVEN  _CONTOURMAPSOURCE_ALPHA
 #endif
             #pragma shader_feature_local __ _DRAWOUTLINE
 #ifdef _DRAWOUTLINE
@@ -109,7 +109,7 @@
 
                 return col;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

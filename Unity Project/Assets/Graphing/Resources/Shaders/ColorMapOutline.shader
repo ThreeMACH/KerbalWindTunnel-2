@@ -30,7 +30,7 @@
         
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma multi_compile_local_fragment __ _DRAWGRADIENT
 #ifdef _DRAWGRADIENT
             #pragma multi_compile_local_fragment _MODE_JET _MODE_JET_DARK _MODE_GRAYSCALE _MODE_CUSTOM
@@ -91,7 +91,7 @@
                 
                 return col;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

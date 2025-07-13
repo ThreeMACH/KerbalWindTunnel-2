@@ -17,7 +17,7 @@
         
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma multi_compile_local __ _OUTLINE_SOURCE
             #pragma vertex Vertex_Shader alpha
             #pragma fragment Fragment_Shader alpha
@@ -45,7 +45,7 @@
 
                 return col;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

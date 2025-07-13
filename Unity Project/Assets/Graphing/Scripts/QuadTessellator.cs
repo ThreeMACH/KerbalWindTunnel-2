@@ -10,7 +10,32 @@ namespace Graphing.Meshing
     {
         public const int maxTessFactor = 5;
         private readonly List<int> indices = new List<int>();
-        public List<int> Indices { get => indices; }
+        public List<int> Indices
+        {
+            get
+            {
+                switch (SystemInfo.graphicsDeviceType)
+                {
+                    case UnityEngine.Rendering.GraphicsDeviceType.Direct3D11:
+                    case UnityEngine.Rendering.GraphicsDeviceType.Direct3D12:
+                        return indices;
+                    case UnityEngine.Rendering.GraphicsDeviceType.OpenGLCore:
+                        return GLIndices(indices).ToList();
+                    default:
+                        throw new NotImplementedException("The current graphics API may not be supported.");
+                }
+            }
+        }
+        private static IEnumerable<int> GLIndices(List<int> indices)
+        {
+            for (int i = 0; i < indices.Count; i++)
+            {
+                if (i % 3 == 2)
+                    yield return indices[i - 2];
+                else
+                    yield return indices[i + 1];
+            }
+        }
         private readonly List<int> indices_backup = new List<int>();
 
         private readonly List<VertexMeta> vertices = new List<VertexMeta>();

@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="utf-8"?>
-<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584533219686861514" AutoLoad="false">
+<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="windtunnelassetbundle" Name="windtunnelassetbundle" CreatedTime="-8584492403981804908" AutoLoad="false">
   <Author />
   <Info />
   <Assets>
@@ -10,6 +10,7 @@
     <Asset Name="Tickmark" Path="Assets/Graphing/Prefabs/Tickmark.prefab" Type="GameObject" Url="Graphing/Prefabs/Tickmark" AutoLoad="false" />
     <Asset Name="ColorMapDefaultMaterial" Path="Assets/Graphing/Resources/Materials/ColorMapDefaultMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/ColorMapDefaultMaterial" AutoLoad="false" />
     <Asset Name="ColorMapMaterial" Path="Assets/Graphing/Resources/Materials/ColorMapMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/ColorMapMaterial" AutoLoad="false" />
+    <Asset Name="LineVertexMaterial" Path="Assets/Graphing/Resources/Materials/LineVertexMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/LineVertexMaterial" AutoLoad="false" />
     <Asset Name="OutlineMaterial" Path="Assets/Graphing/Resources/Materials/OutlineMaterial.mat" Type="Material" Url="Graphing/Resources/Materials/OutlineMaterial" AutoLoad="false" />
     <Asset Name="4Gradient" Path="Assets/Graphing/Resources/Textures/4Gradient.tif" Type="Texture2D" Url="Graphing/Resources/Textures/4Gradient" AutoLoad="false" />
     <Asset Name="5Gradient" Path="Assets/Graphing/Resources/Textures/5Gradient.tif" Type="Texture2D" Url="Graphing/Resources/Textures/5Gradient" AutoLoad="false" />

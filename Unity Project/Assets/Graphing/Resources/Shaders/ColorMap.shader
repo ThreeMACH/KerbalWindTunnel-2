@@ -22,7 +22,7 @@
         
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma multi_compile_local_fragment _MODE_JET _MODE_JET_DARK _MODE_GRAYSCALE _MODE_CUSTOM
 #ifdef _MODE_CUSTOM
             #pragma multi_compile_local_fragment _MAPSOURCE_EVEN __ _MAPSOURCE_ALPHA
@@ -55,7 +55,7 @@
                 
                 return col;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

@@ -14,7 +14,7 @@
             Name "FILL"
             Cull Off
 
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma vertex vert
             //#pragma geometry geom
             #pragma fragment frag
@@ -97,7 +97,7 @@
             {
                 return i.color;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }

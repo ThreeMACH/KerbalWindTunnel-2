@@ -25,7 +25,7 @@
         
         Pass
         {
-            CGPROGRAM
+            HLSLPROGRAM
             #pragma multi_compile_local_fragment _CONTOURMAPSOURCE_EVEN __ _CONTOURMAPSOURCE_ALPHA
             #pragma vertex Vertex_Shader alpha
             #pragma fragment Fragment_Shader alpha
@@ -46,7 +46,7 @@
                 clip(col.a - 0.01);
                 return col;
             }
-            ENDCG
+            ENDHLSL
         }
     }
 }
