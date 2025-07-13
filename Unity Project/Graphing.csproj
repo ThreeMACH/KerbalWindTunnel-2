@@ -57,11 +57,15 @@
     </Reference>
     <Reference Include="System.Data" />
     <Reference Include="System.IO.Compression" />
+    <Reference Include="UnityEditor">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\2019.4.18f1\Editor\Data\Managed\UnityEditor.dll</HintPath>
+    </Reference>
     <Reference Include="UnityEngine">
       <HintPath>C:\Program Files\Unity\Hub\Editor\2019.4.38f1\Editor\Data\Managed/UnityEngine/UnityEngine.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Assets\Graphing\Editor\ExportAssetBundle.cs" />
     <Compile Include="Assets\Graphing\Editor\HideIfDisabledDrawer.cs" />
     <Compile Include="Assets\Graphing\Editor\PrerequisiteVariantStripper.cs" />
     <Compile Include="Assets\Graphing\Legacy\SurfMeshGeneration.cs" />
@@ -117,6 +121,9 @@
     <None Include="packages.config" />
     <Reference Include="UnityEngine">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.dll</HintPath>
+    </Reference>
+    <Reference Include="UnityEngine.AssetBundleModule">
+      <HintPath>C:\Program Files\Unity\Hub\Editor\2019.4.18f1\Editor\Data\Managed\UnityEngine\UnityEngine.AssetBundleModule.dll</HintPath>
     </Reference>
     <Reference Include="UnityEngine.CoreModule">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/Managed/UnityEngine/UnityEngine.CoreModule.dll</HintPath>
