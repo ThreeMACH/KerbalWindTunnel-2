@@ -25,7 +25,7 @@ namespace KerbalWindTunnel.DataGenerators
         {
             new LineGraphDefinition("lift_coefSwap", null) { DisplayName = "Lift", Color = defaultColor },
             new LineGraphDefinition("drag_coefSwap", null) { DisplayName = "Drag", Color = defaultColor },
-            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "", StringFormat = "F2", Color = defaultColor },
+            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", Color = defaultColor },
             new LineGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "Lift Slope", StringFormat = "F3", Color = defaultColor },
             new GroupedGraphDefinition<LineGraphDefinition> ("pitchInput",
                 new LineGraphDefinition("pitchInput_wet", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input (Wet)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
@@ -63,7 +63,7 @@ namespace KerbalWindTunnel.DataGenerators
                             continue;
                     }
                     lineDef.YName = useCoefficients ? "Coefficient" : "Force";
-                    lineDef.YUnit = useCoefficients ? "" : "kN";
+                    lineDef.YUnit = useCoefficients ? "-" : "kN";
                     lineDef.StringFormat = useCoefficients ? "N0" : "F2";
                 }
             }

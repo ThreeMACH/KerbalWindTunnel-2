@@ -252,7 +252,10 @@ namespace Graphing
         /// <returns></returns>
         public virtual string GetFormattedValueAt(float x, float y, bool withName = false)
         {
-            return string.Format("{2}{0:" + StringFormat + "}{1}", ValueAt(x, y), YUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
+            string effectiveUnit = YUnit;
+            if (effectiveUnit == "-")
+                effectiveUnit = "";
+            return string.Format("{2}{0:" + StringFormat + "} {1}", ValueAt(x, y), effectiveUnit, withName && !string.IsNullOrEmpty(DisplayName) ? DisplayName + ": " : "");
         }
 
         public static string FormatNameAndUnit(string axisName, string unit, string fallback = "")

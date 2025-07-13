@@ -60,7 +60,7 @@ namespace KerbalWindTunnel.DataGenerators
                             continue;
                     }
                     lineDef.YName = useCoefficients ? "Coefficient" : "Force";
-                    lineDef.YUnit = useCoefficients ? "" : "kN";
+                    lineDef.YUnit = useCoefficients ? "-" : "kN";
                     lineDef.StringFormat = useCoefficients ? "N0" : "F2";
                 }
             }

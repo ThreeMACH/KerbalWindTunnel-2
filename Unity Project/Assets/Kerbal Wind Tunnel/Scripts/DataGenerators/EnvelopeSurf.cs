@@ -87,7 +87,7 @@ namespace KerbalWindTunnel.DataGenerators
                             continue;
                     }
                     surfDef.ZName = useCoefficients ? "Coefficient" : "Force";
-                    surfDef.ZUnit = useCoefficients ? "" : "kN";
+                    surfDef.ZUnit = useCoefficients ? "-" : "kN";
                     surfDef.StringFormat = useCoefficients ? "N0" : "F2";
                 }
             }
