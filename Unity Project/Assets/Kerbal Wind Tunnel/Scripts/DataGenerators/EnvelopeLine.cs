@@ -1,9 +1,9 @@
 ﻿using System;
 using System.Collections.Generic;
 using System.Linq;
+using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
-using System.Threading;
 
 namespace KerbalWindTunnel.DataGenerators
 {
@@ -175,8 +175,10 @@ namespace KerbalWindTunnel.DataGenerators
 
             // Convert the path into a data structure appropriate for graphing.
             // Also decimate it to mitigate the stairstep appearance.
-            AscentPathPoint[] result = new AscentPathPoint[Mathf.CeilToInt(target.Index / decimation) + 1];
+            AscentPathPoint[] result = new AscentPathPoint[Mathf.CeilToInt((float)target.Index / decimation) + 1];
+            //Debug.Log($"Index: {target.Index}\tLength: {result.Length}");
             PathSolverPoint point = target;
+            int index = 0;
             while (target != origin && target != null)
             {
                 int i = decimation;
@@ -186,11 +188,11 @@ namespace KerbalWindTunnel.DataGenerators
                     target = target.Previous;
                 }
                 point.Previous = target;
-                int index = Mathf.CeilToInt(point.Index / decimation) + 1;
                 result[index] = new AscentPathPoint(point, data);
                 point = target;
+                index++;
             }
-            result[0] = new AscentPathPoint(origin, data);
+            result[index] = new AscentPathPoint(origin, data);
 
             result.Reverse();
             return result;
