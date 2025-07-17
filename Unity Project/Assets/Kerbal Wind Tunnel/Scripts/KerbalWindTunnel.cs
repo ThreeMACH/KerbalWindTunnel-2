@@ -67,9 +67,6 @@ namespace KerbalWindTunnel
                 GameEvents.onGUIApplicationLauncherReady.Add(OnGuiApplicationLauncherReady);
             }
             guiId = GUIUtility.GetControlID(FocusType.Passive);
-            
-            //window.UseMach = WindTunnelSettings.DefaultToMach;
-            //window.Minimized = WindTunnelSettings.StartMinimized;
 
             if (miniExcelWrapper == null)
                 miniExcelWrapper = new MiniExcelWrapper();
@@ -134,7 +131,10 @@ namespace KerbalWindTunnel
             if (window != null)
                 window.gameObject.SetActive(true);
             else
+            {
                 window = Instantiate(AssetLoader.WindTunnelAssetLoader.WindowPrefab, MainCanvasUtil.MainCanvas.transform).GetComponent<WindTunnelWindow>();
+                window.Minimized = WindTunnelSettings.StartMinimized;
+            }
         }
         internal void SetButtonOn()
         {
