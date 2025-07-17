@@ -381,8 +381,8 @@ namespace Graphing
                     row[columnOffest + x] = _values[x, y];
             }
 
-            dataTable.Rows[2][0] = FormatNameAndUnit(XName, XUnit, "X");
-            dataTable.Rows[0][2] = FormatNameAndUnit(YName, YUnit, "Y");
+            dataTable.Rows[0][2] = FormatNameAndUnit(XName, XUnit, "X");
+            dataTable.Rows[2][0] = FormatNameAndUnit(YName, YUnit, "Y");
             dataTable.Rows[0][0] = FormatNameAndUnit(ZName, ZUnit, "Z");
         }
     }
