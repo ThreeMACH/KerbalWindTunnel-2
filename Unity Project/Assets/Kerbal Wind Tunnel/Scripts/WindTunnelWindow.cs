@@ -342,14 +342,14 @@ namespace KerbalWindTunnel
                     new LineGraph(new float[]{ }, 0, 0) { color = Color.black }
             };
             envelopeGrapher.AddGraphToDefaultAxes(collection);
-            
+
             System.Threading.Tasks.Task.Delay(1000).ContinueWith((_) =>
             {
                 ((SurfGraph)collection[0]).SetValues(PlaceholderData.surfPlaceholder, 0, 1, 0, 1);
                 ((OutlineMask)collection[1]).SetValues(PlaceholderData.surfPlaceholder, 0, 1, 0, 1);
                 ((LineGraph)collection[2]).SetValues(new float[] { 0, 0.8f, 0.8f, 0.8f, 0.8f, 0.3f }, 0, 1);
                 Debug.Log("Drew placeholder.");
-            });
+            }, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
             envelopeCollection = collection;
             return;
 #endif
