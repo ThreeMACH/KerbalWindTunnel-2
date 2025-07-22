@@ -1069,7 +1069,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Time-Optimal Path
+  m_Text: '#autoLOC_KWT348'
 --- !u!114 &5901150932282737912
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1163,7 +1163,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Wet
+  m_Text: '#autoLOC_KWT131'
 --- !u!114 &6205997108099665697
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1257,7 +1257,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Dry
+  m_Text: '#autoLOC_KWT132'
 --- !u!114 &6333966976024495572
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1351,7 +1351,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Flight Envelope
+  m_Text: '#autoLOC_KWT111'
 --- !u!114 &6408263827497476359
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1596,7 +1596,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Fuel-Optimal Path
+  m_Text: '#autoLOC_KWT347'
 --- !u!114 &7949347110847597300
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1944,7 +1944,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Information Detail
+  m_Text: '#autoLOC_KWT118'
 --- !u!114 &8936178594728717534
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2665,7 +2665,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: AoA Curves
+  m_Text: '#autoLOC_KWT112'
 --- !u!114 &8936178594829141549
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -2844,7 +2844,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Off
+  m_Text: '#autoLOC_KWT126'
 --- !u!1 &8936178594931325439
 GameObject:
   m_ObjectHideFlags: 0
@@ -3947,7 +3947,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Export Data
+  m_Text: '#autoLOC_KWT114'
 --- !u!114 &8936178595171215548
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4042,7 +4042,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'AoA:'
+  m_Text: '#autoLOC_KWT125'
 --- !u!114 &8936178595173694341
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4767,7 +4767,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Update Vessel
+  m_Text: '#autoLOC_KWT117'
 --- !u!114 &8936178595434329703
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -5177,7 +5177,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Enter value...
+  m_Text: '#autoLOC_KWT119'
 --- !u!1 &8936178595516348890
 GameObject:
   m_ObjectHideFlags: 0
@@ -6340,7 +6340,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Information Detail
+  m_Text: '#autoLOC_KWT118'
 --- !u!114 &8936178595628022512
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -6433,7 +6433,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Enter value...
+  m_Text: '#autoLOC_KWT119'
 --- !u!1 &8936178595692324602
 GameObject:
   m_ObjectHideFlags: 0
@@ -7634,7 +7634,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 1
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Select on Graph
+  m_Text: '#autoLOC_KWT122'
 --- !u!114 &8936178595826346294
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8105,7 +8105,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Velocity Curves
+  m_Text: '#autoLOC_KWT113'
 --- !u!114 &8936178595909621952
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8388,7 +8388,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Ascent Path \nTarget Altitude:"
+  m_Text: '#autoLOC_KWT120'
 --- !u!114 &8936178596010640109
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -8496,7 +8496,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Kerbal Wind Tunnel
+  m_Text: '#autoLOC_KWT116'
 --- !u!222 &8936178596027282076
 CanvasRenderer:
   m_ObjectHideFlags: 0
@@ -8627,7 +8627,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: "Target \nSpeed:"
+  m_Text: '#autoLOC_KWT121'
 --- !u!114 &8936178596032091978
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9187,7 +9187,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Highlight Mode:'
+  m_Text: '#autoLOC_KWT115'
 --- !u!114 &8936178596145130416
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -9569,7 +9569,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Enter value...
+  m_Text: '#autoLOC_KWT119'
 --- !u!1 &8936178596311319182
 GameObject:
   m_ObjectHideFlags: 0
@@ -9725,7 +9725,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Information Detail
+  m_Text: '#autoLOC_KWT118'
 --- !u!114 &8936178596343230179
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10042,7 +10042,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Enter value...
+  m_Text: '#autoLOC_KWT119'
 --- !u!1 &8936178596384358550
 GameObject:
   m_ObjectHideFlags: 0
@@ -11032,7 +11032,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Altitude:'
+  m_Text: '#autoLOC_KWT123'
 --- !u!114 &8936178596510233896
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11220,7 +11220,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Settings
+  m_Text: '#autoLOC_KWT110'
 --- !u!114 &8936178596546295344
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11313,7 +11313,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: Enter value...
+  m_Text: '#autoLOC_KWT119'
 --- !u!1 &8936178596580558103
 GameObject:
   m_ObjectHideFlags: 0
@@ -11467,7 +11467,7 @@ MonoBehaviour:
     m_HorizontalOverflow: 0
     m_VerticalOverflow: 0
     m_LineSpacing: 1
-  m_Text: 'Speed:'
+  m_Text: '#autoLOC_KWT124'
 --- !u!114 &8936178596583495918
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -12602,15 +12602,15 @@ MonoBehaviour:
   m_Value: 0
   m_Options:
     m_Options:
-    - m_Text: Off
+    - m_Text: '#autoLOC_KWT126'
       m_Image: {fileID: 0}
-    - m_Text: Drag
+    - m_Text: '#autoLOC_KWT127'
       m_Image: {fileID: 0}
-    - m_Text: Lift
+    - m_Text: '#autoLOC_KWT128'
       m_Image: {fileID: 0}
-    - m_Text: Drag/Mass
+    - m_Text: '#autoLOC_KWT129'
       m_Image: {fileID: 0}
-    - m_Text: Drag/Lift
+    - m_Text: '#autoLOC_KWT130'
       m_Image: {fileID: 0}
   m_OnValueChanged:
     m_PersistentCalls:

@@ -21,8 +21,8 @@ namespace KerbalWindTunnel.DataGenerators
 
         public static (int x, int y)[] resolution = { (10, 10), (40, 90), (80, 180), (160, 180) };
 
-        private const string xName = "Speed", xUnit = "m/s", yName = "Altitude", yUnit = "m";
-        private const string xMachName = "Sea Level Mach", xMachUnit = "-";
+        private const string xName = "#autoLOC_KWT323", xUnit = "#autoLOC_KWT005", yName = "#autoLOC_KWT322", yUnit = "#autoLOC_KWT001";    // "Speed" "m/s" "Altitude" "m"
+        private const string xMachName = "#autoLOC_KWT334", xMachUnit = "-";    // "Sea Level Mach"
         private static Func<EnvelopeLine.AscentPathPoint, Vector2> ToVector =>
             (pt) => new Vector2(
                 WindTunnelSettings.SpeedIsMach ? pt.speed / WindTunnelWindow.GetSpeedOfSound(0) : pt.speed,
@@ -30,38 +30,38 @@ namespace KerbalWindTunnel.DataGenerators
 
         public readonly List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
         {
-            new SurfGraphDefinition("thrust_excess", p => p.Thrust_Excess) { DisplayName = "Excess Thrust", ZUnit = "kN", StringFormat = "N0", CMin = 0 },
-            new SurfGraphDefinition("thrust_available", p => p.thrust_available) { DisplayName = "Thrust Available", ZUnit = "kN", StringFormat = "N0", CMin = 0 },
-            new SurfGraphDefinition("power_excess", p => p.Specific(p.Power_Excess)) { DisplayName = "Specific Excess Power", ZUnit = "m/s", StringFormat = "N0", CMin = 0 },
+            new SurfGraphDefinition("thrust_excess", p => p.Thrust_Excess) { DisplayName = "#autoLOC_KWT329", ZUnit = "#autoLOC_KWT004", StringFormat = "N0", CMin = 0 },       // "Excess Thrust" "kN"
+            new SurfGraphDefinition("thrust_available", p => p.thrust_available) { DisplayName = "#autoLOC_KWT332", ZUnit = "#autoLOC_KWT004", StringFormat = "N0", CMin = 0 }, // "Thrust Available" "kN"
+            new SurfGraphDefinition("power_excess", p => p.Specific(p.Power_Excess)) { DisplayName = "#autoLOC_KWT335", ZUnit = "#autoLOC_KWT005", StringFormat = "N0", CMin = 0 }, // "Specific Excess Power" "m/s"
             new SurfGraphDefinition("climbAngle", p => Mathf.Asin(Mathf.Clamp(p.Thrust_Excess * p.invMass * WindTunnelWindow.invGAccel, -1, 1)) * Mathf.Rad2Deg)
-                { DisplayName = "Max Climb Angle", ZUnit = "°", StringFormat = "F2" },
-            new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad) { DisplayName = "Level AoA", ZUnit = "°", StringFormat = "F2" },
-            new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "Lift/Drag Ratio", ZUnit = "-", StringFormat = "F2" },
-            new SurfGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "Lift Slope", StringFormat = "F3" },
-            new SurfGraphDefinition("drag_coefSwap", null) { DisplayName = "Drag" },
-            new SurfGraphDefinition("aoa_max", p => p.AoA_max * Mathf.Deg2Rad) { DisplayName = "Max Lift AoA", ZUnit = "°", StringFormat = "F2" },
-            new SurfGraphDefinition("liftMax_coefSwap", null) { DisplayName = "Max Lift" },
-            new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "Pitch Input", ZUnit = "%", StringFormat = "N0" },
-            /*new SurfGraphDefinition("staticMargin", p => p.speed >= 40 ? p.staticMargin * 100 : float.NaN) { DisplayName = "Static Margin", ZUnit = "% MAC", StringFormat = "F2" },
-            new SurfGraphDefinition("stabilityDerivative", p => p.dTorque) { DisplayName = "Stability Derivative", ZUnit = "kNm/°", StringFormat = "F2" },*/
-            new SurfGraphDefinition("fuel_economy", p => p.speed >= 40 ? p.fuelBurnRate / p.speed * 100 * 1000 : float.NaN) { DisplayName = "Fuel Economy", ZUnit = "kg/100 km", StringFormat = "F2" },
-            new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "Fuel Burn Rate", ZUnit = "kg/s", StringFormat = "F3" },
-            new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "Excess Acceleration", ZUnit = "g", StringFormat = "N2", CMin = 0, Enabled = false }
+                { DisplayName = "#autoLOC_KWT343", ZUnit = "#autoLOC_KWT000", StringFormat = "F2" },    // "Max Climb Angle" "°"
+            new SurfGraphDefinition("aoa_level", p => p.AoA_level * Mathf.Deg2Rad) { DisplayName = "#autoLOC_KWT326", ZUnit = "#autoLOC_KWT000", StringFormat = "F2" }, // "Level Flight AoA" "°"
+            new SurfGraphDefinition("ldRatio", p => p.LDRatio) { DisplayName = "#autoLOC_KWT313", ZUnit = "#autoLOC_KWT015", StringFormat = "F2" },   // "Lift/Drag Ratio" "-"
+            new SurfGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "#autoLOC_KWT314", StringFormat = "F3" },  // "Lift Slope"
+            new SurfGraphDefinition("drag_coefSwap", null) { DisplayName = "#autoLOC_KWT311" }, // "Drag"
+            new SurfGraphDefinition("aoa_max", p => p.AoA_max * Mathf.Deg2Rad) { DisplayName = "#autoLOC_KWT327", ZUnit = "#autoLOC_KWT000", StringFormat = "F2" }, // "Max Lift AoA" "°"
+            new SurfGraphDefinition("liftMax_coefSwap", null) { DisplayName = "#autoLOC_KWT309" },  // "Max Lift"
+            new SurfGraphDefinition("pitch_input", p => p.pitchInput * 100) { DisplayName = "#autoLOC_KWT315", ZUnit = "#autoLOC_KWT003", StringFormat = "N0" },    // "Pitch Input" "%"
+            /*new SurfGraphDefinition("staticMargin", p => p.speed >= 40 ? p.staticMargin * 100 : float.NaN) { DisplayName = "#autoLOC_KWT336", ZUnit = "#autoLOC_KWT014", StringFormat = "F2" }, // "Static Margin" "% MAC"
+            new SurfGraphDefinition("stabilityDerivative", p => p.dTorque) { DisplayName = "#autoLOC_KWT339", ZUnit = "#autoLOC_KWT009", StringFormat = "F2" },*/ // "Stability Derivative" "kNm/°"
+            new SurfGraphDefinition("fuel_economy", p => p.speed >= 40 ? p.fuelBurnRate / p.speed * 100 * 1000 : float.NaN) { DisplayName = "#autoLOC_KWT340", ZUnit = "#autoLOC_KWT011", StringFormat = "F2" },    // "Fuel Economy" "kg/100 km"
+            new SurfGraphDefinition("fuel_rate", p => p.fuelBurnRate) { DisplayName = "#autoLOC_KWT341", ZUnit = "autoLOC_KWT012", StringFormat = "F3" },   // "Fuel Burn Rate" "kg/s"
+            new SurfGraphDefinition("accel_excess", p => p.Accel_Excess) { DisplayName = "#autoLOC_KWT330", ZUnit = "#autoLOC_KWT006", StringFormat = "N2", CMin = 0, Enabled = false } // "Excess Acceleration" "g"
         };
         //graphables.Add(new SurfGraph(blank, left, right, bottom, top) { Name = "Stability Range", ZUnit = "deg", StringFormat = "F2", ColorScheme = Graphing.Extensions.GradientExtensions.Jet_Dark });
-        public readonly OutlineGraphDefinition<EnvelopePoint> envelope = new OutlineGraphDefinition<EnvelopePoint>("envelope", p => p.Thrust_Excess) { DisplayName = "Flight Envelope", ZUnit = "kN", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 };
+        public readonly OutlineGraphDefinition<EnvelopePoint> envelope = new OutlineGraphDefinition<EnvelopePoint>("fltEnvelope", p => p.Thrust_Excess) { DisplayName = "#autoLOC_KWT342", ZUnit = "#autoLOC_KWT004", StringFormat = "N0", Color = Color.gray, LineWidth = 2, LineOnly = true, MaskCriteria = (v) => !float.IsNaN(v.z) && !float.IsInfinity(v.z) ? v.z : -1 };  // "Flight Envelope" "kN"
         public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> fuelPath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_fuelOptimal", ToVector,
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost, p => p.time },
-                new string[] { "Climb Angle", "Climb Rate", "Fuel Used", "Time" },
+                new string[] { "#autoLOC_KWT344", "#autoLOC_KWT345", "#autoLOC_KWT346", "#autoLOC_KWT304" },    // "Climb Angle" "Climb Rate" "Fuel Used" "Time"
                 new string[] { "N1", "N0", "N3", "N1" },
-                new string[] { "°", "m/s", "units", "s" })
-        { DisplayName = "Fuel-Optimal Path", StringFormat = "N0", Color = Color.black, LineWidth = 3 };
+                new string[] { "#autoLOC_KWT000", "#autoLOC_KWT005", "#autoLOC_KWT013", "#autoLOC_KWT002" })    // "°" "m/s" "units" "s"
+        { DisplayName = "#autoLOC_KWT347", StringFormat = "N0", Color = Color.black, LineWidth = 3 };   // "Fuel-Optimal Path"
         public readonly MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint> timePath = new MetaLineGraphDefinition<EnvelopeLine.AscentPathPoint>("path_timeOptimal", ToVector,
                 new Func<EnvelopeLine.AscentPathPoint, float>[] { p => p.climbAngle * Mathf.Rad2Deg, p => p.climbRate, p => p.cost },
-                new string[] { "Climb Angle", "Climb Rate", "Time" },
+                new string[] { "#autoLOC_KWT344", "#autoLOC_KWT345", "#autoLOC_KWT304" },   // "Climb Angle" "Climb Rate" "Time"
                 new string[] { "N1", "N0", "N1" },
-                new string[] { "°", "m/s", "s" })
-        { DisplayName = "Time-Optimal Path", StringFormat = "N0", Color = Color.white, LineWidth = 3 };
+                new string[] { "#autoLOC_KWT000", "#autoLOC_KWT005", "#autoLOC_KWT002" })   // "°" "m/s" "s"
+        { DisplayName = "#autoLOC_KWT348", StringFormat = "N0", Color = Color.white, LineWidth = 3 };   // "Time-Optimal Path"
 
         public void SetCoefficientMode(bool useCoefficients)
         {
@@ -80,14 +80,14 @@ namespace KerbalWindTunnel.DataGenerators
                             break;
                         case "lift_slope":
                             surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.dLift) : p => p.dLift;
-                            surfDef.ZUnit = useCoefficients ? "/°" : "kN/°";
+                            surfDef.ZUnit = useCoefficients ? "#autoLOC_KWT007" : "#autoLOC_KWT008";    // "/°" "kN/°"
                             continue;
 #endif
                         default:
                             continue;
                     }
-                    surfDef.ZName = useCoefficients ? "Coefficient" : "Force";
-                    surfDef.ZUnit = useCoefficients ? "-" : "kN";
+                    surfDef.ZName = useCoefficients ? "#autoLOC_KWT307" : "#autoLOC_KWT321";    // "Coefficient" "Force"
+                    surfDef.ZUnit = useCoefficients ? "#autoLOC_KWT015" : "#autoLOC_KWT004";    // "-" "kN"
                     surfDef.StringFormat = useCoefficients ? "N0" : "F2";
                 }
             }

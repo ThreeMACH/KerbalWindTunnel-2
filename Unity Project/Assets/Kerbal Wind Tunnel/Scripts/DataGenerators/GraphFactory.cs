@@ -5,22 +5,31 @@ using System.Linq;
 using Graphing;
 using Graphing.Extensions;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalWindTunnel.DataGenerators
 {
     public abstract class GraphDefinition
     {
+        private const string autoLocStr = "#autoLOC";
         public readonly string name;
         private bool enabled = true;
         protected IGraphable graph;
 
+        protected static string LocalizeIfNeeded(string value)
+        {
+            if (value.StartsWith(autoLocStr))
+                return Localizer.Format(value);
+            return value;
+        }
+
         public IGraphable Graph { get => graph; }
 
-        public string DisplayName { get => graph.DisplayName; set => graph.DisplayName = value; }
-        public string XName { get => graph.XName; set => graph.XName = value; }
-        public string YName { get => graph.YName; set => graph.YName = value; }
-        public string XUnit { get => graph.XUnit; set => graph.XUnit = value; }
-        public string YUnit { get => graph.YUnit; set => graph.YUnit = value; }
+        public string DisplayName { get => graph.DisplayName; set => graph.DisplayName = LocalizeIfNeeded(value); }
+        public string XName { get => graph.XName; set => graph.XName = LocalizeIfNeeded(value); }
+        public string YName { get => graph.YName; set => graph.YName = LocalizeIfNeeded(value); }
+        public string XUnit { get => graph.XUnit; set => graph.XUnit = LocalizeIfNeeded(value); }
+        public string YUnit { get => graph.YUnit; set => graph.YUnit = LocalizeIfNeeded(value); }
         public bool Enabled { get => enabled; set { enabled = value; graph.Visible &= value; } }
         private bool visible = true;
         public bool Visible { get => graph.Visible; set { visible = value; graph.Visible = visible && enabled; } }
@@ -46,8 +55,8 @@ namespace KerbalWindTunnel.DataGenerators
     {
         private readonly static float[,] blank = new float[0, 0];
 
-        public string ZName { get => ((SurfGraph)graph).ZName; set => ((SurfGraph)graph).ZName = value; }
-        public string ZUnit { get => ((SurfGraph)graph).ZUnit; set => ((SurfGraph)graph).ZUnit = value; }
+        public string ZName { get => ((SurfGraph)graph).ZName; set => ((SurfGraph)graph).ZName = LocalizeIfNeeded(value); }
+        public string ZUnit { get => ((SurfGraph)graph).ZUnit; set => ((SurfGraph)graph).ZUnit = LocalizeIfNeeded(value); }
         public float CMin { get => ((SurfGraph)graph).CMin; set => ((SurfGraph)graph).CMin = value; }
         public float CMax { get => ((SurfGraph)graph).CMax; set => ((SurfGraph)graph).CMax = value; }
 
@@ -82,10 +91,10 @@ namespace KerbalWindTunnel.DataGenerators
             : base(name, mappingFunc)
         {
             MetaFuncs = metaFuncs;
-            graph = new MetaLineGraph(blank, metaFields, new float[metaFields.Length][])
+            graph = new MetaLineGraph(blank, metaFields.Select(LocalizeIfNeeded).ToArray(), new float[metaFields.Length][])
             {
                 Name = name,
-                MetaUnits = metaUnits,
+                MetaUnits = metaUnits.Select(LocalizeIfNeeded).ToArray(),
                 MetaStringFormats = metaStringFormats
             };
         }

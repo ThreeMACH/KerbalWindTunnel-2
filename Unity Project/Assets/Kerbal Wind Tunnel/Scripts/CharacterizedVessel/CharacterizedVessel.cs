@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using UnityEngine;
+using KSP.Localization;
 using KerbalWindTunnel.Extensions;
 using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
@@ -475,13 +476,13 @@ namespace KerbalWindTunnel.VesselCache
                     string localName = multiple ? $"{name}{setIndex}" : name;
                     System.Data.DataTable curveTable = machCurve.WriteToDataTable();
                     curveTable.TableName = string.Join("_", localName, "MFactor");
-                    curveTable.Columns[0].ColumnName = Graphing.Graphable.FormatNameAndUnit("Mach Number", "");
+                    curveTable.Columns[0].ColumnName = Graphing.Graphable.FormatNameAndUnit(Localizer.Format("#autoLOC_KWT301"), "");   // "Mach Number"
                     ds.Tables.Add(curveTable);
                     curveTable = forceCurve.WriteToDataTable();
-                    curveTable.TableName = string.Join("_", localName, "Coef");
+                    curveTable.TableName = string.Join("_", localName, Localizer.Format("#autoLOC_KWT305"));    // "Coef"
                     foreach (System.Data.DataRow row in curveTable.Rows)
                         row[0] = (float)row[0] * Mathf.Rad2Deg;
-                    curveTable.Columns[0].ColumnName = Graphing.Graphable.FormatNameAndUnit("Angle of Attack", "°");
+                    curveTable.Columns[0].ColumnName = Graphing.Graphable.FormatNameAndUnit(Localizer.Format("#autoLOC_KWT302"), Localizer.Format("#autoLOC_KWT000"));  // "Angle of Attack" "°"
                     ds.Tables.Add(curveTable);
                 }
             }

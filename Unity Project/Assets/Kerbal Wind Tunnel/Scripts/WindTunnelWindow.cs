@@ -378,7 +378,7 @@ namespace KerbalWindTunnel
             highlightSpeedInput.Text = WindTunnelSettings.SpeedIsMach ? (HighlightSpeed / GetSpeedOfSound(HighlightAltitude)).ToString("F2") : HighlightSpeed.ToString("N0");
             highlightAoAInput.Text = HighlightAoA.ToString();
 
-            highlightSpeedLabel.Text = WindTunnelSettings.SpeedIsMach ? "Mach:" : "Speed:";
+            highlightSpeedLabel.Text = $"{Localizer.Format(WindTunnelSettings.SpeedIsMach ? "#autoLOC_KWT300" : "#autoLOC_KWT323")}:";  // "Mach" "Speed"
 
             highlightManager = gameObject.AddComponent<HighlightManager>();
 
@@ -944,7 +944,7 @@ namespace KerbalWindTunnel
         private void UpdateFromSettings()
         {
             settingsDialog = null;
-            highlightSpeedLabel.Text = WindTunnelSettings.SpeedIsMach ? "Mach:" : "Speed:";
+            highlightSpeedLabel.Text = $"{Localizer.Format(WindTunnelSettings.SpeedIsMach ? "#autoLOC_KWT300" : "#autoLOC_KWT323")}:";  // "Mach" "Speed"
 
             envelopeData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);
             velData.SetCoefficientMode(WindTunnelSettings.UseCoefficients);

@@ -5,6 +5,7 @@ using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
+using KSP.Localization;
 using Graphing;
 using static KerbalWindTunnel.VesselCache.AeroOptimizer;
 
@@ -23,22 +24,22 @@ namespace KerbalWindTunnel.DataGenerators
         private static Func<AoAPoint, Vector2> ToVector(Func<AoAPoint, float> func) => (pt) => new Vector2(pt.AoA * Mathf.Rad2Deg, func(pt));
         public List<GraphDefinition> graphDefinitions = new List<GraphDefinition>
         {
-            new LineGraphDefinition("lift_coefSwap", null) { DisplayName = "Lift", Color = defaultColor },
-            new LineGraphDefinition("drag_coefSwap", null) { DisplayName = "Drag", Color = defaultColor },
-            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "Lift Slope", StringFormat = "F3", Color = defaultColor },
+            new LineGraphDefinition("lift_coefSwap", null) { DisplayName = "#autoLOC_KWT308", Color = defaultColor },   // "Lift"
+            new LineGraphDefinition("drag_coefSwap", null) { DisplayName = "#autoLOC_KWT311", Color = defaultColor },   // "Drag"
+            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "#autoLOC_KWT313", YUnit = "#autoLOC_KWT015", StringFormat = "F2", Color = defaultColor },   // "Lift/Drag Ratio" "-"
+            new LineGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "#autoLOC_KWT314", StringFormat = "F3", Color = defaultColor },    // "Lift Slope"
             new GroupedGraphDefinition<LineGraphDefinition> ("pitchInput",
-                new LineGraphDefinition("pitchInput_wet", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input (Wet)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
-                new LineGraphDefinition("pitchInput_dry", ToVector(p => p.pitchInput_dry * 100)) { DisplayName = "Pitch Input (Dry)", YName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = dryColor }
-                ) {DisplayName = "Pitch Input", YUnit = "%" },
+                new LineGraphDefinition("pitchInput_wet", ToVector(p => p.pitchInput * 100)) { DisplayName = "#autoLOC_KWT316", YName = "#autoLOC_KWT315", YUnit = "#autoLOC_KWT003", StringFormat = "N0", Color = defaultColor },  // "Pitch Input (Wet)" "Pitch Input"  "%"
+                new LineGraphDefinition("pitchInput_dry", ToVector(p => p.pitchInput_dry * 100)) { DisplayName = "#autoLOC_KWT317", YName = "#autoLOC_KWT315", YUnit = "#autoLOC_KWT003", StringFormat = "N0", Color = dryColor }   // "Pitch Input (Dry)" "Pitch Input"  "%"
+                ) {DisplayName = "#autoLOC_KWT315", YUnit = "#autoLOC_KWT003" },  // "Pitch Input"  "%"
             /*new GroupedGraphDefinition<LineGraphDefinition> ("staticMargin",
-                new LineGraphDefinition("staticMargin_wet", ToVector(p => p.staticMargin * 100)) { DisplayName = "Static Margin (Wet)", YName = "Static Margin", YUnit = "% MAC", StringFormat = "F2", Color = defaultColor },
-                new LineGraphDefinition("staticMargin_wet", ToVector(p => p.staticMargin_dry * 100)) { DisplayName = "Static Margin (Dry)", YName = "Static Margin", YUnit = "% MAC", StringFormat = "F2", Color = dryColor }
-                ) { DisplayName = "Static Margin", YUnit = "% MAC" },*/
+                new LineGraphDefinition("staticMargin_wet", ToVector(p => p.staticMargin * 100)) { DisplayName = "#autoLOC_KWT337", YName = "#autoLOC_KWT336", YUnit = "#autoLOC_KWT014", StringFormat = "F2", Color = defaultColor },  // "Static Margin (Wet)" "Static Margin" "% MAC"
+                new LineGraphDefinition("staticMargin_wet", ToVector(p => p.staticMargin_dry * 100)) { DisplayName = "#autoLOC_KWT338", YName = "#autoLOC_KWT336", YUnit = "#autoLOC_KWT014", StringFormat = "F2", Color = dryColor }   // "Static Margin (Dry)" "Static Margin" "% MAC"
+                ) { DisplayName = "#autoLOC_KWT336", YUnit = "#autoLOC_KWT014" },*/ //  "Static Margin" "% MAC"
             new GroupedGraphDefinition<LineGraphDefinition> ("torque",
-                new LineGraphDefinition("torque_wet", ToVector(p => p.torque)) { DisplayName = "Torque (Wet)", YName = "Torque", YUnit = "kNm", StringFormat = "N0", Color = defaultColor },
-                new LineGraphDefinition("torque_dry", ToVector(p => p.torque_dry)) { DisplayName = "Torque (Dry)", YName = "Torque", YUnit = "kNm", StringFormat = "N0", Color = dryColor }
-                ) { DisplayName = "Torque", YUnit = "kNm" }
+                new LineGraphDefinition("torque_wet", ToVector(p => p.torque)) { DisplayName = "#autoLOC_KWT319", YName = "#autoLOC_KWT318", YUnit = "#autoLOC_KWT010", StringFormat = "N0", Color = defaultColor },    // "Torque (Wet)" "Torque" "kNm"
+                new LineGraphDefinition("torque_dry", ToVector(p => p.torque_dry)) { DisplayName = "#autoLOC_KWT320", YName = "#autoLOC_KWT318", YUnit = "#autoLOC_KWT010", StringFormat = "N0", Color = dryColor }     // "Torque (Dry" "Torque" "kNm"
+                ) { DisplayName = "#autoLOC_KWT318", YUnit = "#autoLOC_KWT010" }    // "Torque" "kNm"
         };
 
         public void SetCoefficientMode(bool useCoefficients)
@@ -57,13 +58,13 @@ namespace KerbalWindTunnel.DataGenerators
                             break;
                         case "lift_slope":
                             lineDef.mappingFunc = useCoefficients ? ToVector(p => p.Coefficient(p.dLift)) : ToVector(p => p.dLift);
-                            lineDef.YUnit = useCoefficients ? "/°" : "kN/°";
+                            lineDef.YUnit = useCoefficients ? "#autoLOC_KWT007" : "#autoLOC_KWT008";   // "/°" "kN/°"
                             continue;
                         default:
                             continue;
                     }
-                    lineDef.YName = useCoefficients ? "Coefficient" : "Force";
-                    lineDef.YUnit = useCoefficients ? "-" : "kN";
+                    lineDef.YName = useCoefficients ? "#autoLOC_KWT307" : "#autoLOC_KWT321";    // "Coefficient" "Force"
+                    lineDef.YUnit = useCoefficients ? "#autoLOC_KWT015" : "#autoLOC_KWT004";    // "-" "kN"
                     lineDef.StringFormat = useCoefficients ? "N0" : "F2";
                 }
             }
@@ -74,8 +75,8 @@ namespace KerbalWindTunnel.DataGenerators
             SetCoefficientMode(WindTunnelSettings.UseCoefficients);
             foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                graphDefinition.XUnit = "°";
-                graphDefinition.XName = "Angle of Attack";
+                graphDefinition.XUnit = "#autoLOC_KWT000";  // "°"
+                graphDefinition.XName = "#autoLOC_KWT302";  // "Angle of Attack"
                 graphDefinition.Visible = false;
             }
             graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));
@@ -233,16 +234,16 @@ namespace KerbalWindTunnel.DataGenerators
                 if (WindTunnelSettings.UseCoefficients)
                 {
                     float coefMod = Coefficient(1);
-                    return string.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
-                        "Lift Coefficient:\t{3:N2}\n" + "Drag Coefficient:\t{4:N2}\n" + "Lift/Drag Ratio:\t{5:N2}\n" + "Pitch Input:\t{7:F3}\n" + 
-                        "Wing Area:\t{8:F2}",
+                    return string.Format($"{Localizer.Format("#autoLOC_KWT322")}:\t{{0:N0}}{Localizer.Format("#autoLOC_KWT001")}\n{Localizer.Format("#autoLOC_KWT323")}:\t{{1:N0}}{Localizer.Format("#autoLOC_KWT005")}\n{Localizer.Format("#autoLOC_KWT300")}:\t{{6:N2}}\n{Localizer.Format("#autoLOC_KWT306")}:\t{{2:N2}}{Localizer.Format("#autoLOC_KWT000")}\n" +   // "Altitude" "m" "Speed" "m/s" "Mach" "AoA" "°"
+                        $"{Localizer.Format("#autoLOC_KWT310")}:\t{{3:N2}}\n{Localizer.Format("#autoLOC_KWT312")}:\t{{4:N2}}\n{Localizer.Format("#autoLOC_KWT313")}:\t{{5:N2}}\n{Localizer.Format("#autoLOC_KWT315")}:\t{{7:F3}}\n" +     // "Lift Coefficient" "Drag Coefficient" "Lift/Drag Ratio" "Pitch Input"
+                        $"{Localizer.Format("#autoLOC_KWT325")}:\t{{8:F2}}",   // "Wing Area"
                         altitude, speed, AoA * Mathf.Rad2Deg,
                         Lift * coefMod, Drag * coefMod, LDRatio, mach, pitchInput,
                         wingArea);
                 }
                 else
-                    return string.Format("Altitude:\t{0:N0}m\n" + "Speed:\t{1:N0}m/s\n" + "Mach:\t{6:N2}\n" + "AoA:\t{2:N2}°\n" +
-                            "Lift:\t{3:N0}kN\n" + "Drag:\t{4:N0}kN\n" + "Lift/Drag Ratio:\t{5:N2}\n" + "Pitch Input:\t{7:F3}",
+                    return string.Format($"{Localizer.Format("#autoLOC_KWT322")}:\t{{0:N0}}{Localizer.Format("#autoLOC_KWT001")}\n{Localizer.Format("#autoLOC_KWT323")}:\t{{1:N0}}{Localizer.Format("#autoLOC_KWT005")}\n{Localizer.Format("#autoLOC_KWT300")}:\t{{6:N2}}\n{Localizer.Format("#autoLOC_KWT306")}:\t{{2:N2}}{Localizer.Format("#autoLOC_KWT000")}\n" +   // "Altitude" "m" "Speed" "m/s" "Mach" "AoA" "°"
+                            $"{Localizer.Format("#autoLOC_KWT308")}:\t{{3:N0}}{Localizer.Format("#autoLOC_KWT004")}\n{Localizer.Format("#autoLOC_KWT311")}:\t{{4:N0}}{Localizer.Format("#autoLOC_KWT004")}\n{Localizer.Format("#autoLOC_KWT313")}:\t{{5:N2}}\n{Localizer.Format("#autoLOC_KWT315")}:\t{{7:F3}}",  // "Lift" "kN" "Drag" "kN" "Lift/Drag Ratio" "Pitch Input"
                             altitude, speed, AoA * Mathf.Rad2Deg,
                             Lift, Drag, LDRatio, mach, pitchInput);
             }

@@ -21,21 +21,21 @@ namespace KerbalWindTunnel.DataGenerators
 
         public readonly List<LineGraphDefinition> graphDefinitions = new List<LineGraphDefinition>()
         {
-            new LineGraphDefinition("aoa_level", ToVector(p => p.AoA_level * Mathf.Rad2Deg)){ DisplayName = "Level AoA", YName = "Angle", YUnit = "°", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("aoa_max", ToVector(p => p.AoA_max * Mathf.Rad2Deg)) { DisplayName = "Max Lift AoA", YName = "Angle", YUnit = "°", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "Lift/Drag Ratio", YUnit = "-", StringFormat = "F2", Color = defaultColor },
-            new LineGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "Lift Slope", StringFormat = "F3", Color = defaultColor },
-            new LineGraphDefinition("thrust_available", ToVector(p => p.thrust_available)) { DisplayName = "Thrust Available", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor },
-            new LineGraphDefinition("thrust_required", ToVector(p => p.thrust_required)) { DisplayName = "Thrust Required", YName = "Force", YUnit = "kN", StringFormat = "N0", Color = defaultColor },
-            new LineGraphDefinition("excess_thrust", ToVector(p => p.Thrust_Excess)){ DisplayName = "Excess Thrust", YName = "Force", YUnit = "kN", StringFormat="N0", Color = defaultColor },
-            new LineGraphDefinition("liftMax_coefSwap", null) { DisplayName = "Max Lift", Color = defaultColor },
-            new LineGraphDefinition("drag_coefSwap", null) { DisplayName = "Drag", Color = defaultColor },
-            new LineGraphDefinition("fuel_economy", ToVector(p => p.fuelBurnRate / p.speed * 100 * 1000)) { DisplayName = "Fuel Economy", YUnit = "kg/100 km", StringFormat = "F2", Color = defaultColor, Enabled = false },
-            new LineGraphDefinition("fuel_rate", ToVector(p => p.fuelBurnRate)) { DisplayName = "Fuel Burn Rate", YUnit = "kg/s", StringFormat = "F3", Color = defaultColor, Enabled = false },
-            new LineGraphDefinition("pitch_input", ToVector(p => p.pitchInput * 100)) { DisplayName = "Pitch Input", YUnit = "%", StringFormat = "N0", Color = defaultColor },
-            /*new LineGraphDefinition("staticMargin", ToVector(p => p.speed >= 40 ? p.staticMargin * 100 : float.NaN)) { DisplayName = "Static Margin", YUnit = "% MAC", StringFormat = "F2" },
-            new LineGraphDefinition("stabilityDerivative", ToVector(p => p.dTorque)) { DisplayName = "Stability Derivative", YUnit = "kNm/°", StringFormat = "F2" },*/
-            new LineGraphDefinition("accel_excess", ToVector(p => p.Accel_Excess)) { DisplayName = "Excess Acceleration", YUnit = "g", StringFormat = "N2", Color = defaultColor, Enabled = false }
+            new LineGraphDefinition("aoa_level", ToVector(p => p.AoA_level * Mathf.Rad2Deg)){ DisplayName = "#autoLOC_KWT326", YName = "#autoLOC_KWT303", YUnit = "#autoLOC_KWT000", StringFormat = "F2", Color = defaultColor },   // "Level AoA" "Angle" "°"
+            new LineGraphDefinition("aoa_max", ToVector(p => p.AoA_max * Mathf.Rad2Deg)) { DisplayName = "#autoLOC_KWT327", YName = "#autoLOC_KWT303", YUnit = "#autoLOC_KWT000", StringFormat = "F2", Color = defaultColor },    // "Max Lift AoA" "Angle" "°"
+            new LineGraphDefinition("ldRatio", ToVector(p => p.LDRatio)) { DisplayName = "#autoLOC_KWT313", YUnit = "#autoLOC_KWT015", StringFormat = "F2", Color = defaultColor },   // "Lift/Drag Ratio" "-"
+            new LineGraphDefinition("lift_slope_coefSwap", null) { DisplayName = "#autoLOC_KWT314", StringFormat = "F3", Color = defaultColor },    // "Lift Slope"
+            new LineGraphDefinition("thrust_available", ToVector(p => p.thrust_available)) { DisplayName = "#autoLOC_KWT332", YName = "#autoLOC_KWT321", YUnit = "#autoLOC_KWT004", StringFormat = "N0", Color = defaultColor },   // "Thrust Available" "Force" "kN"
+            new LineGraphDefinition("thrust_required", ToVector(p => p.thrust_required)) { DisplayName = "#autoLOC_KWT333", YName = "#autoLOC_KWT321", YUnit = "#autoLOC_KWT004", StringFormat = "N0", Color = defaultColor },   // "Thrust Required" "Force" "kN"
+            new LineGraphDefinition("excess_thrust", ToVector(p => p.Thrust_Excess)){ DisplayName = "#autoLOC_KWT329", YName = "#autoLOC_KWT321", YUnit = "#autoLOC_KWT004", StringFormat="N0", Color = defaultColor },  // "Excess Thrust" "Force" "kN"
+            new LineGraphDefinition("liftMax_coefSwap", null) { DisplayName = "#autoLOC_KWT309", Color = defaultColor },    // "Max Lift"
+            new LineGraphDefinition("drag_coefSwap", null) { DisplayName = "#autoLOC_KWT311", Color = defaultColor },   // "Drag"
+            new LineGraphDefinition("fuel_economy", ToVector(p => p.fuelBurnRate / p.speed * 100 * 1000)) { DisplayName = "#autoLOC_KWT340", YUnit = "#autoLOC_KWT011", StringFormat = "F2", Color = defaultColor, Enabled = false }, // "Fuel Economy" "kg/100 km"
+            new LineGraphDefinition("fuel_rate", ToVector(p => p.fuelBurnRate)) { DisplayName = "#autoLOC_KWT341", YUnit = "#autoLOC_KWT012", StringFormat = "F3", Color = defaultColor, Enabled = false }, // "Fuel Burn Rate" "kg/s"
+            new LineGraphDefinition("pitch_input", ToVector(p => p.pitchInput * 100)) { DisplayName = "#autoLOC_KWT315", YUnit = "#autoLOC_KWT003", StringFormat = "N0", Color = defaultColor },  // "Pitch Input" "%"
+            /*new LineGraphDefinition("staticMargin", ToVector(p => p.speed >= 40 ? p.staticMargin * 100 : float.NaN)) { DisplayName = "#autoLOC_KWT336", YUnit = "#autoLOC_KWT014", StringFormat = "F2" },   // "Static Margin" "% MAC"
+            new LineGraphDefinition("stabilityDerivative", ToVector(p => p.dTorque)) { DisplayName = "#autoLOC_KWT339", YUnit = "#autoLOC_KWT009", StringFormat = "F2" },*/   // "Stability Derivative" "kNm/°"
+            new LineGraphDefinition("accel_excess", ToVector(p => p.Accel_Excess)) { DisplayName = "#autoLOC_KWT330", YUnit = "#autoLOC_KWT006", StringFormat = "N2", Color = defaultColor, Enabled = false } // "Excess Acceleration" "g"
         };
 
         public void SetCoefficientMode(bool useCoefficients)
@@ -54,13 +54,13 @@ namespace KerbalWindTunnel.DataGenerators
                             break;
                         case "lift_slope":
                             lineDef.mappingFunc = useCoefficients ? ToVector(p => p.Coefficient(p.dLift)) : ToVector(p => p.dLift);
-                            lineDef.YUnit = useCoefficients ? "/°" : "kN/°";
+                            lineDef.YUnit = useCoefficients ? "#autoLOC_KWT007" : "#autoLOC_KWT008";    // "/°" "kN/°"
                             continue;
                         default:
                             continue;
                     }
-                    lineDef.YName = useCoefficients ? "Coefficient" : "Force";
-                    lineDef.YUnit = useCoefficients ? "-" : "kN";
+                    lineDef.YName = useCoefficients ? "#autoLOC_KWT307" : "#autoLOC_KWT321";    // "Coefficient" "Force"
+                    lineDef.YUnit = useCoefficients ? "#autoLOC_KWT015" : "#autoLOC_KWT004";    // "-" "kN"
                     lineDef.StringFormat = useCoefficients ? "N0" : "F2";
                 }
             }
@@ -71,8 +71,8 @@ namespace KerbalWindTunnel.DataGenerators
             SetCoefficientMode(WindTunnelSettings.UseCoefficients);
             foreach (GraphDefinition graphDefinition in graphDefinitions)
             {
-                graphDefinition.XUnit = "m/s";
-                graphDefinition.XName = "Airspeed";
+                graphDefinition.XUnit = "#autoLOC_KWT005";  // "m/s"
+                graphDefinition.XName = "#autoLOC_KWT324";  // "Airspeed"
                 graphDefinition.Visible = false;
             }
             graphables.AddRange(graphDefinitions.Where(g => g.Enabled).Select(g => g.Graph));

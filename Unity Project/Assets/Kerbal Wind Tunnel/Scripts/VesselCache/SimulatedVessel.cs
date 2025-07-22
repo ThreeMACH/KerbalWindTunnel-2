@@ -224,7 +224,7 @@ namespace KerbalWindTunnel.VesselCache
 
             if (relativeWingArea == 0)
             {
-                ScreenMessages.PostScreenMessage("No wings found, using a reference area of 1.", 5, ScreenMessageStyle.UPPER_CENTER);
+                ScreenMessages.PostScreenMessage("#autoLOC_KWT209", 5, ScreenMessageStyle.UPPER_CENTER);   // "No wings found, using a reference area of 1."
                 relativeWingArea = 1;
             }
             if (v is ShipConstruct construct)
@@ -236,7 +236,7 @@ namespace KerbalWindTunnel.VesselCache
             MAC = relativeWingArea / MAC;
 
             //if (lgWarning)
-                //ScreenMessages.PostScreenMessage("Landing gear deployed, results may not be accurate.", 5, ScreenMessageStyle.UPPER_CENTER);
+                //ScreenMessages.PostScreenMessage("#autoLOC_KWT210", 5, ScreenMessageStyle.UPPER_CENTER);  // "Landing gear deployed, results may not be accurate."
         }
 
         private void InitClone(SimulatedVessel vessel)

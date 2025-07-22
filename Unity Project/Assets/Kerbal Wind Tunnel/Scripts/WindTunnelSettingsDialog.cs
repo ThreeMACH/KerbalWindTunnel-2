@@ -1,5 +1,6 @@
 ﻿using System.Collections.Generic;
 using UnityEngine;
+using KSP.Localization;
 
 namespace KerbalWindTunnel
 {
@@ -188,31 +189,31 @@ namespace KerbalWindTunnel
         {
             List<DialogGUIBase> dialog = new List<DialogGUIBase>
             {
-                new DialogGUIToggle(UseCoefficients, "Lift, Drag as coefficients", b => UseCoefficients = b ),
-                new DialogGUIToggle(SpeedIsMach, "Speed as Mach", (b) => SpeedIsMach = b),
-                new DialogGUIToggle(UseCharacterized, "Use faster vessel characterization",  b => UseCharacterized = b),
-                new DialogGUIToggle(StartMinimized, "Start minimized", b => StartMinimized = b),
-                new DialogGUIToggle(UseSingleColorHighlighting, "Use simple part highlighting", b => UseSingleColorHighlighting = b),
-                new DialogGUIToggle(ShowEnvelopeMask, "Show flight envelope outline on graphs", b => ShowEnvelopeMask = b),
-                new DialogGUIToggle(ShowEnvelopeMaskAlways && ShowEnvelopeMask, "Show flight envelope outline even on flight envelope", b => { ShowEnvelopeMaskAlways = b; ShowEnvelopeMask |= b; }),
+                new DialogGUIToggle(UseCoefficients, "#autoLOC_KWT100", b => UseCoefficients = b ),     // "Lift, Drag as coefficients"
+                new DialogGUIToggle(SpeedIsMach, "#autoLOC_KWT101", (b) => SpeedIsMach = b),            // "Speed as Mach"
+                new DialogGUIToggle(UseCharacterized, "#autoLOC_KWT102",  b => UseCharacterized = b),   // "Use faster vessel characterization"
+                new DialogGUIToggle(StartMinimized, "#autoLOC_KWT103", b => StartMinimized = b),        // "Start minimized"
+                new DialogGUIToggle(UseSingleColorHighlighting, "#autoLOC_KWT104", b => UseSingleColorHighlighting = b),    // "Use simple part highlighting"
+                new DialogGUIToggle(ShowEnvelopeMask, "#autoLOC_KWT105", b => ShowEnvelopeMask = b),    // "Show flight envelope outline on graphs"
+                new DialogGUIToggle(ShowEnvelopeMaskAlways && ShowEnvelopeMask, "#autoLOC_KWT106", b => { ShowEnvelopeMaskAlways = b; ShowEnvelopeMask |= b; }),    // "Show flight envelope outline even on flight envelope"
             };
 
             dialog.Add(new DialogGUIHorizontalLayout(TextAnchor.MiddleLeft,
-                new DialogGUILabel(string.Format("Propeller rotation evaluations: {0}", RotationCount), UISkinManager.defaultSkin.toggle, true),
+                new DialogGUILabel(Localizer.Format("#autoLOC_KWT107", RotationCount), UISkinManager.defaultSkin.toggle, true),   // "Propeller rotation evaluations: "
                 new DialogGUISlider(() => Mathf.Log(RotationCount, 2), 0, 4, true, 100, 20, value => RotationCount = (int)Mathf.Pow(2, value))
                 ));
 
             if (ToolbarManager.ToolbarAvailable)
-                dialog.Add(new DialogGUIToggle(UseBlizzy, "Use Blizzy's Toolbar", b => UseBlizzy = b));
+                dialog.Add(new DialogGUIToggle(UseBlizzy, "#autoLOC_KWT108", b => UseBlizzy = b));      // "Use Blizzy's Toolbar"
 
-            dialog.Add(new DialogGUIButton("Accept", () =>
+            dialog.Add(new DialogGUIButton("#autoLOC_6001205", () =>         // "Accept"
             {
                 if (!invokeOnlyOnChange || settingsChanged)
                     acceptAction?.Invoke();
             }, true));
 
             return PopupDialog.SpawnPopupDialog(new Vector2(0.5f, 0.5f), new Vector2(0.5f, 0.5f),
-                new MultiOptionDialog(popupWindowName, "", "Kerbal Wind Tunnel Settings", UISkinManager.defaultSkin, dialog.ToArray()),
+                new MultiOptionDialog(popupWindowName, "", "#autoLOC_KWT109", UISkinManager.defaultSkin, dialog.ToArray()), // "Kerbal Wind Tunnel Settings"
                 false, UISkinManager.defaultSkin, true);
         }
     }

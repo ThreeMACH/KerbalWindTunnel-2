@@ -752,6 +752,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 5901150932282737913, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Time-Optimal Path
+      objectReference: {fileID: 0}
     - target: {fileID: 5980288136923256643, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_SizeDelta.x
@@ -771,6 +776,21 @@ PrefabInstance:
         type: 3}
       propertyPath: m_SizeDelta.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 6205997108099665710, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Wet
+      objectReference: {fileID: 0}
+    - target: {fileID: 6333966976024495573, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Dry
+      objectReference: {fileID: 0}
+    - target: {fileID: 6408263827497476356, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Flight Envelope
       objectReference: {fileID: 0}
     - target: {fileID: 7085935092327580191, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
@@ -812,25 +832,30 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 7949347110847597301, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Fuel-Optimal Path
+      objectReference: {fileID: 0}
     - target: {fileID: 8104892763457212077, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.x
-      value: 20.378712
+      value: 23.378712
       objectReference: {fileID: 0}
     - target: {fileID: 8104892763457212077, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
-      value: 0.5125763
+      value: 0.5109272
       objectReference: {fileID: 0}
     - target: {fileID: 8104892763457212077, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMin.x
-      value: -19.378712
+      value: -22.378712
       objectReference: {fileID: 0}
     - target: {fileID: 8104892763457212077, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMin.y
-      value: 0.48742372
+      value: 0.4890728
       objectReference: {fileID: 0}
     - target: {fileID: 8387127128387692008, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
@@ -867,6 +892,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.x
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8936178594829141546, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: AoA Curves
+      objectReference: {fileID: 0}
     - target: {fileID: 8936178594965796551, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -927,6 +957,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8936178595171215549, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Export Data
+      objectReference: {fileID: 0}
     - target: {fileID: 8936178595375526531, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -956,6 +991,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178595434329700, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Update Vessel
       objectReference: {fileID: 0}
     - target: {fileID: 8936178595458109634, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
@@ -1307,6 +1347,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8936178595826346295, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Select on Graph
+      objectReference: {fileID: 0}
     - target: {fileID: 8936178595859034034, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -1337,6 +1382,18 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8936178595909621953, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Velocity Curves
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596010640106, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: 'Ascent Path
+
+        Target Altitude:'
+      objectReference: {fileID: 0}
     - target: {fileID: 8936178596010640111, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -1367,6 +1424,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8936178596027282075, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Kerbal Wind Tunnel
+      objectReference: {fileID: 0}
     - target: {fileID: 8936178596027282078, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -1396,6 +1458,13 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596032091979, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: 'Target
+
+        Speed:'
       objectReference: {fileID: 0}
     - target: {fileID: 8936178596032091980, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
@@ -1517,6 +1586,11 @@ PrefabInstance:
       propertyPath: m_AnchoredPosition.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 8936178596145130417, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: 'Highlight Mode:'
+      objectReference: {fileID: 0}
     - target: {fileID: 8936178596349849722, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
       propertyPath: m_AnchorMax.y
@@ -1636,6 +1710,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596546295345, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Text
+      value: Settings
       objectReference: {fileID: 0}
     - target: {fileID: 8936178596611487104, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}
@@ -1811,6 +1890,31 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchoredPosition.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596728001462, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Options.m_Options.Array.data[0].m_Text
+      value: Off
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596728001462, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Options.m_Options.Array.data[1].m_Text
+      value: Drag
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596728001462, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Options.m_Options.Array.data[2].m_Text
+      value: Lift
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596728001462, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Options.m_Options.Array.data[3].m_Text
+      value: Drag/Mass
+      objectReference: {fileID: 0}
+    - target: {fileID: 8936178596728001462, guid: 8f5bdc3303b9dc543b45e303d4d77724,
+        type: 3}
+      propertyPath: m_Options.m_Options.Array.data[4].m_Text
+      value: Drag/Lift
       objectReference: {fileID: 0}
     - target: {fileID: 8936178596796259912, guid: 8f5bdc3303b9dc543b45e303d4d77724,
         type: 3}

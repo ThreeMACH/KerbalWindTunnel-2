@@ -30,35 +30,35 @@ namespace KerbalWindTunnel
             {
                 new DialogGUIContentSizer(UnityEngine.UI.ContentSizeFitter.FitMode.PreferredSize, UnityEngine.UI.ContentSizeFitter.FitMode.MinSize),
                 new DialogGUIHorizontalLayout(UnityEngine.TextAnchor.MiddleLeft,
-                    new DialogGUILabel("Save As: ", false, true),
+                    new DialogGUILabel("#autoLOC_KWT200", false, true),   // "Save As: "
                     new DialogGUITextInput("", filename, false, 60, value => filename = value, 300, 30)
                     ),
                 new DialogGUISpace(5),
                 new DialogGUIHorizontalLayout(UnityEngine.TextAnchor.MiddleLeft,
-                    new DialogGUILabel("Format: ", false, true),
+                    new DialogGUILabel("#autoLOC_KWT201", false, true),    // "Format: "
                     new DialogGUIToggleGroup(
-                        new DialogGUIToggle(() => format == GraphIO.FileFormat.XLSX, "Spreadsheet", _ => format = GraphIO.FileFormat.XLSX),
-                        new DialogGUIToggle(() => format == GraphIO.FileFormat.CSV, "CSV", _ => format = GraphIO.FileFormat.CSV)
+                        new DialogGUIToggle(() => format == GraphIO.FileFormat.XLSX, "#autoLOC_KWT202", _ => format = GraphIO.FileFormat.XLSX), // "Spreadsheet"
+                        new DialogGUIToggle(() => format == GraphIO.FileFormat.CSV, "#autoLOC_KWT203", _ => format = GraphIO.FileFormat.CSV)    // "CSV"
                         ),
                     new DialogGUIFlexibleSpace()
                     ),
                 new DialogGUIHorizontalLayout(UnityEngine.TextAnchor.MiddleLeft,
                     new DialogGUIToggleGroup(
-                        new DialogGUIToggleButton(() => outputMode == OutputMode.Visible, "Visible graph(s)", _ => outputMode = OutputMode.Visible, h: 25),
-                        new DialogGUIToggleButton(() => outputMode == OutputMode.All, "All graphs", _ => outputMode = OutputMode.All, h: 25),
-                        new DialogGUIToggleButton(() => outputMode == OutputMode.Vessel, "Vessel", _ => outputMode = OutputMode.Vessel, h: 25)
+                        new DialogGUIToggleButton(() => outputMode == OutputMode.Visible, "#autoLOC_KWT204", _ => outputMode = OutputMode.Visible, h: 25),  // "Visible graph(s)"
+                        new DialogGUIToggleButton(() => outputMode == OutputMode.All, "#autoLOC_KWT205", _ => outputMode = OutputMode.All, h: 25),  // "All graphs"
+                        new DialogGUIToggleButton(() => outputMode == OutputMode.Vessel, "#autoLOC_KWT206", _ => outputMode = OutputMode.Vessel, h: 25) // "Vessel"
                         )
                 ),
                 new DialogGUIHorizontalLayout(
                     new DialogGUIFlexibleSpace(),
-                    new DialogGUIButton("Save", Export, false),
-                    new DialogGUIButton("Cancel", Dismiss, false),
+                    new DialogGUIButton("#autoLOC_174778", Export, false),  // "Save"
+                    new DialogGUIButton("#autoLOC_174783", Dismiss, false), // "Cancel"
                     new DialogGUIFlexibleSpace()
                     )
             };
 
             dialog = PopupDialog.SpawnPopupDialog(
-                new MultiOptionDialog(popupWindowName, "", "Export", UISkinManager.defaultSkin, dialogItems.ToArray()),
+                new MultiOptionDialog(popupWindowName, "", "#autoLOC_KWT207", UISkinManager.defaultSkin, dialogItems.ToArray()),    // "Export"
                 false, UISkinManager.defaultSkin, isModal: true);
             dialog.GetComponentInChildren<TMPro.TMP_InputField>(true).gameObject.AddComponent<Extensions.InputLockSelectHandler>().Setup("test", ControlTypes.KEYBOARDINPUT);
         }
@@ -74,11 +74,11 @@ namespace KerbalWindTunnel
             if (System.IO.File.Exists(path))
             {
                 PopupDialog.SpawnPopupDialog(new UnityEngine.Vector2(0.5f, 0.5f), new UnityEngine.Vector2(0.5f, 0.5f),
-                    new MultiOptionDialog(popupConfirmName, "The specified file already exists. Would you like to replace it?", "", UISkinManager.defaultSkin,
+                    new MultiOptionDialog(popupConfirmName, "#autoLOC_KWT208", "", UISkinManager.defaultSkin,   // "The specified file already exists. Would you like to replace it?"
                         new DialogGUIHorizontalLayout(
                             new DialogGUIFlexibleSpace(),
-                            new DialogGUIButton("Yes", () => { DeleteFile(path); ContinueExport(filename); Dismiss(); }, true),
-                            new DialogGUIButton("No", () => { }, true),
+                            new DialogGUIButton("#autoLOC_174798", () => { DeleteFile(path); ContinueExport(filename); Dismiss(); }, true), // "Yes (overwrite)"
+                            new DialogGUIButton("#autoLOC_174804", () => { }, true),    // "No (cancel)"
                             new DialogGUIFlexibleSpace()
                             )
                         ), false, UISkinManager.defaultSkin, true);
