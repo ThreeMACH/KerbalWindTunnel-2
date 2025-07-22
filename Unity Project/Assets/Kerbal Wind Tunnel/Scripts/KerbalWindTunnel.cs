@@ -80,9 +80,9 @@ namespace KerbalWindTunnel
                 if (!WindTunnelSettings.UseBlizzy) return false;
                 if (!ToolbarManager.ToolbarAvailable) return false;
                 if (HighLogic.LoadedScene != GameScenes.EDITOR && HighLogic.LoadedScene != GameScenes.FLIGHT) return true;
-                blizzyToolbarButton = ToolbarManager.Instance.add("ReCoupler", "ReCoupler");
+                blizzyToolbarButton = ToolbarManager.Instance.add("KerbalWindTunnel", "KerbalWindTunnel");
                 blizzyToolbarButton.TexturePath = iconPath_blizzy_off;
-                blizzyToolbarButton.ToolTip = "ReCoupler";
+                blizzyToolbarButton.ToolTip = KSP.Localization.Localizer.Format("#autoLOC_KWT116");
                 blizzyToolbarButton.Visible = true;
                 blizzyToolbarButton.OnClick += (e) =>
                 {
