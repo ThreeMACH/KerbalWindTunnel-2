@@ -60,7 +60,7 @@ namespace KerbalWindTunnel
             dialog = PopupDialog.SpawnPopupDialog(
                 new MultiOptionDialog(popupWindowName, "", "#autoLOC_KWT207", UISkinManager.defaultSkin, dialogItems.ToArray()),    // "Export"
                 false, UISkinManager.defaultSkin, isModal: true);
-            dialog.GetComponentInChildren<TMPro.TMP_InputField>(true).gameObject.AddComponent<Extensions.InputLockSelectHandler>().Setup("test", ControlTypes.KEYBOARDINPUT);
+            dialog.GetComponentInChildren<TMPro.TMP_InputField>(true).gameObject.AddComponent<Extensions.InputLockSelectHandler>().Setup("WindTunnelExport", ControlTypes.KEYBOARDINPUT);
         }
 
         public void Dismiss()

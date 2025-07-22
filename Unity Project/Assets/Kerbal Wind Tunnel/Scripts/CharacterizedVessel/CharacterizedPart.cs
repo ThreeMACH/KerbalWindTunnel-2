@@ -119,6 +119,9 @@ namespace KerbalWindTunnel.VesselCache
         }
         public static IEnumerable<(float, bool)> AxesToWorldKeys(Vector3 v)
         {
+#if OUTSIDE_UNITY
+            static
+#endif
             IEnumerable<float> ZeroOne()
             {
                 yield return 0;

@@ -123,6 +123,7 @@ namespace KerbalWindTunnel.DataGenerators
 
             while (queue.Count > 0)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 PathSolverPoint current = queue.Dequeue();
                 if (current == target)
                     break;
@@ -181,6 +182,7 @@ namespace KerbalWindTunnel.DataGenerators
             int index = 0;
             while (target != origin && target != null)
             {
+                cancellationToken.ThrowIfCancellationRequested();
                 int i = decimation;
                 while (i > 0 && target.Previous != null)
                 {
