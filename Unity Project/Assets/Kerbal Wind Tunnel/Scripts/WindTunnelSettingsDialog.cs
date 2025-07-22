@@ -160,7 +160,7 @@ namespace KerbalWindTunnel
             ConfigNode[] settingsNode = GameDatabase.Instance.GetConfigNodes("KerbalWindTunnelSettings");
             if (settingsNode.Length < 1)
             {
-                Debug.Log("Kerbal Wind Tunnel Settings file note found.");
+                Debug.Log("[KWT] Kerbal Wind Tunnel Settings file note found.");
                 // To trigger creating a settings file.
                 settingsChanged = true;
                 return;

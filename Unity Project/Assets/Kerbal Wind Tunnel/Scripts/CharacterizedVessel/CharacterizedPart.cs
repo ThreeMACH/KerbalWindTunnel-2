@@ -87,7 +87,7 @@ namespace KerbalWindTunnel.VesselCache
                         evalPt = 1;
                     }
                     if (machMag == 0)
-                        Debug.LogError($"[Kerbal Wind Tunnel][CharacterizedPart.Characterize] For part {part.name}, LiftMachCurve evaluated to zero at both M=0 and M=1, resulting in undefined part lift. Please report this error.");
+                        Debug.LogError($"[KWT][CharacterizedPart.Characterize] For part {part.name}, LiftMachCurve evaluated to zero at both M=0 and M=1, resulting in undefined part lift. Please report this error.");
                     float PartLiftForce(float aoa)
                     {
                         Vector3 lift = Vector3.zero;

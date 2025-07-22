@@ -109,7 +109,7 @@ namespace KerbalWindTunnel.DataGenerators
             PathSolverPoint target = FindValidPoint(PathSolverPoint.Nearest(exitCoords.speed, exitCoords.altitude, bounds), data, bounds);
 
             if (origin == null)
-                throw new Exception("Vessel cannot maintain flight at or below the specified origin altitude.");
+                throw new Exception("[KWT] Vessel cannot maintain flight at or below the specified origin altitude.");
 
             origin.cost = 0;
             origin.time = 0;

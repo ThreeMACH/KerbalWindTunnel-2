@@ -162,7 +162,7 @@ namespace KerbalWindTunnel.VesselCache
                 if (maxAoATaskHandle != null)
                     return;
 #if DEBUG
-                Debug.Log("Starting Characterization");
+                Debug.Log("[KWT] Starting Characterization");
 #endif
 
                 List<Task> tasks = new List<Task>();
@@ -181,7 +181,7 @@ namespace KerbalWindTunnel.VesselCache
                 taskHandle = Task.WhenAll(combinePartTask, surfaceTask);
                 maxAoATaskHandle = taskHandle.ContinueWith(CharacterizeMaxAoA);
 #if DEBUG
-                taskHandle.ContinueWith(t => Debug.Log("Completed Characterization"));
+                taskHandle.ContinueWith(t => Debug.Log("[KWT] Completed Characterization"));
 #endif
             }
         }

@@ -184,13 +184,13 @@ namespace KerbalWindTunnel
                 if (System.IO.File.Exists(path))
                     System.IO.File.Delete(path);
             }
-            catch (Exception ex) { Debug.Log($"Unable to delete file:{ex.Message}"); }
+            catch (Exception ex) { Debug.Log($"[KWT] Unable to delete file:{ex.Message}"); }
 
             System.Data.DataSet output = WriteToDataSet();
 
             if (output == null)
             {
-                Debug.LogError($"This AeroPredictor does not implement an output method. {this.GetType()}");
+                Debug.LogError($"[KWT] This AeroPredictor does not implement an output method. {this.GetType()}");
                 return;
             }
 

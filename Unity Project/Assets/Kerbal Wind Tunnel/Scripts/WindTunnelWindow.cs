@@ -230,7 +230,7 @@ namespace KerbalWindTunnel
                 if (_graphMode == value)
                     return;
                 if (_graphMode < 0 || _graphMode > 2)
-                    throw new ArgumentException("Invalid graph mode.");
+                    throw new ArgumentException("[KWT] Invalid graph mode.");
                 _graphMode = value;
                 switch (_graphMode)
                 {
