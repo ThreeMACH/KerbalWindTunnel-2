@@ -493,6 +493,10 @@ if EXIST "Builds\WindTunnel\Output\" (rd /Q /S "Builds\WindTunnel\Output")
 FOR /F delims^=^"^ tokens^=2 %25%25i in ('findstr /b /c:"[assembly: AssemblyVersion(" "$(ProjectDir)\Properties\AssemblyInfo.cs"') do (set version=%25%25i)
 
 echo Creating distribution zip file: %25version:~0,7%25
+
+rem Don't overwrite a zip file if I forgot to increment the version number.
+if EXIST "Builds\Kerbal_Wind_Tunnel-%25version:~0,7%25.zip" (EXIT 1)
+
 tar -caf "Builds\Kerbal_Wind_Tunnel-%25version:~0,7%25.zip" -C "Builds" "WindTunnel\*"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
