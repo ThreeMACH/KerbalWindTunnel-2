@@ -403,7 +403,6 @@ namespace KerbalWindTunnel
         }
 
         // Called when the Export button is clicked
-        // TODO: Modal window to name file and select options.
         public void ExportGraphData()
         {
 #if !OUTSIDE_UNITY
@@ -805,10 +804,18 @@ namespace KerbalWindTunnel
             }
         }
 
+        public void ClearCaches()
+        {
+            VelCurve.Clear(taskTracker_vel?.LastFollowOnTask);
+            AoACurve.Clear(taskTracker_aoa?.LastFollowOnTask);
+            EnvelopeSurf.Clear(taskTracker_surf?.LastFollowOnTask);
+        }
+
         // Called by the Planet selection dropdown
         public void PlanetSelected(int item)
         {
             body = planets[item];
+            ClearCaches();
             RefreshData();
             if (HighlightMode > 0)
                 UpdateHighlightingMethod();
@@ -890,12 +897,11 @@ namespace KerbalWindTunnel
 
             Cancel();
 
-            VelCurve.Clear(taskTracker_vel?.LastFollowOnTask);
-            AoACurve.Clear(taskTracker_aoa?.LastFollowOnTask);
-            EnvelopeSurf.Clear(taskTracker_surf?.LastFollowOnTask);
+            ClearCaches();
 
             RefreshData();
 
+            // COULDDO:
             //updateVesselButton.interactable = false;
         }
 
