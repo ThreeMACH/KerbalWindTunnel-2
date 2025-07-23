@@ -198,6 +198,7 @@ namespace KerbalWindTunnel
             get => _ascentTargetAlt;
             set
             {
+                autoSetAscentTarget = false;
                 if (_ascentTargetAlt == value)
                     return;
                 _ascentTargetAlt = value;
@@ -212,6 +213,7 @@ namespace KerbalWindTunnel
             get => _ascentTargetSpeed;
             set
             {
+                autoSetAscentTarget = false;
                 if (_ascentTargetSpeed == value)
                     return;
                 _ascentTargetSpeed = value;
@@ -828,12 +830,14 @@ namespace KerbalWindTunnel
         }
         internal void ProvideAscentTarget((float speed, float altitude) maxSustainableEnergy)
         {
-            if (_ascentTargetSpeed < 0)
-                _ascentTargetSpeed = maxSustainableEnergy.speed;
-            if (_ascentTargetAlt < 0)
-                _ascentTargetAlt = maxSustainableEnergy.altitude;
-            // TODO: Set the text fields to these numbers. Can't do it here since this will be called from a worker thread.
-            // TODO: It's not a worker thread anymore!
+            if (!autoSetAscentTarget)
+                return;
+
+            _ascentTargetSpeed = maxSustainableEnergy.speed;
+            ascentSpeedInput.Text = maxSustainableEnergy.speed.ToString();
+
+            _ascentTargetAlt = maxSustainableEnergy.altitude;
+            ascentAltitudeInput.Text = maxSustainableEnergy.altitude.ToString();
         }
 
         // Called whenever one of the AoA graph selection toggles *changes*.
