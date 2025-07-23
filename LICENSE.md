@@ -11,7 +11,7 @@ a project under another license is permissible.
 
 MIT License
 
-Copyright (c) 2024 David Boots
+Copyright (c) 2025 David Boots
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
