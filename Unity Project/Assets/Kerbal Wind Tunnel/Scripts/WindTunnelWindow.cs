@@ -804,18 +804,19 @@ namespace KerbalWindTunnel
             }
         }
 
-        public void ClearCaches()
+        public async System.Threading.Tasks.Task ClearCaches()
         {
-            VelCurve.Clear(taskTracker_vel?.LastFollowOnTask);
-            AoACurve.Clear(taskTracker_aoa?.LastFollowOnTask);
-            EnvelopeSurf.Clear(taskTracker_surf?.LastFollowOnTask);
+            await System.Threading.Tasks.Task.WhenAll(
+                VelCurve.Clear(taskTracker_vel?.LastFollowOnTask),
+                AoACurve.Clear(taskTracker_aoa?.LastFollowOnTask),
+                envelopeData.Clear(taskTracker_surf?.LastFollowOnTask));
         }
 
         // Called by the Planet selection dropdown
-        public void PlanetSelected(int item)
+        public async void PlanetSelected(int item)
         {
             body = planets[item];
-            ClearCaches();
+            await ClearCaches();
             RefreshData();
             if (HighlightMode > 0)
                 UpdateHighlightingMethod();
@@ -878,7 +879,7 @@ namespace KerbalWindTunnel
         }
 
         // Called by the Update Vessel button
-        public void UpdateVessel()
+        public async void UpdateVessel()
         {
             if (vessel != null)
             {
@@ -897,7 +898,7 @@ namespace KerbalWindTunnel
 
             Cancel();
 
-            ClearCaches();
+            await ClearCaches();
 
             RefreshData();
 

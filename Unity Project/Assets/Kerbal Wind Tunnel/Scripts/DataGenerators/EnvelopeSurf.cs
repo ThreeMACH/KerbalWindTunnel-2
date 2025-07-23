@@ -270,14 +270,21 @@ namespace KerbalWindTunnel.DataGenerators
             Debug.Log("[KWT] Graphs updated - Envelope");
         }
 
-        public static void Clear(Task task = null)
+        public async Task Clear(Task task = null)
         {
             if (task == null)
+            {
                 cache.Clear();
+                EnvelopePoints = null;
+            }
             else
-                task.ContinueWith(ClearContinuation);
+                await task.ContinueWith(ClearContinuation);
         }
-        private static void ClearContinuation(Task _) => cache.Clear();
+        private void ClearContinuation(Task _)
+        {
+            cache.Clear();
+            EnvelopePoints = null;
+        }
 
         public void UpdateGraphs()
         {

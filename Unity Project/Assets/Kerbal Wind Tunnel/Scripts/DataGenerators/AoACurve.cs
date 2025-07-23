@@ -154,12 +154,12 @@ namespace KerbalWindTunnel.DataGenerators
             Debug.Log("[KWT] Graphs updated - AoA");
         }
 
-        public static void Clear(Task task = null)
+        public static async Task Clear(Task task = null)
         {
             if (task == null)
                 cache.Clear();
             else
-                task.ContinueWith(ClearContinuation);
+                await task.ContinueWith(ClearContinuation);
         }
         private static void ClearContinuation(Task _) => cache.Clear();
 
