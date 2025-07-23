@@ -199,7 +199,7 @@ namespace KerbalWindTunnel
             };
 
             dialog.Add(new DialogGUIHorizontalLayout(TextAnchor.MiddleLeft,
-                new DialogGUILabel(Localizer.Format("#autoLOC_KWT107", RotationCount), UISkinManager.defaultSkin.toggle, true),   // "Propeller rotation evaluations: "
+                new DialogGUILabel(() => Localizer.Format("#autoLOC_KWT107", RotationCount), UISkinManager.defaultSkin.toggle, true),   // "Propeller rotation evaluations: "
                 new DialogGUISlider(() => Mathf.Log(RotationCount, 2), 0, 4, true, 100, 20, value => RotationCount = (int)Mathf.Pow(2, value))
                 ));
 
