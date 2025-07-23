@@ -181,7 +181,24 @@ namespace Graphing
         }
 
         public void RecalculateBounds()
-            => axis.SetBounds(autoSetMin ? AutoMin : Min, autoSetMax ? AutoMax : Max);
+        {
+            float max = autoSetMax ? AutoMax : Max;
+            float min = autoSetMin ? AutoMin : Min;
+            // Ignore auto bounds if they conflict with a manual bound.
+            if (max < min)
+            {
+                if (autoSetMin && !autoSetMax)
+                    axis.SetBounds(max, max);
+                else if (autoSetMax && !autoSetMin)
+                    axis.SetBounds(min, min);
+                else if (max == 0 || min == 0)
+                    axis.SetBounds(0, 0);
+                else
+                    axis.SetBounds(max, min);
+            }
+            else
+                axis.SetBounds(min, max);
+        }
 
         [SerializeField]
         private AxisDirection _use = AxisDirection.Undefined;
