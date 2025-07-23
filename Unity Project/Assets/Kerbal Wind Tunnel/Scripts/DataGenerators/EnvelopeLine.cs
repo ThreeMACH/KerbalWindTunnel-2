@@ -33,14 +33,17 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
+        private static readonly AscentPathPoint[] blank = new AscentPathPoint[0];
         private static async Task ProcessOptimalLine(MetaLineGraphDefinition<AscentPathPoint> graphDef, (float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, CostIncreaseFunction costIncreaseFunc, EnvelopePoint[,] data, CostIncreaseFunction timeDifferenceFunc, CancellationToken cancellationToken)
         {
             Task<IList<AscentPathPoint>> task = Task.Run(() => GetOptimalPath(exitCoords, initialCoords, speedBounds, altitudeBounds, costIncreaseFunc, data, timeDifferenceFunc, cancellationToken));
             try
             {
                 await task;
+                Debug.Log(task.Status);
             }
-            catch (OperationCanceledException) { return; }
+            catch (OperationCanceledException) { Debug.LogException(task.Exception); return; }
+            catch (IncapableFlightException) { Debug.LogException(task.Exception); graphDef.UpdateGraph(blank); }
             graphDef.UpdateGraph(task.Result);
         }
 
@@ -96,6 +99,13 @@ namespace KerbalWindTunnel.DataGenerators
             }
         }
 
+        public class IncapableFlightException : Exception
+        {
+            public IncapableFlightException(string message) : base(message)
+            {
+            }
+        }
+
         private static IList<AscentPathPoint> GetOptimalPath((float speed, float altitude) exitCoords, (float speed, float altitude) initialCoords, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds, CostIncreaseFunction costIncreaseFunc, EnvelopePoint[,] data, CostIncreaseFunction timeFunc, CancellationToken cancellationToken)
         {
             const int decimation = 5;
@@ -109,7 +119,7 @@ namespace KerbalWindTunnel.DataGenerators
             PathSolverPoint target = FindValidPoint(PathSolverPoint.Nearest(exitCoords.speed, exitCoords.altitude, bounds), data, bounds);
 
             if (origin == null)
-                throw new Exception("[KWT] Vessel cannot maintain flight at or below the specified origin altitude.");
+                throw new IncapableFlightException("[KWT] Vessel cannot maintain flight at or below the specified origin altitude.");
 
             origin.cost = 0;
             origin.time = 0;
@@ -202,7 +212,7 @@ namespace KerbalWindTunnel.DataGenerators
         private static PathSolverPoint FindValidPoint((int xi, int yi) target, EnvelopePoint[,] data, BoundsInfo bounds)
         {
             int xi = target.xi, yi = target.yi;
-            int upperBound = bounds.width;
+            int upperBound = bounds.width - 1;
             if (yi == 0 && data[xi, yi].Thrust_Excess < 0)
                 xi = upperBound;
             while (data[xi, yi].Thrust_Excess < 0)
