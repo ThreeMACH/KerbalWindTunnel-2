@@ -108,6 +108,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\WindTunnelWindow.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ObjectDump.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CanvasLayerSetter.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
     <None Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.asmdef" />
     <None Include="AssetBundles\windtunnelassetbundle.ksp" />
     <None Include="packages.config" />
@@ -421,7 +422,7 @@
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/Facades/System.Threading.Timer.dll</HintPath>
     </Reference>
     <Reference Include="System.Transactions">
-	  <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.5/System.Transactions.dll</HintPath>
+      <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.5/System.Transactions.dll</HintPath>
     </Reference>
     <Reference Include="System.ValueTuple">
       <HintPath>C:/Program Files/Unity/Hub/Editor/2019.4.38f1/Editor/Data/MonoBleedingEdge/lib/mono/4.7.1-api/Facades/System.ValueTuple.dll</HintPath>
@@ -472,18 +473,27 @@
     <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\"
 copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\windtunnelassetbundle.dat"
 
+cd $(ProjectDir)..
+
+copy /Y "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\WindTunnelLocalization.cfg" "WindTunnelLocalization.cfg"
+copy /Y "LICENSE.md" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\"
+
 if not $(ConfigurationName) == Release (EXIT)
 
-cd $(ProjectDir)..
-copy /Y "$(TargetDir)$(ProjectName).*" "Builds\WindTunnel\Plugins\"
-copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "Builds\WindTunnel\windtunnelassetbundle.dat"
-copy /Y "$(TargetDir)PriorityQueue.dll" "Builds\WindTunnel\Plugins\+PriorityQueue.dll"
-copy /Y "$(TargetDir)Microsoft.Bcl.HashCode.dll" "Builds\WindTunnel\Plugins\References"
-copy /Y "$(TargetDir)System.Xml.Linq.dll" "Builds\WindTunnel\Plugins\References\System.Xml.Linq.dll.ignore"
-copy /Y "$(TargetDir)System.Numerics.dll" "Builds\WindTunnel\Plugins\References\Load 1st"
-copy /Y "$(TargetDir)System.Transactions.dll" "Builds\WindTunnel\Plugins\References\Load 1st"
-copy /Y "$(TargetDir)System.Data.dll" "Builds\WindTunnel\Plugins\References\Load 2nd"
-copy /Y "$(TargetDir)MiniExcel.*" "Builds\WindTunnel\Plugins\References\Load 3rd"</PostBuildEvent>
+echo Building release folder.
+
+if EXIST "Builds\WindTunnel\" (del /Q /S "Builds\WindTunnel\*")
+
+xcopy /S "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\" "Builds\WindTunnel\"
+
+if EXIST "Builds\WindTunnel\KerbalWindTunnelSettings.cfg" (del /Q "Builds\WindTunnel\KerbalWindTunnelSettings.cfg")
+if EXIST "Builds\WindTunnel\PluginData\" (rd /Q /S "Builds\WindTunnel\PluginData")
+if EXIST "Builds\WindTunnel\Output\" (rd /Q /S "Builds\WindTunnel\Output")
+
+FOR /F delims^=^"^ tokens^=2 %25%25i in ('findstr /b /c:"[assembly: AssemblyVersion(" "$(ProjectDir)\Properties\AssemblyInfo.cs"') do (set version=%25%25i)
+
+echo Creating distribution zip file: %25version:~0,7%25
+tar -caf "Builds\Kerbal_Wind_Tunnel-%25version:~0,7%25.zip" -C "Builds" "WindTunnel\*"</PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.
