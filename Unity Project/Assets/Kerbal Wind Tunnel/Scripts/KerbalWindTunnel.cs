@@ -25,7 +25,7 @@ namespace KerbalWindTunnel
         private bool appLauncherEventSet = false;
         public const string texPath = "GameData/WindTunnel/Textures/";
 #if OUTSIDE_UNITY
-        public const string graphPath = "GameData/WindTunnel/PluginData";
+        public const string graphPath = "GameData/WindTunnel/Output";
 #else
         public const string graphPath = "TestOutput";
 #endif
