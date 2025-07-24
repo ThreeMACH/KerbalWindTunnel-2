@@ -309,23 +309,28 @@ namespace KerbalWindTunnel.DataGenerators
             EnvelopePoint[,] data = results.data;
             
             (float speed, float altitude) initialCoords = ascentOrigin;
+            if (initialCoords.altitude < results.altitudeBounds.bottom)
+                initialCoords.altitude = results.altitudeBounds.bottom;
             (float speed, float altitude) exitCoords = (WindTunnelWindow.Instance.AscentTargetSpeed, WindTunnelWindow.Instance.AscentTargetAltitude);
             (float lower, float step, float upper) speedBounds = (results.speedBounds.left, (results.speedBounds.right - results.speedBounds.left) / (data.GetUpperBound(0) + 1), results.speedBounds.right);
             (float lower, float step, float upper) altitudeBounds = (results.altitudeBounds.bottom, (results.altitudeBounds.top - results.altitudeBounds.bottom) / (data.GetUpperBound(1) + 1), results.altitudeBounds.top);
 
             if (WindTunnelWindow.Instance.autoSetAscentTarget || exitCoords.speed < 0 || exitCoords.altitude < 0)
             {
-                exitCoords = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
-                WindTunnelWindow.Instance.ProvideAscentTarget(exitCoords);
+                (exitCoords.speed, exitCoords.altitude, bool sustainable) = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
+                if (sustainable)
+                    WindTunnelWindow.Instance.ProvideAscentTarget(exitCoords);
             }
             await EnvelopeLine.CalculateOptimalLines(exitCoords, initialCoords, speedBounds, altitudeBounds, data, cancellationToken, fuelPath, timePath);
         }
 
-        public static (float speed, float altitude) GetMaxSustainableEnergy(EnvelopePoint[,] data, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds)
+        public static (float speed, float altitude, bool sustainable) GetMaxSustainableEnergy(EnvelopePoint[,] data, (float lower, float step, float upper) speedBounds, (float lower, float step, float upper) altitudeBounds)
         {
             int speedLength = data.GetUpperBound(0);
             int altLength = data.GetUpperBound(1);
-            (float speed, float altitude) result = ascentOrigin;
+            (float speed, float altitude, bool sustainable) result = (ascentOrigin.speed, ascentOrigin.altitude, false);
+            if (result.altitude < altitudeBounds.lower)
+                result.altitude = altitudeBounds.lower;
             int altIndex = 0;
             float g = (float)(WindTunnelWindow.Instance.CelestialBody.GeeASL * PhysicsGlobals.GravitationalAcceleration);
             for (int h = 0; h <= altLength; h++)
@@ -338,7 +343,7 @@ namespace KerbalWindTunnel.DataGenerators
                     if (data[v, h].Thrust_Excess >= 0)
                     {
                         altIndex = h;
-                        result = (speedBounds.step * v + speedBounds.lower, altitudeBounds.step * h + altitudeBounds.lower);
+                        result = (speedBounds.step * v + speedBounds.lower, altitudeBounds.step * h + altitudeBounds.lower, true);
                         break;
                     }
                 }

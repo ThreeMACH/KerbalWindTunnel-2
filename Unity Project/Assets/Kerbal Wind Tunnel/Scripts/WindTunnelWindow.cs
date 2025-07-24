@@ -794,7 +794,7 @@ namespace KerbalWindTunnel
                     float minY, maxY;
                     minX = envelopeGrapher.PrimaryHorizontalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryHorizontalAxis.Min;
                     maxX = envelopeGrapher.PrimaryHorizontalAxis.AutoSetMax ? body.upperSpeed : envelopeGrapher.PrimaryHorizontalAxis.Max;
-                    minY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryVerticalAxis.Min;
+                    minY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMin ? body.lowerAlt : envelopeGrapher.PrimaryVerticalAxis.Min;
                     maxY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMax ? body.upperAlt : envelopeGrapher.PrimaryVerticalAxis.Max;
                     taskTracker_surf = new TaskProgressTracker();
                     await envelopeData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_surf, CelestialBody, minX, maxX, minY, maxY);
@@ -1029,6 +1029,10 @@ namespace KerbalWindTunnel
         {
             public CBItem(CelestialBody celestialBody, int depth = 0)
             {
+                const float altRatio = 0.35f;
+                const float altRatioGas = 0.25f;
+                const float orbAtmoRatio = 1.2f;
+                const float speedRatio = 0.35f;
                 this.celestialBody = celestialBody;
                 if (celestialBody.referenceBody != celestialBody)
                     semiMajorRadius = (float)celestialBody.orbit.semiMajorAxis;
@@ -1041,10 +1045,21 @@ namespace KerbalWindTunnel
                 else
                     parent = celestialBody.referenceBody;
 
+                lowerAlt = 0;
                 switch (name.ToLower())
                 {
-                    case "laythe":
                     default:
+                        upperSpeed = Mathf.Round(Mathf.Sqrt((float)celestialBody.gravParameter / (float)celestialBody.atmosphereDepth * orbAtmoRatio) * speedRatio * 0.002f) * 500;
+                        if (celestialBody.hasSolidSurface)
+                        {
+                            upperAlt = Mathf.Round((float)celestialBody.atmosphereDepth * altRatio * 0.0002f) * 5000;
+                        }
+                        else
+                        {
+                            upperAlt = Mathf.Round((float)celestialBody.atmosphereDepth * 0.0002f) * 5000;
+                            lowerAlt = Mathf.Round(upperAlt * altRatioGas * 0.0002f) * 5000;
+                        }
+                        break;
                     case "kerbin":
                         upperAlt = 25000;
                         upperSpeed = 2500;
@@ -1057,12 +1072,13 @@ namespace KerbalWindTunnel
                         upperAlt = 10000;
                         upperSpeed = 1000;
                         break;
-                    /*case "laythe":
-                        upperAlt = 20000;
-                        maxSpeed = 2000;
-                        break;*/
+                    case "laythe":
+                        upperAlt = 30000;
+                        upperSpeed = 2000;
+                        break;
                     case "jool":
                         upperAlt = 200000;
+                        lowerAlt = 50000;
                         upperSpeed = 7000;
                         break;
                 }
@@ -1077,6 +1093,7 @@ namespace KerbalWindTunnel
             public string NameFormatted { get => new string(' ', depth * 4) + name; }
             public readonly float semiMajorRadius;
             public readonly CelestialBody parent;
+            public float lowerAlt;
             public float upperAlt;
             public float upperSpeed;
 
