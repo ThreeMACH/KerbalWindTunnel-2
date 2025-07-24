@@ -293,6 +293,7 @@ namespace Graphing
             {
                 _unit = value;
                 axisText.Text = AxisLabel;
+                LayoutRebuilder.MarkLayoutForRebuild(transform as RectTransform);
             }
         }
         private string _label = "";
@@ -303,6 +304,7 @@ namespace Graphing
             {
                 _label = value;
                 axisText.Text = AxisLabel;
+                LayoutRebuilder.MarkLayoutForRebuild(transform as RectTransform);
             }
         }
 
@@ -499,6 +501,7 @@ namespace Graphing
             
             if ((_use & AxisDirection.Color) > 0 && axisMaterial != null)
                 axisMaterial.SetRange(Min, Max);
+            LayoutRebuilder.MarkLayoutForRebuild(transform as RectTransform);
         }
 
         // Start is called before the first frame update
@@ -509,6 +512,7 @@ namespace Graphing
             foreach (Tickmark tick in GetComponentsInChildren<Tickmark>())
                 ticks.Add(tick);
             colorBar.rectTransform.GetComponent<RotatedNodeFillParent>().ForceDisable();
+            Canvas.ForceUpdateCanvases();
             RedrawAxis();
         }
 
@@ -889,7 +893,8 @@ namespace Graphing
             }
             axisBoundSetters[0]?.UpdatePosition();
             axisBoundSetters[1]?.UpdatePosition();
-            LayoutRebuilder.MarkLayoutForRebuild((RectTransform)transform);
+            Canvas.ForceUpdateCanvases();
+            LayoutRebuilder.MarkLayoutForRebuild(transform as RectTransform);
         }
 
 #if UNITY_EDITOR
@@ -903,6 +908,7 @@ namespace Graphing
             CalculateBounds(min, max, side == AxisSide.Top || side == AxisSide.Bottom, forceBounds);
             if (isActiveAndEnabled)
                 StartCoroutine(RedrawNextFrame());
+            LayoutRebuilder.MarkLayoutForRebuild(transform as RectTransform);
         }
         private IEnumerator RedrawNextFrame()
         {

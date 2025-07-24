@@ -123,13 +123,23 @@ namespace Graphing
         public float minSize = 20;
         private bool isHorizontal;
         public float minWidth => Mathf.Max(minSize, preferredWidth);
-        public float preferredWidth => isHorizontal ? label.LayoutElement.preferredWidth : label.LayoutElement.preferredWidth + tickWidth + TickSpacing;
+        public float preferredWidth { get; private set; }
         public float flexibleWidth => 0;
         public float minHeight => Mathf.Max(minSize, preferredHeight);
-        public float preferredHeight => isHorizontal ? label.LayoutElement.preferredHeight + tickWidth + tickSpacing : label.LayoutElement.preferredHeight;
+        public float preferredHeight { get; private set; }
         public float flexibleHeight => 0;
         public int layoutPriority => 100;
-        public void CalculateLayoutInputHorizontal() => isHorizontal = side == AxisSide.Top || side == AxisSide.Bottom;
-        public void CalculateLayoutInputVertical() => isHorizontal = side == AxisSide.Top || side == AxisSide.Bottom;
+        public void CalculateLayoutInputHorizontal()
+        {
+            isHorizontal = side == AxisSide.Top || side == AxisSide.Bottom;
+            Vector2 preferredSize = label.GetPreferredValues();
+            preferredWidth = isHorizontal ? preferredSize.x : preferredSize.x + tickWidth + TickSpacing;
+        }
+        public void CalculateLayoutInputVertical()
+        {
+            isHorizontal = side == AxisSide.Top || side == AxisSide.Bottom;
+            Vector2 preferredSize = label.GetPreferredValues();
+            preferredHeight = isHorizontal ? preferredSize.y + tickWidth + tickSpacing : preferredSize.y;
+        }
     }
 }

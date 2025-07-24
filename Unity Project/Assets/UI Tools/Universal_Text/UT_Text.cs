@@ -65,6 +65,19 @@ namespace UI_Tools.Universal_Text
                 return;
             }
         }
+        public Vector2 GetPreferredValues()
+        {
+            switch (Mode)
+            {
+                case UT_Mode.Unity:
+                    return new Vector2(
+                        unity_text.cachedTextGenerator.GetPreferredWidth(unity_text.text, unity_text.GetGenerationSettings(unity_text.rectTransform.rect.size)),
+                        unity_text.cachedTextGenerator.GetPreferredHeight(unity_text.text, unity_text.GetGenerationSettings(unity_text.rectTransform.rect.size)));
+                case UT_Mode.TMPro:
+                    return tmp_text.GetPreferredValues();
+            }
+            return Vector2.zero;
+        }
 #pragma warning disable IDE1006 // Naming Styles
         public Color color
 #pragma warning restore IDE1006 // Naming Styles
