@@ -243,6 +243,8 @@ namespace KerbalWindTunnel
                     oxygenAvailable = body.atmosphereContainsOxygen;
                 }
                 mach = speed / speedOfSound;
+                if (float.IsInfinity(mach))
+                    mach = float.MaxValue;
                 
                 lock (PhysicsGlobals.DragCurvePseudoReynolds)
                     pseudoReDragMult = PhysicsGlobals.DragCurvePseudoReynolds.Evaluate(atmDensity * speed);

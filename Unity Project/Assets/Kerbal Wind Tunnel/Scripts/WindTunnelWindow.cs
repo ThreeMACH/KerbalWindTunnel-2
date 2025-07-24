@@ -283,7 +283,7 @@ namespace KerbalWindTunnel
                 else
                     highlightSpeedInput.Text = value.ToString("N0");
                 if (GraphMode == 1)
-                    RefreshData();
+                    WatchAsync(RefreshData());
                 UpdateHighlightingMethod();
             }
         }
@@ -301,7 +301,7 @@ namespace KerbalWindTunnel
                 _highlightAltitude = value;
                 highlightAltitudeInput.Text = value.ToString();
                 if (GraphMode > 0)
-                    RefreshData();
+                    WatchAsync(RefreshData());
                 UpdateHighlightingMethod();
             }
         }
@@ -331,6 +331,15 @@ namespace KerbalWindTunnel
             highlightAoAGroup.SetActive(aoa);
             highlightAltitudeGroup.SetActive(altitude);
             highlightSpeedGroup.SetActive(speed);
+        }
+
+        private static void WatchAsync(System.Threading.Tasks.Task task)
+        {
+#if OUTSIDE_UNITY
+            static
+#endif
+            async System.Threading.Tasks.Task TaskCheckIn(System.Threading.Tasks.Task t) => await t;
+            task.ContinueWith(TaskCheckIn, System.Threading.CancellationToken.None, System.Threading.Tasks.TaskContinuationOptions.OnlyOnFaulted, System.Threading.Tasks.TaskScheduler.FromCurrentSynchronizationContext());
         }
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
@@ -436,7 +445,7 @@ namespace KerbalWindTunnel
                 else
                     _highlightSpeed = result;
                 if (GraphMode == 1)
-                    RefreshData();
+                    WatchAsync(RefreshData());
                 UpdateHighlightingMethod();
             }
             else
@@ -456,7 +465,7 @@ namespace KerbalWindTunnel
                 {
                     _highlightAltitude = result;
                     if (GraphMode > 0)
-                        RefreshData();
+                        WatchAsync(RefreshData());
                     UpdateHighlightingMethod();
                 }
             }
@@ -768,7 +777,7 @@ namespace KerbalWindTunnel
 #pragma warning restore CS0162 // Unreachable code detected
 #endif
 
-        private void RefreshData()
+        private async System.Threading.Tasks.Task RefreshData()
         {
 #if DEBUG
             Debug.Log("[KWT] Refreshing.");
@@ -787,19 +796,19 @@ namespace KerbalWindTunnel
                     minY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMin ? 0 : envelopeGrapher.PrimaryVerticalAxis.Min;
                     maxY = envelopeGrapher.PrimaryVerticalAxis.AutoSetMax ? body.upperAlt : envelopeGrapher.PrimaryVerticalAxis.Max;
                     taskTracker_surf = new TaskProgressTracker();
-                    var _ = envelopeData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_surf, CelestialBody, minX, maxX, minY, maxY);
+                    await envelopeData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_surf, CelestialBody, minX, maxX, minY, maxY);
                     break;
                 case 1:
                     minX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMin ? -20 : aoaCurveGrapher.PrimaryHorizontalAxis.Min;
                     maxX = aoaCurveGrapher.PrimaryHorizontalAxis.AutoSetMax ? 20 : aoaCurveGrapher.PrimaryHorizontalAxis.Max;
                     taskTracker_aoa = new TaskProgressTracker();
-                    _ = aoaData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_aoa, CelestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
+                    await aoaData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_aoa, CelestialBody, HighlightAltitude, HighlightSpeed, minX * Mathf.Deg2Rad, maxX * Mathf.Deg2Rad);
                     break;
                 case 2:
                     minX = Mathf.Min(0, velCurveGrapher.PrimaryHorizontalAxis.Min);
                     maxX = Mathf.Max(body.upperSpeed, velCurveGrapher.PrimaryHorizontalAxis.Max);
                     taskTracker_vel = new TaskProgressTracker();
-                    _ = velData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_vel, CelestialBody, HighlightAltitude, minX, maxX);
+                    await velData.Calculate(vessel, cancellationTokenSource.Token, taskTracker_vel, CelestialBody, HighlightAltitude, minX, maxX);
                     break;
             }
         }
@@ -817,7 +826,7 @@ namespace KerbalWindTunnel
         {
             body = planets[item];
             await ClearCaches();
-            RefreshData();
+            WatchAsync(RefreshData());
             if (HighlightMode > 0)
                 UpdateHighlightingMethod();
         }
@@ -829,12 +838,12 @@ namespace KerbalWindTunnel
         }
 
         // Called when the Graph Mode is changed by a toggle or externally.
-        private void GraphModeChanged() => RefreshData();
+        private void GraphModeChanged() => WatchAsync(RefreshData());
 
         // Called whenever the target ascent altitude or velocity is changed.
-        private void UpdateAscentTarget()
+        private async void UpdateAscentTarget()
         {
-            var _ = envelopeData.CalculateOptimalLines(cancellationTokenSource.Token);
+            await envelopeData.CalculateOptimalLines(cancellationTokenSource.Token);
         }
         internal void ProvideAscentTarget((float speed, float altitude) maxSustainableEnergy)
         {
@@ -900,7 +909,7 @@ namespace KerbalWindTunnel
 
             await ClearCaches();
 
-            RefreshData();
+            WatchAsync(RefreshData());
 
             // COULDDO:
             //updateVesselButton.interactable = false;
@@ -977,7 +986,7 @@ namespace KerbalWindTunnel
                     || (WindTunnelSettings.ShowEnvelopeMask && !envelopeCollection[envelopeDropdown.Value].Name.EndsWith("_excess"));
 
             if (WindTunnelSettings.UseCharacterized != vessel is VesselCache.CharacterizedVessel)
-                RefreshData();
+                WatchAsync(RefreshData());
         }
 
         private void OnEditorShipModified(ShipConstruct _)
