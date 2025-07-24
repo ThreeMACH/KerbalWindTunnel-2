@@ -615,7 +615,8 @@ namespace Graphing
         /// <returns></returns>
         public string GetFormattedValueAt(float x, float y, int index = -1, bool withName = false)
         {
-            if (graphs.Count == 0)
+            int affectedGraphs = graphs.Where(g => g.Visible && g.DisplayValue).Count();
+            if (affectedGraphs == 0)
                 return "";
 
             if (index >= 0)
@@ -625,7 +626,7 @@ namespace Graphing
                 return graphs[index].GetFormattedValueAt(x, y, withName);
             }
 
-            if (graphs.Count > 1)
+            if (affectedGraphs > 1)
                 withName = true;
 
             string returnValue = "";

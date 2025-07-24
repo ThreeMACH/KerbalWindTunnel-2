@@ -261,7 +261,12 @@ namespace Graphing
                 if (MetaStringFormats.Length > i)
                     value += string.Format("\n{2}{0:" + (string.IsNullOrEmpty(MetaStringFormats[i]) ? "" : MetaStringFormats[i]) + "}{1}", MetaValueAt(x, y, width, height, i), MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i], string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
                 else
-                    value += string.Format("\n{2}{0}{1}", MetaValueAt(x, y, width, height, i).ToString(), MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i], string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
+                {
+                    string effectiveUnit = MetaUnits.Length <= i || string.IsNullOrEmpty(MetaUnits[i]) ? "" : MetaUnits[i];
+                    if (effectiveUnit == "-")
+                        effectiveUnit = "";
+                    value += string.Format("\n{2}{0}{1}", MetaValueAt(x, y, width, height, i).ToString(), effectiveUnit, string.IsNullOrEmpty(MetaFields[i]) ? "" : MetaFields[i] + ": ");
+                }
             }
             return value;
         }
