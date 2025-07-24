@@ -81,6 +81,7 @@ namespace KerbalWindTunnel.DataGenerators
                         case "lift_slope":
                             surfDef.mappingFunc = useCoefficients ? p => p.Coefficient(p.dLift) : p => p.dLift;
                             surfDef.ZUnit = useCoefficients ? "#autoLOC_KWT007" : "#autoLOC_KWT008";    // "/°" "kN/°"
+                            surfDef.StringFormat = useCoefficients ? "F3" : "F1";
                             continue;
 #endif
                         default:
@@ -88,7 +89,7 @@ namespace KerbalWindTunnel.DataGenerators
                     }
                     surfDef.ZName = useCoefficients ? "#autoLOC_KWT307" : "#autoLOC_KWT321";    // "Coefficient" "Force"
                     surfDef.ZUnit = useCoefficients ? "#autoLOC_KWT015" : "#autoLOC_KWT004";    // "-" "kN"
-                    surfDef.StringFormat = useCoefficients ? "N0" : "F2";
+                    surfDef.StringFormat = useCoefficients ? "F2" : "N0";
                 }
             }
         }

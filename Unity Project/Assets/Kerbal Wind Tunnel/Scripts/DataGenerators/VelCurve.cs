@@ -55,13 +55,14 @@ namespace KerbalWindTunnel.DataGenerators
                         case "lift_slope":
                             lineDef.mappingFunc = useCoefficients ? ToVector(p => p.Coefficient(p.dLift)) : ToVector(p => p.dLift);
                             lineDef.YUnit = useCoefficients ? "#autoLOC_KWT007" : "#autoLOC_KWT008";    // "/°" "kN/°"
+                            lineDef.StringFormat = useCoefficients ? "F3" : "F1";
                             continue;
                         default:
                             continue;
                     }
                     lineDef.YName = useCoefficients ? "#autoLOC_KWT307" : "#autoLOC_KWT321";    // "Coefficient" "Force"
                     lineDef.YUnit = useCoefficients ? "#autoLOC_KWT015" : "#autoLOC_KWT004";    // "-" "kN"
-                    lineDef.StringFormat = useCoefficients ? "N0" : "F2";
+                    lineDef.StringFormat = useCoefficients ? "F2" : "N0";
                 }
             }
         }
