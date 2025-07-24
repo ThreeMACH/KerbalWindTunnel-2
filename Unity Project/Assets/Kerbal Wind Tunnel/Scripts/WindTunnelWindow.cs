@@ -13,6 +13,7 @@ namespace KerbalWindTunnel
 {
     public class WindTunnelWindow : MonoBehaviour
     {
+        private const string planetIndentString = "   ";
 #pragma warning disable IDE0044 // Add readonly modifier
 #pragma warning disable CS0649 // Field is never assigned to
         [SerializeField]
@@ -1066,6 +1067,8 @@ namespace KerbalWindTunnel
                         break;
                 }
                 name = Localizer.Format("<<1>>", celestialBody.displayName);
+                for (int i = 0; i < depth; i++)
+                    name = string.Format(planetIndentString) + name;
             }
 
             public readonly CelestialBody celestialBody;
