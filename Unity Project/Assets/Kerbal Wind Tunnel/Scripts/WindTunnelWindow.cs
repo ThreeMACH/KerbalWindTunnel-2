@@ -634,7 +634,7 @@ namespace KerbalWindTunnel
         }
         private void SetAoADetails()
         {
-            AoACurve.AoAPoint pointDetails = new AoACurve.AoAPoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA);
+            AoACurve.AoAPoint pointDetails = new AoACurve.AoAPoint(vessel, CelestialBody, HighlightAltitude, HighlightSpeed, HighlightAoA * Mathf.Deg2Rad);
             aoaCurveInfo.Text = pointDetails.ToString();
         }
 
