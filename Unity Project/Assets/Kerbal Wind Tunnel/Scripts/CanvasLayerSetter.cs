@@ -4,6 +4,18 @@ using UnityEngine;
 
 public class CanvasLayerSetter : MonoBehaviour
 {
+    [SerializeField]
+    private int bias = 0;
+    public int Bias
+    {
+        get => bias;
+        set
+        {
+            bias = value;
+            OnEnable();
+        }
+    }
+
     public void OnEnable()
     {
         Canvas canvas = GetComponent<Canvas>();
@@ -23,6 +35,6 @@ public class CanvasLayerSetter : MonoBehaviour
         ListPool<Canvas>.Instance.Release(canvases);
         if (parentCanvas == null)
             return;
-        canvas.sortingLayerID = parentCanvas.sortingLayerID;
+        canvas.sortingLayerID = parentCanvas.sortingLayerID + bias;
     }
 }
