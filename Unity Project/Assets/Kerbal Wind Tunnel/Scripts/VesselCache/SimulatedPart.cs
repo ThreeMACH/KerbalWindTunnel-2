@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.Linq;
 using KerbalWindTunnel.Extensions;
 using Smooth.Pools;
 using UnityEngine;
@@ -111,16 +112,76 @@ namespace KerbalWindTunnel.VesselCache
             dryMass = part.mass;
             shieldedFromAirstream = part.ShieldedFromAirstream;
 
-            noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
-            hasLiftModule = part.hasLiftModule;
-            bodyLiftMultiplier = part.bodyLiftMultiplier;
-            dragModel = part.dragModel;
-            cubesNone = part.DragCubes.None;
-
             CoM = part.transform.TransformPoint(part.CoMOffset);
             CoP = part.transform.TransformPoint(part.CoPOffset);
             CoL = part.transform.TransformPoint(part.CoLOffset);
             transformPosition = part.transform.position;
+
+            cubesNone = part.DragCubes.None;
+            lock (cubes)
+                cubes = new DragCubeList
+                {
+                    BodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve(),
+                    SurfaceCurves = new PhysicsGlobals.SurfaceCurvesList()
+                };
+            ownsCubes = true;
+
+            ModuleProceduralFairing proceduralFairing = part.GetComponent<ModuleProceduralFairing>();
+            if (proceduralFairing != null)
+            {
+                DragCube cube;
+                if (part.parent == null)
+                {
+                    // KSP apparently ignores the fairings on root parts... (see https://github.com/DBooots/KerbalWindTunnel/issues/17)
+                    // We replicate this by ignoring the fairing's attachment node and resetting the drag cube to that of the base prefab.
+                    part.FindAttachNode(proceduralFairing.fairingNode).overrideDragArea = -1;
+                    cube = part.partInfo.partPrefab.DragCubes.Cubes[0];
+                }
+                else
+                {
+                    // In other cases, we want to make sure the panels are reflected as being collapsed (not exploded)
+                    foreach (var panel in proceduralFairing.Panels)
+                        panel.SetCollapsedViewInstantly();
+                    // Set the fairing's attachment node to the area of the fairing start.
+                    float baseArea = proceduralFairing.xSections[proceduralFairing.xSections.Count - 1].r * proceduralFairing.interstageOcclusionFudge;
+                    part.FindAttachNode(proceduralFairing.fairingNode).overrideDragArea = baseArea * baseArea * Mathf.PI;
+                    // And re-render the procedural drag cube (in case it wasn't already).
+                    cube = DragCubeSystem.Instance.RenderProceduralDragCube(part);
+                }
+                lock (cubes)
+                {
+                    lock (part.DragCubes)
+                    {
+                        List<DragCube> cubesBackup = part.DragCubes.Cubes.ToList();
+
+                        part.DragCubes.ClearCubes();
+                        part.DragCubes.Cubes.Add(cube);
+                        CopyDragCubesList(part.DragCubes, cubes);
+
+                        // Reset the part's data, just in case, so I don't break anything.
+                        part.DragCubes.ClearCubes();
+                        part.DragCubes.Cubes.AddRange(cubesBackup);
+                        part.DragCubes.ForceUpdate(true, true);
+                        part.DragCubes.SetDragWeights();
+                        part.DragCubes.SetPartOcclusion();
+                    }
+
+                    if (part.parent != null)
+                    {
+                        float offset = cube.Center.y + cube.Size.y * 0.5f - cube.Depth[2];
+                        offset = (cube.Center.y + offset) * 0.5f;
+                        float Moffset = offset * 0.5f;
+                        CoP.y += offset;
+                        CoM.y += Moffset;
+                    }
+                    cubesNone = cubes.None;
+                }
+            }
+
+            noDrag = rigidbody == null && !PhysicsGlobals.ApplyDragToNonPhysicsParts;
+            hasLiftModule = part.hasLiftModule;
+            bodyLiftMultiplier = part.bodyLiftMultiplier;
+            dragModel = part.dragModel;
 
             switch (dragModel)
             {
@@ -140,13 +201,6 @@ namespace KerbalWindTunnel.VesselCache
             }
 
             simCurves = SimCurves.Borrow(null);
-
-            cubes = new DragCubeList
-            {
-                BodyLiftCurve = new PhysicsGlobals.LiftingSurfaceCurve(),
-                SurfaceCurves = new PhysicsGlobals.SurfaceCurvesList()
-            };
-            ownsCubes = true;
 
             ModuleWheels.ModuleWheelDeployment wheelDeployment = part.FindModuleImplementing<ModuleWheels.ModuleWheelDeployment>();
             bool forcedRetract = !shieldedFromAirstream && wheelDeployment != null && wheelDeployment.Position > 0;
@@ -169,8 +223,7 @@ namespace KerbalWindTunnel.VesselCache
                     }
                 }
             }
-
-            else
+            else if (proceduralFairing == null)
             {
                 lock (this.cubes)
                     lock (part.DragCubes)
