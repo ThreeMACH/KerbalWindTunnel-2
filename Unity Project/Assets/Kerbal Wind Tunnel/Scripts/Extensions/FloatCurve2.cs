@@ -14,6 +14,7 @@ namespace KerbalWindTunnel
         private readonly HashSet<float> yKeysSet = new HashSet<float>();
         public readonly Keyframe2[,] values;
         private readonly Coefficients[,] coefficientsCache;
+        private readonly bool empty;
 
         public (int, int) Size { get => (xKeys.Length, yKeys.Length); }
         public int Length { get { return values.Length; } }
@@ -30,7 +31,10 @@ namespace KerbalWindTunnel
             values = new Keyframe2[this.xKeys.Length, this.yKeys.Length];
             Array.Sort(this.xKeys);
             Array.Sort(this.yKeys);
-            coefficientsCache = new Coefficients[this.xKeys.Length - 1, this.yKeys.Length - 1];
+            if (this.xKeys.Length == 0 || this.yKeys.Length == 0)
+                return;
+            else
+                coefficientsCache = new Coefficients[this.xKeys.Length - 1, this.yKeys.Length - 1];
         }
 
         public FloatCurve2(IEnumerable<float> xKeys, IEnumerable<float> yKeys, float[,] values) : this(xKeys, yKeys)
@@ -520,6 +524,8 @@ namespace KerbalWindTunnel
 
         public float Evaluate(float timeX, float timeY)
         {
+            if (xKeys.Length == 0 || yKeys.Length == 0)
+                return 0;
             ReadWriteLock.EnterReadLock();
             try
             {
@@ -543,6 +549,8 @@ namespace KerbalWindTunnel
 
         public float EvaluateDerivative(float timeX, float timeY, (int, int) dimension, bool prefer1 = false)
         {
+            if (xKeys.Length == 0 || yKeys.Length == 0)
+                return 0;
             ReadWriteLock.EnterReadLock();
             try
             {
