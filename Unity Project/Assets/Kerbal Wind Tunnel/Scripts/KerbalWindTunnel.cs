@@ -42,6 +42,7 @@ namespace KerbalWindTunnel
         private Texture2D icon_blizzy; // = new Texture2D(24, 24, TextureFormat.ARGB32, false);
 
         private static MiniExcelWrapper miniExcelWrapper;
+        public static MiniExcelWrapper MiniExcelWrapper => miniExcelWrapper;
 
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Awake()

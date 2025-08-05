@@ -26,7 +26,20 @@ namespace Graphing.IO
 
         public static readonly SpreadsheetOptions defaultOptions = new SpreadsheetOptions(true, true, 1, 0);
 
-        public static ISpreadsheetWriter SpreadsheetWriter { get; set; } = new MiniExcelWriter();
+        /// <summary>
+        /// Gets or sets the spreadsheet writer class. Can be initialized with <see cref="InitializeMiniExcelWriter"/>.
+        /// </summary>
+        public static ISpreadsheetWriter SpreadsheetWriter { get; set; }
+
+        /// <summary>
+        /// Initializes <see cref="SpreadsheetWriter"/> as a <see cref="MiniExcelWriter"/>.
+        /// This only needs to be called once before outputting to any spreadsheets.
+        /// </summary>
+        public static void InitializeMiniExcelWriter()
+        {
+            if (SpreadsheetWriter == null)
+                SpreadsheetWriter = new MiniExcelWriter();
+        }
 
         /// <summary>
         /// Outputs the object's values to file.

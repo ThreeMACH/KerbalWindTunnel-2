@@ -213,7 +213,7 @@ namespace KerbalWindTunnel
         protected virtual async System.Threading.Tasks.Task WriteToFileCSV(string path, System.Data.DataSet data)
         {
             foreach (System.Data.DataTable table in data.Tables)
-                await MiniExcelLibs.MiniExcel.SaveAsAsync(path.Insert(path.Length - 4, $"_{table.TableName}"), table, printHeader: false, excelType: MiniExcelLibs.ExcelType.CSV, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true });
+                await WindTunnel.MiniExcelWrapper.WriteToCSV(path.Insert(path.Length - 4, $"_{table.TableName}"), table, false);
         }
 
         public readonly struct Conditions
