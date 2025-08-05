@@ -19,8 +19,7 @@ namespace KerbalWindTunnel
             string path = typeof(MiniExcelWrapper).Assembly.Location;
             char pathChar = Path.DirectorySeparatorChar;
 
-            string dir = Directory.GetFiles(path.Substring(0, path.LastIndexOf(pathChar)), "*.dll*", SearchOption.AllDirectories).First(s => s.Contains("MiniExcelDomainWorker"));
-            Debug.Log(dir);
+            string dir = Directory.GetFiles(path.Substring(0, path.LastIndexOf(pathChar)), "*.dll", SearchOption.AllDirectories).First(s => s.Contains("MiniExcelDomainWorker"));
             worker = (IDomainWriter)excelDomain.CreateInstanceFromAndUnwrap(dir, "MiniExcelDomain.MiniExcelWorker");
 
             path = string.Join($"{pathChar}", path.Substring(0, path.LastIndexOf(pathChar)), "References");
