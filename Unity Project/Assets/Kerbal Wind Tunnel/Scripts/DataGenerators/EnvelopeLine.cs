@@ -40,7 +40,6 @@ namespace KerbalWindTunnel.DataGenerators
             try
             {
                 await task;
-                Debug.Log(task.Status);
             }
             catch (OperationCanceledException) { Debug.LogException(task.Exception); return; }
             catch (IncapableFlightException) { Debug.LogException(task.Exception); graphDef.UpdateGraph(blank); }
