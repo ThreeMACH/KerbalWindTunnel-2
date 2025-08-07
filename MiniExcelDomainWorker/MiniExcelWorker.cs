@@ -18,9 +18,25 @@ namespace MiniExcelDomain
         }
         private Exception LoadAssembly(string assemblyName, string assemblyFile, string[] dlls)
         {
-            string simpleName = assemblyName.Substring(0, assemblyName.IndexOf(','));
+            int simpleNameLength = assemblyName.IndexOf(',');
+            if (simpleNameLength < 0)
+                simpleNameLength = assemblyName.Length;
+            string simpleName = assemblyName.Substring(0, simpleNameLength);
             if (AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.StartsWith(simpleName + ",")))
                 return null;
+            if (string.IsNullOrEmpty(simpleName) || simpleNameLength == assemblyName.Length)
+            {
+                try
+                {
+                    Assembly.LoadFile(dlls.FirstOrDefault(s => s.Contains(assemblyFile)));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                    return ex;
+                }
+                return null;
+            }
             try
             {
                 Assembly.Load(assemblyName);
@@ -28,7 +44,15 @@ namespace MiniExcelDomain
             catch (FileNotFoundException)
             {
                 Debug.Log($"Loading {simpleName} from alternate package.");
-                Assembly.LoadFile(dlls.FirstOrDefault(s => s.Contains(assemblyFile)));
+                try
+                {
+                    Assembly.LoadFile(dlls.FirstOrDefault(s => s.Contains(assemblyFile)));
+                }
+                catch (Exception ex)
+                {
+                    Debug.LogException(ex);
+                    return ex;
+                }
             }
             catch (Exception ex)
             {
@@ -61,6 +85,12 @@ namespace MiniExcelDomain
                 "System.IO.Compression.dll", dlls);
             if (exception != null)
                 return exception;
+            // MiniExcelInterface
+            exception = LoadAssembly(
+                "MiniExcelInterface",
+                "MiniExcelInterface.dll", dlls);
+            if (exception != null)
+                return exception;
             // MiniExcel
             exception = LoadAssembly(
                 "MiniExcel, Version=1.41.2.0, Culture=neutral, PublicKeyToken=e7310002a53eac39",
@@ -76,12 +106,12 @@ namespace MiniExcelDomain
             => AppDomain.CurrentDomain.GetAssemblies().Any(a => a.FullName.Contains(assemblyName));
 #endif
 
-        public Exception Write(string path, string sheet, object data, Graphing.IO.SpreadsheetOptions? options = null)
+        public Exception Write(string path, string sheet, object data, SpreadsheetOptions? options = null)
         {
             try
             {
                 if (writer == null)
-                    writer = new MiniExcelWriter();
+                    writer = new MiniExcelInterface.MiniExcelWriter();
                 writer.Write(path, sheet, data, options);
             }
             catch (Exception ex)
@@ -91,7 +121,7 @@ namespace MiniExcelDomain
             return null;
         }
 
-        public async Task WriteToCSV(string path, System.Data.DataTable table, bool printHeader, string sheetName = "")
+        public async void WriteToCSV(string path, System.Data.DataTable table, bool printHeader, string sheetName = "")
         {
             await MiniExcelLibs.MiniExcel.SaveAsAsync(path, table, excelType: MiniExcelLibs.ExcelType.CSV, printHeader: printHeader, sheetName: sheetName, configuration: new MiniExcelLibs.Csv.CsvConfiguration() { FastMode = true });
         }

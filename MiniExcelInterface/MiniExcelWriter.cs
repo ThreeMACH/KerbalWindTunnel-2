@@ -1,10 +1,18 @@
-﻿using MiniExcelLibs;
+﻿using Graphing.IO;
+using MiniExcelLibs;
 using MiniExcelLibs.OpenXml;
 
-namespace Graphing.IO
+namespace MiniExcelInterface
 {
     public class MiniExcelWriter : ISpreadsheetWriter
     {
+        /// <summary>
+        /// Initializes <see cref="GraphIO.SpreadsheetWriter"/> as a <see cref="MiniExcelWriter"/>.
+        /// This only needs to be called once before outputting to any spreadsheets.
+        /// </summary>
+        public static void InitializeMiniExcelWriter()
+            => GraphIO.SpreadsheetWriter = new MiniExcelWriter();
+
         private static readonly OpenXmlConfiguration defaultConfig = new OpenXmlConfiguration()
         {
             FastMode = true,

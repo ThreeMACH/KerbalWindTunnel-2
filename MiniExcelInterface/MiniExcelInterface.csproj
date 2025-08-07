@@ -4,11 +4,11 @@
   <PropertyGroup>
     <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
     <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
-    <ProjectGuid>{BB5039AF-44AA-4B45-AE14-291E5FFD02F3}</ProjectGuid>
+    <ProjectGuid>{3F6CADCF-A796-496C-BD21-001C30E03229}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>MiniExcelDomainWorker</RootNamespace>
-    <AssemblyName>MiniExcelDomainWorker</AssemblyName>
+    <RootNamespace>MiniExcelInterface</RootNamespace>
+    <AssemblyName>MiniExcelInterface</AssemblyName>
     <TargetFrameworkVersion>v4.7.1</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <Deterministic>true</Deterministic>
@@ -31,9 +31,6 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Assembly-CSharp">
-      <HintPath>C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program\KSP_x64_Data\Managed\Assembly-CSharp.dll</HintPath>
-    </Reference>
     <Reference Include="MiniExcel">
       <HintPath>..\Unity Project\Packages\MiniExcel.1.41.1\lib\net45\MiniExcel.dll</HintPath>
     </Reference>
@@ -45,35 +42,21 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="UnityEngine.CoreModule">
-      <HintPath>C:\Program Files\Unity\Hub\Editor\2019.4.38f1\Editor\Data\Managed\UnityEngine\UnityEngine.CoreModule.dll</HintPath>
-    </Reference>
   </ItemGroup>
   <ItemGroup>
-    <Compile Include="MiniExcelWorker.cs" />
+    <Compile Include="MiniExcelWriter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\MiniExcelInterface\MiniExcelInterface.csproj">
-      <Project>{3f6cadcf-a796-496c-bd21-001c30e03229}</Project>
-      <Name>MiniExcelInterface</Name>
-    </ProjectReference>
     <ProjectReference Include="..\Unity Project\Graphing.csproj">
       <Project>{81d997ea-6791-9cd0-cae6-ee8dd2c1c9a5}</Project>
       <Name>Graphing</Name>
     </ProjectReference>
-    <ProjectReference Include="..\Unity Project\KerbalWindTunnel.csproj">
-      <Project>{ad0f161a-a1bb-b671-5cda-8c7f8b850a44}</Project>
-      <Name>KerbalWindTunnel</Name>
-    </ProjectReference>
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\"
-
-if not $(ConfigurationName) == Release (EXIT)
-
-cd $(ProjectDir)..
-copy /Y "$(TargetDir)$(ProjectName).*" "Builds\WindTunnel\Plugins\"</PostBuildEvent>
+    <PostBuildEvent>if EXIST "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\References\$(ProjectName).dll.ignore" (del /Q "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\References\$(ProjectName).dll.ignore")
+copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\References\"
+ren "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\References\$(ProjectName).dll" "$(ProjectName).dll.ignore"</PostBuildEvent>
   </PropertyGroup>
 </Project>

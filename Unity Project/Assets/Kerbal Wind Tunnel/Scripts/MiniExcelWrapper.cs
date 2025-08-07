@@ -64,7 +64,7 @@ namespace KerbalWindTunnel
 #endif
             try
             {
-                Task result = worker.WriteToCSV(path, table, printHeader, sheetName);
+                Task result = Task.Run(() => worker.WriteToCSV(path, table, printHeader, sheetName));
                 await result;
                 if (result.Exception != null)
                     throw new AggregateException(result.Exception);
@@ -93,6 +93,6 @@ namespace KerbalWindTunnel
         public bool CheckAssembly(string assemblyName);
 #endif
         public Exception Write(string path, string sheet, object data, SpreadsheetOptions? options = null);
-        public Task WriteToCSV(string path, System.Data.DataTable table, bool printHeader, string sheetName = "");
+        public void WriteToCSV(string path, System.Data.DataTable table, bool printHeader, string sheetName = "");
     }
 }

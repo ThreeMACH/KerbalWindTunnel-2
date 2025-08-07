@@ -32,3 +32,5 @@ Unity Project/TestOutput/
 Builds/*.zip
 MiniExcelDomainWorker/obj/
 MiniExcelDomainWorker/bin/
+MiniExcelInterface/bin/
+MiniExcelInterface/obj/
