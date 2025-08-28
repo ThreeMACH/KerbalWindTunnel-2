@@ -281,10 +281,10 @@ namespace Graphing
         {
             string strCsv = "";
             strCsv += FormatNameAndUnit(XName, XUnit);
-            strCsv += FormatNameAndUnit(YName, YUnit);
+            strCsv += "," + FormatNameAndUnit(YName, YUnit);
 
             for (int i = 0; i < MetaFields.Length && i < metaCount; i++)
-                strCsv += string.Format(",{0}", FormatNameAndUnit(MetaFields[i], MetaUnits[i]));
+                strCsv += "," + FormatNameAndUnit(MetaFields[i], MetaUnits[i]);
 
             try
             {
