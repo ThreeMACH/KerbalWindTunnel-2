@@ -26,9 +26,8 @@ namespace KerbalWindTunnel
             Exception loadException = worker.SetupDomain(path);
             if (loadException != null)
                 throw new AggregateException(loadException);
-#if DEBUG
-            Debug.Log(worker.ListAssemblies());
-#endif
+
+            Debug.LogFormat("[KWT] MiniExcel AppDomain created, these are the assemblies it has:\n{0}", worker.ListAssemblies());
         }
 
         public void Write(string path, string sheet, object data, SpreadsheetOptions? options = null)

@@ -251,9 +251,9 @@ namespace KerbalWindTunnel.DataGenerators
             UnityEngine.Profiling.Profiler.EndSample();
 #endif                
             cancellationToken.ThrowIfCancellationRequested();
-#if DEBUG
+
             Debug.LogFormat("[KWT] Data run finished. {0} of {1} ({2:F0}%) retrieved from cache.", cachedCount, results.Length, (float)cachedCount / results.Length * 100);
-#endif
+
             return (results.To2Dimension(speedSegments + 1), (lowerBoundSpeed, upperBoundSpeed), (lowerBoundAltitude, upperBoundAltitude));
         }
         private void PushResults(Task<ResultsType> data)
