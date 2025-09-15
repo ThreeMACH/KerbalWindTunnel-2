@@ -91,6 +91,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedVessel.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\ImageLocalizer.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\KSPediaLocalizer.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\KSPediaTextLocalizer.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\SelectionGrid.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\Tooltip.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\TooltipMover.cs" />

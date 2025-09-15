@@ -12,6 +12,7 @@ GameObject:
   - component: {fileID: 195656658128573976}
   - component: {fileID: 195656658128573977}
   - component: {fileID: 195656658128573990}
+  - component: {fileID: 1170319152659742437}
   m_Layer: 5
   m_Name: KWT KSPedia Template
   m_TagString: Untagged
@@ -87,6 +88,18 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 138879376, guid: 7f5bed1f9aa762b41942b1832536a846, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+--- !u!114 &1170319152659742437
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 195656658128573988}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef362fbb566b3f941bce329bd7516a63, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
 --- !u!1 &195656658780515970
@@ -217,9 +230,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c27aa0ac81824f49aabb26b08f7f539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  overrideUnityFont: {fileID: 0}
-  overrideTMPFont: {fileID: 0}
-  queuedMode: -1
 --- !u!1 &195656659292150882
 GameObject:
   m_ObjectHideFlags: 0
@@ -372,6 +382,3 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4c27aa0ac81824f49aabb26b08f7f539, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  overrideUnityFont: {fileID: 0}
-  overrideTMPFont: {fileID: 0}
-  queuedMode: -1

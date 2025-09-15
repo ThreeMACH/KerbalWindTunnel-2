@@ -88,8 +88,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   identifier: graph.png
-  path: D:/Users/david/Documents/Source Code/KerbalWindTunnel 2/Unity Project/Assets/Kerbal
-    Wind Tunnel/KSPedia/Textures/graph.png
+  path: 
   spriteRect:
     serializedVersion: 2
     x: 0
@@ -908,7 +907,7 @@ PrefabInstance:
     - target: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
         type: 3}
       propertyPath: m_SizeDelta.x
-      value: 822
+      value: 950
       objectReference: {fileID: 0}
     - target: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
         type: 3}

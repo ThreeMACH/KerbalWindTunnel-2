@@ -8719,7 +8719,7 @@ GameObject:
   - component: {fileID: 22299963756675321}
   - component: {fileID: 735942220690741325}
   m_Layer: 5
-  m_Name: Value
+  m_Name: Number
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -10907,8 +10907,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   identifier: export.png
-  path: D:/Users/david/Documents/Source Code/KerbalWindTunnel 2/Unity Project/Assets/Kerbal
-    Wind Tunnel/KSPedia/Textures/export.png
+  path: 
   spriteRect:
     serializedVersion: 2
     x: 0

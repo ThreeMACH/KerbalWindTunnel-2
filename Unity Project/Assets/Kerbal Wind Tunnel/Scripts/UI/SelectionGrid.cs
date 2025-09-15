@@ -41,11 +41,11 @@ namespace KerbalWindTunnel.UI
             for (int i = 0; i < numItems; i++)
             {
                 GameObject label = Instantiate(textPrefab, labelsContainer.transform);
-                label.GetComponent<UT_Text>().Text = listItems[i];
+                label.GetComponent<UT_Text>().Text = Localize(listItems[i]);
                 label.SetActive(true);
 
                 if (tooltips.Count > i)
-                    label.GetComponent<Tooltip>()?.SetTooltip(tooltips[i]);
+                    label.GetComponent<Tooltip>()?.SetTooltip(Localize(tooltips[i]));
                     //label.AddComponent<KSPAssets.KSPedia.DatabaseTooltip>().text = tooltips[i];
 
                 uint flags = listFlags[i];
@@ -59,6 +59,15 @@ namespace KerbalWindTunnel.UI
                     Instantiate(prefab, flagContainers[j].transform).SetActive(true);
                 }
             }
+        }
+
+        private string Localize(string text)
+        {
+#if !UNITY_EDITOR
+            if (text?.StartsWith("#autoLOC", StringComparison.InvariantCultureIgnoreCase) == true)
+                text = KSP.Localization.Localizer.Format(text);
+#endif
+            return text;
         }
     }
 }

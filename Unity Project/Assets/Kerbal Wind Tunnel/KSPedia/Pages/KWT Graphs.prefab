@@ -74,26 +74,6 @@ MonoBehaviour:
   m_FillOrigin: 0
   m_UseSpriteMesh: 0
   m_PixelsPerUnitMultiplier: 1
---- !u!114 &8615103588710410416
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 5462356326179103238}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 0
-  m_MinWidth: -1
-  m_MinHeight: 108
-  m_PreferredWidth: -1
-  m_PreferredHeight: -1
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
 --- !u!1 &860010854794970507
 GameObject:
   m_ObjectHideFlags: 0
@@ -341,6 +321,26 @@ MonoBehaviour:
   m_FlexibleWidth: -1
   m_FlexibleHeight: -1
   m_LayoutPriority: 1
+--- !u!114 &4756937696804011752
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2228994274884131751}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: 108
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &2690634118014288827
 GameObject:
   m_ObjectHideFlags: 0
@@ -404,6 +404,26 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
+--- !u!114 &8477598422923056973
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2876742007720594314}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: 108
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &2916678643232618001
 GameObject:
   m_ObjectHideFlags: 0
@@ -467,6 +487,40 @@ MonoBehaviour:
   m_ChildControlHeight: 1
   m_ChildScaleWidth: 0
   m_ChildScaleHeight: 0
+--- !u!114 &6007197998901008666
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3036857815684740761}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0bf8a8d1a3556b44eb9838cfa1197579, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  tooltip: 
+  tooltipPrefab: {fileID: 1676297089597815688}
+--- !u!114 &5747965210874889701
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3261857830178498167}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: 108
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!1 &3327104797561106335
 GameObject:
   m_ObjectHideFlags: 0
@@ -590,6 +644,26 @@ MonoBehaviour:
   m_Spacing: {x: 0, y: 25}
   m_Constraint: 1
   m_ConstraintCount: 1
+--- !u!114 &8615103588710410416
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5462356326179103238}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_IgnoreLayout: 0
+  m_MinWidth: -1
+  m_MinHeight: 108
+  m_PreferredWidth: -1
+  m_PreferredHeight: -1
+  m_FlexibleWidth: -1
+  m_FlexibleHeight: -1
+  m_LayoutPriority: 1
 --- !u!114 &7718602297181226646
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -628,67 +702,45 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   listItems:
-  - Lift
-  - Max Lift
-  - Drag
-  - Lift/Drag Ratio
-  - Lift Curve Slope
-  - Torque
-  - Pitch Input
-  - Excess Thrust
-  - Thrust Available
-  - Thrust Required
-  - Specific Excess Power
-  - Excess Acceleration
-  - Maximum Climb Angle
-  - Level Flight Angle of Attack
-  - Max Lift Angle of Attack
-  - Fuel Economy
-  - Fuel Burn Rate
-  - Fuel-Optimal Path
-  - Time-Optimal Path
+  - '#autoLOC_KWT308'
+  - '#autoLOC_KWT309'
+  - '#autoLOC_KWT311'
+  - '#autoLOC_KWT313'
+  - '#autoLOC_KWT545'
+  - '#autoLOC_KWT318'
+  - '#autoLOC_KWT315'
+  - '#autoLOC_KWT329'
+  - '#autoLOC_KWT332'
+  - '#autoLOC_KWT333'
+  - '#autoLOC_KWT335'
+  - '#autoLOC_KWT330'
+  - '#autoLOC_KWT546'
+  - '#autoLOC_KWT547'
+  - '#autoLOC_KWT548'
+  - '#autoLOC_KWT340'
+  - '#autoLOC_KWT341'
+  - '#autoLOC_KWT347'
+  - '#autoLOC_KWT348'
   tooltips:
-  - The lift generated, expressed as either a force or a coefficient, depending on
-    settings.\nThis needs to be equal to the weight of the craft for level flight.
-  - The lift generated at the first peak in the lift curve, expressed as either a
-    force or a coefficient, depending on settings.\nThis point in the lift curve
-    is commonly called the stall point. This defines how heavy a craft your wings
-    can support.
-  - The drag generated, expressed as either a force or a coefficient, depending on
-    settings. Lower is usually better.
-  - The ratio of lift produced to drag generated. Higher is usually better.
-  - The slope of the lift curve with angle of attack.
-  - The pitching torque produced by aerodynamic forces (positive is nose up).\nThis
-    should always decrease (or become more negative) as angle of attack increases
-    for a stable aircraft.
-  - The pitch input required for stable flight (positive is nose up).\nYour craft
-    can't sustain an angle of attack where this is greater than 1 (or less than -1).
-  - Excess thrust is the difference between the thrust available and the thrust required.\nThis
-    needs to be greater than (or equal to) zero to sustain flight.
-  - How much thrust your engines produce. Moar is usually better.
-  - How much thrust is required to offset drag and contribute to lifting your craft.\nAt
-    small angles of attack, this is roughly equal to drag. When your wings don't
-    produce enough lift to offset the weight of your craft, this also counts how
-    much thrust is needed for lift.
-  - Specific excess power is excess thrust times velocity (giving power) divided
-    by mass (making it 'specific').\nThis is the power available to climb or accelerate.
-    The sustainable flight envelope is where this is positive.
-  - This is equal to excess thrust divided by mass. How many Gs push your pilot back
-    in their seat.
-  - This is the maximum climb angle your craft can sustain. Not necessarily the most
-    efficient.
-  - This is the angle of attack (as perceived by the root part) needed to sustain
-    level flight.
-  - This is the angle of attack (as perceived by the root part) at which your craft
-    generates the most lift.\nBeyond this point, your craft is effectively stalled.
-  - Fuel economy is measure in units per 100 km. Use this to find out how far your
-    craft can fly.
-  - Fuel burn rate is measured in units per second. Use this to figure out how long
-    your craft can fly for.
-  - This is the ascent path that uses the least fuel to reach the target speed and
-    altitude.
-  - This is the ascent path that uses the least time to reach the target speed and
-    altitude.
+  - '#autoLOC_KWT549'
+  - '#autoLOC_KWT550'
+  - '#autoLOC_KWT551'
+  - '#autoLOC_KWT552'
+  - '#autoLOC_KWT553'
+  - '#autoLOC_KWT554'
+  - '#autoLOC_KWT555'
+  - '#autoLOC_KWT556'
+  - '#autoLOC_KWT557'
+  - '#autoLOC_KWT558'
+  - '#autoLOC_KWT559'
+  - '#autoLOC_KWT560'
+  - '#autoLOC_KWT561'
+  - '#autoLOC_KWT562'
+  - '#autoLOC_KWT563'
+  - '#autoLOC_KWT564'
+  - '#autoLOC_KWT565'
+  - '#autoLOC_KWT566'
+  - '#autoLOC_KWT567'
   listFlags: 02000000050000000700000007000000070000000200000007000000050000000500000004000000010000000500000001000000050000000500000005000000050000000100000001000000
   textPrefab: {fileID: 3036857815684740761}
   positivePrefab: {fileID: 6488122644364884881}
@@ -698,26 +750,6 @@ MonoBehaviour:
   - {fileID: 4248663907675015841}
   - {fileID: 6876253659479379992}
   - {fileID: 860010854794970507}
---- !u!114 &4756937696804011752
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2228994274884131751}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 0
-  m_MinWidth: -1
-  m_MinHeight: 108
-  m_PreferredWidth: -1
-  m_PreferredHeight: -1
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
 --- !u!1 &6488122644364884881
 GameObject:
   m_ObjectHideFlags: 0
@@ -915,40 +947,6 @@ MonoBehaviour:
   m_Spacing: {x: 0, y: 25}
   m_Constraint: 1
   m_ConstraintCount: 1
---- !u!114 &5747965210874889701
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3261857830178498167}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 0
-  m_MinWidth: -1
-  m_MinHeight: 108
-  m_PreferredWidth: -1
-  m_PreferredHeight: -1
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
---- !u!114 &6007197998901008666
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3036857815684740761}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0bf8a8d1a3556b44eb9838cfa1197579, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  tooltip: 
-  tooltipPrefab: {fileID: 1676297089597815688}
 --- !u!1 &7489238021974825693
 GameObject:
   m_ObjectHideFlags: 0
@@ -1010,26 +1008,6 @@ MonoBehaviour:
   m_Spacing: {x: 0, y: 25}
   m_Constraint: 1
   m_ConstraintCount: 1
---- !u!114 &8477598422923056973
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2876742007720594314}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 306cc8c2b49d7114eaa3623786fc2126, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_IgnoreLayout: 0
-  m_MinWidth: -1
-  m_MinHeight: 108
-  m_PreferredWidth: -1
-  m_PreferredHeight: -1
-  m_FlexibleWidth: -1
-  m_FlexibleHeight: -1
-  m_LayoutPriority: 1
 --- !u!1001 &206987121892890265
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -1596,15 +1574,15 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 7171775085455293483, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
---- !u!224 &6393701740441578583 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
-    type: 3}
-  m_PrefabInstance: {fileID: 6021816565996138796}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2228994274884131751 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5584235083228392075, guid: 3addb70a9570b5f4c81607b852a642b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 6021816565996138796}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &6393701740441578583 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
     type: 3}
   m_PrefabInstance: {fileID: 6021816565996138796}
   m_PrefabAsset: {fileID: 0}
@@ -1743,15 +1721,15 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 7171775085455293483, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
---- !u!224 &7714795672894280071 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
-    type: 3}
-  m_PrefabInstance: {fileID: 6934208973998886140}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3261857830178498167 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5584235083228392075, guid: 3addb70a9570b5f4c81607b852a642b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 6934208973998886140}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &7714795672894280071 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
     type: 3}
   m_PrefabInstance: {fileID: 6934208973998886140}
   m_PrefabAsset: {fileID: 0}
@@ -1890,15 +1868,15 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 7171775085455293483, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
---- !u!224 &7814046309887361385 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
-    type: 3}
-  m_PrefabInstance: {fileID: 7447306918581492754}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &3036857815684740761 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5584235083228392075, guid: 3addb70a9570b5f4c81607b852a642b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 7447306918581492754}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &7814046309887361385 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
     type: 3}
   m_PrefabInstance: {fileID: 7447306918581492754}
   m_PrefabAsset: {fileID: 0}
@@ -2039,15 +2017,15 @@ PrefabInstance:
     m_RemovedComponents:
     - {fileID: 7171775085455293483, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
   m_SourcePrefab: {fileID: 100100000, guid: 3addb70a9570b5f4c81607b852a642b9, type: 3}
---- !u!224 &7041442053186223226 stripped
-RectTransform:
-  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
-    type: 3}
-  m_PrefabInstance: {fileID: 7679496796057067777}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &2876742007720594314 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5584235083228392075, guid: 3addb70a9570b5f4c81607b852a642b9,
+    type: 3}
+  m_PrefabInstance: {fileID: 7679496796057067777}
+  m_PrefabAsset: {fileID: 0}
+--- !u!224 &7041442053186223226 stripped
+RectTransform:
+  m_CorrespondingSourceObject: {fileID: 804798086673210747, guid: 3addb70a9570b5f4c81607b852a642b9,
     type: 3}
   m_PrefabInstance: {fileID: 7679496796057067777}
   m_PrefabAsset: {fileID: 0}
