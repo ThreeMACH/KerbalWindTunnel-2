@@ -89,6 +89,11 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\MiniExcelWrapper.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ToolbarWrapper.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CharacterizedVessel\CharacterizedVessel.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\ImageLocalizer.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\KSPediaLocalizer.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\SelectionGrid.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\Tooltip.cs" />
+    <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\UI\TooltipMover.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\AeroOptimizer.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\IReleasable.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\VesselCache\PartCollection.cs" />
@@ -105,6 +110,7 @@
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\ObjectDump.cs" />
     <Compile Include="Assets\Kerbal Wind Tunnel\Scripts\CanvasLayerSetter.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <None Include="AssetBundles\kwt_kspedia.ksp" />
     <None Include="Assets\Kerbal Wind Tunnel\Scripts\KerbalWindTunnel.asmdef" />
     <None Include="AssetBundles\windtunnelassetbundle.ksp" />
     <None Include="packages.config" />
@@ -468,6 +474,7 @@
   <PropertyGroup>
     <PostBuildEvent>copy /Y "$(TargetDir)$(ProjectName).*" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\Plugins\"
 copy /Y "$(ProjectDir)AssetBundles\windtunnelassetbundle.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\windtunnelassetbundle.dat"
+copy /Y "$(ProjectDir)AssetBundles\kwt_kspedia.ksp" "C:\Program Files (x86)\Steam\steamapps\common\Kerbal Space Program Debug\GameData\WindTunnel\"
 
 cd $(ProjectDir)..
 

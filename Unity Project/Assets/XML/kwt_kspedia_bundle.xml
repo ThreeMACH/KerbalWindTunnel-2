@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<KSPBundleDefinition xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" UrlName="kwt_kspedia" Name="kwt_kspedia" CreatedTime="-8584437131148836652" AutoLoad="false">
+  <Author />
+  <Info />
+  <Assets>
+    <Asset Name="KWT Data" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Data.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Data" AutoLoad="false" />
+    <Asset Name="KWT Flight Envelope" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Flight Envelope.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Flight Envelope" AutoLoad="false" />
+    <Asset Name="KWT Graph Manipulation" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Graph Manipulation.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Graph Manipulation" AutoLoad="false" />
+    <Asset Name="KWT Graphs" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Graphs.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Graphs" AutoLoad="false" />
+    <Asset Name="KWT Introduction" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Introduction.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Introduction" AutoLoad="false" />
+    <Asset Name="KWT Part Highlighting" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Part Highlighting.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Part Highlighting" AutoLoad="false" />
+    <Asset Name="KWT Settings" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT Settings.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT Settings" AutoLoad="false" />
+    <Asset Name="KWT UI" Path="Assets/Kerbal Wind Tunnel/KSPedia/Pages/KWT UI.prefab" Type="GameObject" Url="Kerbal Wind Tunnel/KSPedia/Pages/KWT UI" AutoLoad="false" />
+    <Asset Name="kwt_kspedia_kspedia" Path="Assets/XML/kwt_kspedia_kspedia.xml" Type="TextAsset" Url="XML/kwt_kspedia_kspedia" AutoLoad="false" />
+  </Assets>
+  <Dependencies />
+</KSPBundleDefinition>

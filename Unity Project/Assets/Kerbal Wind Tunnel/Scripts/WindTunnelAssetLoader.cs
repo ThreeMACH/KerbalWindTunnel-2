@@ -17,6 +17,8 @@ namespace KerbalWindTunnel.AssetLoader
         private const string shaderBundlePath = "GameData/WindTunnel/graphingShaders.assetbundle";
         private static Dictionary<string, Shader> shaders = null;
         private static GameObject[] loadedPrefabs = null;
+
+        private const string kspediaResourcesPath = "GameData/WindTunnel/Textures/KSPedia Localization/";
         public static GameObject WindowPrefab {
             get { ProcessPrefabs(); return _windowPrefab; }
             private set => _windowPrefab = value;
@@ -36,9 +38,50 @@ namespace KerbalWindTunnel.AssetLoader
             processedPrefabs = true;
         }
 
+        public static void ProcessKSPediaResources()
+        {
+            List<System.Threading.Tasks.Task> tasks = new List<System.Threading.Tasks.Task>();
+            string currentLanguage;
+#if UNITY_EDITOR
+            currentLanguage = "en-us";
+#else
+            currentLanguage = KSP.Localization.Localizer.CurrentLanguage;
+#endif
+            string path = KSPUtil.ApplicationRootPath + kspediaResourcesPath;
+
+            Debug.Log("[KWT] Processing KSPedia localizated image files.");
+            foreach (string file in System.IO.Directory.EnumerateFiles(path, "*.*", System.IO.SearchOption.AllDirectories))
+            {
+                if (!System.IO.Path.HasExtension(file))
+                    continue;
+
+                Debug.Log(file);
+
+                // only load those for the current language
+                int localizationStart = file.LastIndexOf("_");
+                int localizationEnd = file.LastIndexOf(".") - 1;
+
+                if (localizationStart > localizationEnd)
+                    continue;
+                if (localizationStart < 0)
+                    continue;
+
+                if (!string.Equals(file.Substring(localizationStart + 1, currentLanguage.Length), currentLanguage, System.StringComparison.CurrentCultureIgnoreCase))
+                    continue;
+
+                // strip out the localization suffix
+                string file_ = file.Remove(localizationStart, currentLanguage.Length + 1);
+                string filename = System.IO.Path.GetFileName(file_);
+                tasks.Add(KSPediaLocalizer.LoadTexture(file_, filename));
+            }
+            System.Threading.Tasks.Task.WhenAll(tasks).Wait(5000);
+        }
+
         [System.Diagnostics.CodeAnalysis.SuppressMessage("CodeQuality", "IDE0051:Remove unused private members", Justification = "Unity Method")]
         private void Start()
         {
+            ProcessKSPediaResources();
+
             string path = KSPUtil.ApplicationRootPath + assetBundlePath;
 
             AssetBundle prefabs = AssetBundle.LoadFromFile(path);

@@ -11,6 +11,7 @@ namespace UI_Tools.Universal_Text
         [SerializeField]
         public TMPro.TMP_FontAsset overrideTMPFont = null;
         [SerializeField]
+        [HideInInspector]
         private UT_Mode queuedMode = UT_Mode.Invalid;
 
         protected virtual Font GetUnityFont(TMPro.TMP_FontAsset font)
