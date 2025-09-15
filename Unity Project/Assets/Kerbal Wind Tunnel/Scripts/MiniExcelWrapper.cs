@@ -86,12 +86,12 @@ namespace KerbalWindTunnel
 
     public interface IDomainWriter
     {
-        public string ListAssemblies();
-        public Exception SetupDomain(string path);
+        string ListAssemblies();
+        Exception SetupDomain(string path);
 #if DEBUG
-        public bool CheckAssembly(string assemblyName);
+        bool CheckAssembly(string assemblyName);
 #endif
-        public Exception Write(string path, string sheet, object data, SpreadsheetOptions? options = null);
-        public void WriteToCSV(string path, System.Data.DataTable table, bool printHeader, string sheetName = "");
+        Exception Write(string path, string sheet, object data, SpreadsheetOptions? options = null);
+        void WriteToCSV(string path, System.Data.DataTable table, bool printHeader, string sheetName = "");
     }
 }

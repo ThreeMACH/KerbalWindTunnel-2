@@ -317,7 +317,8 @@ namespace KerbalWindTunnel.DataGenerators
 
             if (WindTunnelWindow.Instance.autoSetAscentTarget || exitCoords.speed < 0 || exitCoords.altitude < 0)
             {
-                (exitCoords.speed, exitCoords.altitude, bool sustainable) = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
+                bool sustainable;
+                (exitCoords.speed, exitCoords.altitude, sustainable) = GetMaxSustainableEnergy(data, speedBounds, altitudeBounds);
                 if (sustainable)
                     WindTunnelWindow.Instance.ProvideAscentTarget(exitCoords);
             }
